@@ -1,0 +1,128 @@
+container.appendChild(row);
+        }
+    );
+}
+
+
+function escapeHTML(str){
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        str;
+
+    return div.innerHTML;
+}
+
+
+/* ================= SETTINGS ================= */
+
+document
+.getElementById("soundToggle")
+.addEventListener(
+    "click",
+    function(){
+
+        this.classList.toggle(
+            "active"
+        );
+
+    }
+);
+
+
+document
+.getElementById("animationToggle")
+.addEventListener(
+    "click",
+    function(){
+
+        this.classList.toggle(
+            "active"
+        );
+
+        document
+            .querySelector(".bg")
+            .style.display =
+                this.classList.contains(
+                    "active"
+                )
+                ? "block"
+                : "none";
+
+    }
+);
+
+
+/* ================= RESET ================= */
+
+function resetGame(){
+
+    if(
+        !confirm(
+            "Точно сбросить весь прогресс?"
+        )
+    ) return;
+
+    localStorage.removeItem(
+        "killuaClicker"
+    );
+
+    data =
+        JSON.parse(
+            JSON.stringify(
+                defaultData
+            )
+        );
+
+    update();
+
+    toast(
+        "🗑 Прогресс сброшен"
+    );
+}
+
+
+/* ================= TOAST ================= */
+
+let toastTimer;
+
+function toast(message){
+
+    const el =
+        document.getElementById(
+            "toast"
+        );
+
+    el.textContent =
+        message;
+
+    el.classList.add("show");
+
+    clearTimeout(
+        toastTimer
+    );
+
+    toastTimer =
+        setTimeout(
+            () =>
+                el.classList.remove(
+                    "show"
+                ),
+            1800
+        );
+}
+
+
+/* ================= START ================= */
+
+update();
+renderTop();
+
+</script>
+
+</body>
+</html>
