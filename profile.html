@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Профиль</title>
+<style>
+body{margin:0;background:#060814;color:white;font-family:Arial;text-align:center}
+.box{max-width:500px;margin:60px auto;padding:25px}
+.avatar{width:110px;height:110px;border-radius:50%;background:#00eaff;color:#111;display:flex;align-items:center;justify-content:center;font-size:45px;margin:20px auto}
+button{width:100%;padding:15px;margin:8px 0;border:0;border-radius:13px;background:#151b2e;color:white;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="box">
+<button onclick="location.href='index.html'">← Меню</button>
+<div class="avatar">⚡</div>
+<h1 id="nick"></h1>
+<p>🪙 Баланс: <b id="coins"></b></p>
+<p>⚡ Сила клика: <b id="power"></b></p>
+<p>🤖 Автокликер: <b id="auto"></b>/сек</p>
+<button onclick="logout()">ВЫЙТИ</button>
+</div>
+
+<script>
+const nick=localStorage.getItem("currentUser");
+
+if(!nick)location.href="login.html";
+
+const users=JSON.parse(localStorage.getItem("users")||"[]");
+const u=users.find(x=>x.nick===nick);
+
+document.getElementById("nick").textContent=u.nick;
+document.getElementById("coins").textContent=u.coins.toLocaleString();
+document.getElementById("power").textContent=u.power.toLocaleString();
+document.getElementById("auto").textContent=u.auto.toLocaleString();
+
+function logout(){
+    localStorage.removeItem("currentUser");
+    location.href="index.html";
+}
+</script>
+</body>
+</html>
