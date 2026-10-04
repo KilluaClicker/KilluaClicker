@@ -1,0 +1,244 @@
+<input
+id="coins-${index}"
+type="number"
+min="0"
+value="${Number(user.coins)||0}"
+>
+
+</div>
+
+
+<div>
+
+<label>
+⚡ Сила клика
+</label>
+
+<input
+id="power-${index}"
+type="number"
+min="1"
+value="${Number(user.power)||1}"
+>
+
+</div>
+
+
+<div>
+
+<label>
+🤖 Автокликер
+</label>
+
+<input
+id="auto-${index}"
+type="number"
+min="0"
+value="${Number(user.auto)||0}"
+>
+
+</div>
+
+</div>
+
+
+<div class="grid">
+
+<button
+class="action save"
+onclick="savePlayer(${index})"
+>
+💾 СОХРАНИТЬ
+</button>
+
+
+${
+!main
+
+?
+
+<button
+class="action ${
+user.admin
+? "remove"
+: "give"
+}"
+onclick="toggleAdmin(${index})"
+>
+
+${
+user.admin
+? "🚫 СНЯТЬ АДМИНКУ"
+: "👑 ВЫДАТЬ АДМИНКУ"
+}
+
+</button>
+
+
+
+:""
+
+}
+
+</div>
+
+;
+
+
+container.appendChild(card);
+
+});
+
+}
+
+
+/* =================================
+   СОХРАНЕНИЕ
+================================= */
+
+function savePlayer(index){
+
+const users=getUsers();
+
+const user=users[index];
+
+
+const coins=
+Number(
+document.getElementById(
+coins-${index}
+).value
+);
+
+
+const power=
+Number(
+document.getElementById(
+power-${index}
+).value
+);
+
+
+const auto=
+Number(
+document.getElementById(
+auto-${index}
+).value
+);
+
+
+if(
+!Number.isFinite(coins) ||
+!Number.isFinite(power) ||
+!Number.isFinite(auto)
+){
+
+alert("❌ Неверные значения.");
+
+return;
+
+}
+
+
+if(
+coins<0 ||
+power<1 ||
+auto<0
+){
+
+alert(
+"❌ Значения не могут быть отрицательными."
+);
+
+return;
+
+}
+
+
+user.coins=Math.floor(coins);
+
+user.power=Math.floor(power);
+
+user.auto=Math.floor(auto);
+
+
+saveUsers(users);
+
+
+alert(
+"✅ Данные сохранены!"
+);
+
+
+render();
+
+}
+
+
+/* =================================
+   АДМИНКА
+================================= */
+
+function toggleAdmin(index){
+
+const users=getUsers();
+
+const user=users[index];
+
+
+if(user.nick===MAIN_ADMIN){
+
+alert(
+"Главного администратора изменить нельзя."
+);
+
+return;
+
+}
+
+
+user.admin=
+!user.admin;
+
+
+saveUsers(users);
+
+
+alert(
+user.admin
+? 👑 ${user.nick} получил админку!
+: 🚫 Админка ${user.nick} снята!`
+);
+
+
+render();
+
+}
+
+
+/* =================================
+   ЗАЩИТА ТЕКСТА
+================================= */
+
+function escapeHTML(text){
+
+const div=
+document.createElement("div");
+
+div.textContent=text;
+
+return div.innerHTML;
+
+}
+
+
+/* =================================
+   START
+================================= */
+
+render();
+
+</script>
+
+</body>
+</html>
