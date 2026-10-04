@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Игра</title>
+<style>
+body{margin:0;background:#060814;color:white;font-family:Arial;text-align:center}
+.box{padding:30px}
+button{padding:12px 18px;border:0;border-radius:12px;background:#151b2e;color:white;cursor:pointer}
+.coins{font-size:45px;color:#ffe600;font-weight:bold}
+.coin{width:210px;height:210px;margin:40px auto;border-radius:50%;background:linear-gradient(135deg,#fff000,#ff7200);display:flex;align-items:center;justify-content:center;font-size:80px;cursor:pointer}
+.coin:active{transform:scale(.9)}
+</style>
+</head>
+<body>
+<div class="box">
+<button onclick="location.href='index.html'">← Меню</button>
+<h2>Твои монетки</h2>
+<div id="coins" class="coins">0</div>
+<div class="coin" onclick="clickCoin()">🪙</div>
+<p>За клик: +<span id="power">1</span></p>
+<p>Автокликер: <span id="auto">0</span>/сек</p>
+</div>
+
+<script>
+const nick=localStorage.getItem("currentUser");
+
+if(!nick){
+    location.href="login.html";
+}
+
+function users(){
+    return JSON.parse(localStorage.getItem("users")||"[]");
+}
+
+function getUser(){
+    return users().find(u=>u.nick===nick);
+}
+
+function saveUser(user){
+    let all=users();
+    let i=all.findIndex(u=>u.nick===nick);
+    all[i]=user;
+    localStorage.setItem("users",JSON.stringify(all));
+}
+
+function update(){
+    const u=getUser();
+    if(!u)return;
+
+    document.getElementById("coins").textContent=u.coins.toLocaleString();
+    document.getElementById("power").textContent=u.power.toLocaleString();
+    document.getElementById("auto").textContent=u.auto.toLocaleString();
+}
+
+function clickCoin(){
+    const u=getUser();
+    u.coins+=u.power;
+    saveUser(u);
+    update();
+}
+
+setInterval(()=>{
+    const u=getUser();
+    if(!u)return;
+
+    if(u.auto>0){
+        u.coins+=u.auto;
+        saveUser(u);
+        update();
+    }
+},1000);
+
+update();
+</script>
+</body>
+</html>

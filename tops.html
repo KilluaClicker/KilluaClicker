@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Топ игроков — KilluaClicker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 20% 10%, #17345c, transparent 35%),
+        radial-gradient(circle at 80% 90%, #421654, transparent 35%),
+        #060814;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: min(700px, 92%);
+    margin: auto;
+    padding: 25px 0 60px;
+}
+
+.back {
+    border: 0;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: #ffffff12;
+    color: white;
+    cursor: pointer;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 35px;
+    font-size: 38px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #7f8ba5;
+    margin-bottom: 30px;
+}
+
+.player {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 17px;
+    margin: 10px 0;
+    border-radius: 18px;
+    background: #101626;
+    border: 1px solid #ffffff10;
+}
+
+.place {
+    width: 45px;
+    font-size: 22px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#00eaff,#0066ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #07101c;
+    font-weight: 900;
+    overflow: hidden;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info {
+    flex: 1;
+}
+
+.nick {
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.stats {
+    margin-top: 5px;
+    color: #77839b;
+    font-size: 12px;
+}
+
+.balance {
+    color: #ffe600;
+    font-weight: 900;
+    text-align: right;
+}
+
+.first {
+    background: linear-gradient(
+        135deg,
+        rgba(255,215,0,.18),
+        #101626
+    );
+    border-color: #ffd70055;
+}
+
+.second {
+    border-color: #c0c0c055;
+}
+
+.third {
+    border-color: #cd7f3255;
+}
+
+.empty {
+    text-align: center;
+    padding: 40px;
+    color: #7f8ba5;
+    background: #101626;
+    border-radius: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<button class="back" onclick="location.href='index.html'">
+← Меню
+</button>
+
+<h1>🏆 ТОП ИГРОКОВ</h1>
+
+<div class="subtitle">
+Игроки отсортированы по количеству монет
+</div>
+
+<div id="topList"></div>
+
+</div>
+
+
+<script>
+
+/* ==================================
+   ПОЛУЧАЕМ ВСЕХ ЗАРЕГИСТРИРОВАННЫХ
+   ПОЛЬЗОВАТЕЛЕЙ
+================================== */
+
+function getUsers() {
+
+    try {
+
+        const data =
+            localStorage.getItem("users");
+
+        if (!data) {
+            return [];
+        }
+
+        const users = JSON.parse(data);
+
+        if (!Array.isArray(users)) {
+            return [];
+        }
+
+        return users;
+
+    } catch (error) {
+
+        console.error(
+            "Ошибка загрузки пользователей:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
+
+
+/* ==================================
+   ПОКАЗ ТОПА
+================================== */
+
+function renderTop() {
+
+    const container =
+        document.getElementById("topList");
+
+    container.innerHTML = "";
+
+    let users = getUsers();
+
+
+    /* У каждого аккаунта
+       должны быть эти значения */
+
+    users = users.map(user => {
+
+        return {
+
+            nick:
+                user.nick || "Игрок",
+
+            coins:
+                Number(user.coins) || 0,
+
+            power:
+                Number(user.power) || 1,
+
+            auto:
+                Number(user.auto) || 0
+
+        };
+
+    });
+
+
+    /* Сортировка
+       от самого большого баланса
+       к самому маленькому */
+
+    users.sort(function(a, b) {
+
+        return b.coins - a.coins;
+
+    });
+
+
+    /* Если игроков нет */
+
+    if (users.length === 0) {
+
+        container.innerHTML = 
+            <div class="empty">
+                👥 Пока нет зарегистрированных игроков
+            </div>
+        ;
+
+        return;
+
+    }
+
+
+    /* Создаём строку
+       для каждого аккаунта */
+
+    users.forEach(function(user, index) {
+const row =
+            document.createElement("div");
+
+
+        row.className = "player";
+
+
+        if (index === 0) {
+            row.classList.add("first");
+        }
+
+        if (index === 1) {
+            row.classList.add("second");
+        }
+
+        if (index === 2) {
+            row.classList.add("third");
+        }
+
+
+        let place;
+
+
+        if (index === 0) {
+            place = "🥇";
+        }
+
+        else if (index === 1) {
+            place = "🥈";
+        }
+
+        else if (index === 2) {
+            place = "🥉";
+        }
+
+        else {
+            place = index + 1;
+        }
+
+
+        /* Аватар */
+
+        const avatar =
+            localStorage.getItem(
+                "avatar_" + user.nick
+            );
+
+
+        let avatarHTML;
+
+
+        if (avatar) {
+
+            avatarHTML =
+                <img src="${avatar}" alt="avatar">;
+
+        }
+
+        else {
+
+            avatarHTML =
+                user.nick
+                    .charAt(0)
+                    .toUpperCase();
+
+        }
+
+
+        row.innerHTML = 
+
+            <div class="place">
+                ${place}
+            </div>
+
+            <div class="avatar">
+                ${avatarHTML}
+            </div>
+
+            <div class="info">
+
+                <div class="nick">
+                    ${escapeHTML(user.nick)}
+                </div>
+
+                <div class="stats">
+                    ⚡ Сила: ${format(user.power)}
+                    &nbsp; • &nbsp;
+                    🤖 Авто: ${format(user.auto)}/сек
+                </div>
+
+            </div>
+
+            <div class="balance">
+                🪙 ${format(user.coins)}
+            </div>
+
+        ;
+
+
+        container.appendChild(row);
+
+    });
+
+}
+
+
+/* ==================================
+   ФОРМАТ ЧИСЕЛ
+================================== */
+
+function format(number) {
+
+    return Number(number)
+        .toLocaleString("ru-RU");
+
+}
+
+
+/* ==================================
+   ЗАЩИТА ОТ HTML
+================================== */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+
+/* ==================================
+   ЗАПУСК
+================================== */
+
+renderTop();
+
+</script>
+
+</body>
+</html>
