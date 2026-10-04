@@ -3,703 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>KilluaClicker</title>
 
 <style>
-
-* {
-    box-sizing: border-box;
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
 }
 
-html,
-body {
-    margin: 0;
-    min-height: 100%;
-}
-
-body {
-    min-height: 100vh;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    overflow-x: hidden;
-
-    font-family:
-        Arial,
-        sans-serif;
-
-    color: white;
-
+body{
+    min-height:100vh;
+    font-family:Arial,sans-serif;
+    color:white;
     background:
-        radial-gradient(
-            circle at 15% 15%,
-            rgba(0, 234, 255, 0.18),
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 85% 80%,
-            rgba(132, 67, 255, 0.22),
-            transparent 35%
-        ),
-        linear-gradient(
-            135deg,
-            #050712,
-            #080c1b 50%,
-            #050713
-        );
+        radial-gradient(circle at 20% 10%,#00eaff35,transparent 30%),
+        radial-gradient(circle at 80% 90%,#714cff35,transparent 30%),
+        #050810;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
-
-/* =========================
-   ФОНОВЫЕ СВЕЧЕНИЯ
-========================= */
-
-.bg {
-    position: fixed;
-
-    width: 320px;
-    height: 320px;
-
-    border-radius: 50%;
-
-    filter: blur(90px);
-
-    opacity: 0.25;
-
-    pointer-events: none;
+.container{
+    width:min(450px,92%);
+    padding:30px;
+    border-radius:30px;
+    background:rgba(15,22,38,.94);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 30px 100px rgba(0,0,0,.6);
 }
 
-.bg.one {
-    top: -120px;
-    left: -100px;
-
-    background: #00eaff;
+.logo{
+    text-align:center;
+    font-size:48px;
+    font-weight:900;
+    color:#00eaff;
+    text-shadow:0 0 30px #00eaff55;
 }
 
-.bg.two {
-    right: -100px;
-    bottom: -130px;
-
-    background: #773cff;
+.subtitle{
+    text-align:center;
+    color:#66738c;
+    font-size:11px;
+    letter-spacing:5px;
+    margin:5px 0 25px;
 }
 
-
-/* =========================
-   ОСНОВНОЙ КОНТЕЙНЕР
-========================= */
-
-.menu {
-    position: relative;
-
-    width: min(470px, 92%);
-
-    padding: 32px;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-
-    border-radius: 30px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(19, 26, 45, 0.88),
-            rgba(7, 11, 22, 0.94)
-        );
-
-    box-shadow:
-        0 30px 100px
-        rgba(0, 0, 0, 0.5);
-
-    backdrop-filter: blur(25px);
-
-    z-index: 2;
+.user{
+    display:flex;
+    align-items:center;
+    gap:13px;
+    padding:13px;
+    margin-bottom:18px;
+    border-radius:18px;
+    background:#ffffff08;
 }
 
-
-/* =========================
-   ЛОГО
-========================= */
-
-.logo {
-    text-align: center;
-
-    margin-bottom: 5px;
-
-    font-size: 48px;
-
-    font-weight: 900;
-
-    letter-spacing: -2px;
-
-    color: #00eaff;
-
-    text-shadow:
-        0 0 15px
-        rgba(0, 234, 255, 0.5),
-
-        0 0 45px
-        rgba(0, 234, 255, 0.18);
+.avatar{
+    width:48px;
+    height:48px;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#00eaff,#536bff);
+    color:#06101b;
+    font-size:20px;
+    font-weight:900;
 }
 
-
-.game-name {
-    text-align: center;
-
-    color: #77839b;
-
-    font-size: 12px;
-
-    letter-spacing: 4px;
-
-    font-weight: bold;
-
-    margin-bottom: 25px;
+.username{
+    font-weight:bold;
 }
 
-
-/* =========================
-   ПРОФИЛЬ
-========================= */
-
-.user-card {
-    display: flex;
-
-    align-items: center;
-
-    gap: 13px;
-
-    padding: 13px;
-
-    margin-bottom: 20px;
-
-    border-radius: 17px;
-
-    background:
-        rgba(255, 255, 255, 0.035);
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.06);
+.status{
+    color:#758198;
+    font-size:12px;
+    margin-top:4px;
 }
 
-
-.avatar {
-    width: 45px;
-    height: 45px;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    flex-shrink: 0;
-
-    border-radius: 14px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #00eaff,
-            #5965ff
-        );
-
-    color: #06101b;
-
-    font-weight: 900;
-
-    font-size: 18px;
+button{
+    width:100%;
+    border:0;
+    padding:16px;
+    margin:5px 0;
+    border-radius:15px;
+    color:white;
+    background:#ffffff09;
+    border:1px solid #ffffff0c;
+    font-weight:800;
+    cursor:pointer;
+    transition:.18s;
 }
 
-
-.user-name {
-    font-size: 15px;
-
-    font-weight: 800;
+button:hover{
+    transform:translateY(-2px);
+    background:#ffffff14;
 }
 
-
-.user-status {
-    margin-top: 4px;
-
-    color: #7c879d;
-
-    font-size: 11px;
+.play{
+    background:linear-gradient(135deg,#ffe600,#ff7900);
+    color:#111;
+    font-size:17px;
 }
 
-
-/* =========================
-   КНОПКИ
-========================= */
-
-.buttons {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 10px;
+.admin{
+    background:linear-gradient(135deg,#00eaff,#5965ff);
+    color:#06101b;
 }
 
-
-button {
-    width: 100%;
-
-    min-height: 54px;
-
-    border: 0;
-
-    border-radius: 16px;
-
-    cursor: pointer;
-
-    color: white;
-
-    background:
-        rgba(255, 255, 255, 0.045);
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.06);
-
-    font-size: 14px;
-
-    font-weight: 800;
-
-    transition:
-        transform 0.18s ease,
-        background 0.18s ease,
-        box-shadow 0.18s ease;
+.logout{
+    color:#ff6d8c;
 }
 
-
-button:hover {
-    transform:
-        translateY(-2px);
-
-    background:
-        rgba(255, 255, 255, 0.08);
-
-    box-shadow:
-        0 10px 30px
-        rgba(0, 0, 0, 0.2);
+.footer{
+    text-align:center;
+    color:#414c62;
+    font-size:10px;
+    margin-top:20px;
 }
-
-
-button:active {
-    transform:
-        translateY(1px)
-        scale(0.99);
-}
-
-
-/* =========================
-   ИГРАТЬ
-========================= */
-
-.play {
-    min-height: 62px;
-background:
-        linear-gradient(
-            135deg,
-            #ffe600,
-            #ff7a00
-        );
-
-    color: #111;
-
-    font-size: 17px;
-
-    box-shadow:
-        0 10px 35px
-        rgba(255, 166, 0, 0.18);
-}
-
-
-.play:hover {
-    background:
-        linear-gradient(
-            135deg,
-            #fff000,
-            #ff8b00
-        );
-
-    box-shadow:
-        0 15px 45px
-        rgba(255, 166, 0, 0.27);
-}
-
-
-/* =========================
-   АДМИН
-========================= */
-
-.admin {
-    background:
-        linear-gradient(
-            135deg,
-            #00eaff,
-            #5965ff
-        );
-
-    color: #06101b;
-
-    border: none;
-}
-
-
-.admin:hover {
-    background:
-        linear-gradient(
-            135deg,
-            #38efff,
-            #7180ff
-        );
-}
-
-
-/* =========================
-   РАЗДЕЛИТЕЛЬ
-========================= */
-
-.divider {
-    height: 1px;
-
-    margin: 7px 0;
-
-    background:
-        rgba(255, 255, 255, 0.06);
-}
-
-
-/* =========================
-   ВЫХОД
-========================= */
-
-.logout {
-    color: #ff6f8e;
-
-    background:
-        rgba(255, 70, 105, 0.05);
-
-    border-color:
-        rgba(255, 70, 105, 0.1);
-}
-
-
-/* =========================
-   НИЗ
-========================= */
-
-.footer {
-    text-align: center;
-
-    margin-top: 22px;
-
-    color: #4f5a70;
-
-    font-size: 10px;
-
-    letter-spacing: 1px;
-}
-
-
-/* =========================
-   TOAST
-========================= */
-
-.toast {
-    position: fixed;
-
-    left: 50%;
-    bottom: 25px;
-
-    z-index: 100;
-
-    padding: 13px 18px;
-
-    border-radius: 13px;
-
-    background:
-        rgba(18, 24, 39, 0.96);
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.1);
-
-    box-shadow:
-        0 15px 40px
-        rgba(0, 0, 0, 0.4);
-
-    font-size: 13px;
-
-    font-weight: bold;
-
-    opacity: 0;
-
-    pointer-events: none;
-
-    transform:
-        translate(-50%, 20px);
-
-    transition: 0.25s;
-}
-
-
-.toast.show {
-    opacity: 1;
-
-    transform:
-        translate(-50%, 0);
-}
-
-
-/* =========================
-   ТЕЛЕФОН
-========================= */
-
-@media (max-width: 500px) {
-
-    .menu {
-        padding: 23px;
-
-        border-radius: 24px;
-    }
-
-    .logo {
-        font-size: 40px;
-    }
-
-}
-
 </style>
 </head>
 
-
 <body>
 
+<div class="container">
 
-<div class="bg one"></div>
-<div class="bg two"></div>
+    <div class="logo">Killua</div>
 
-
-<div class="menu">
-
-
-    <!-- ЛОГО -->
-
-    <div class="logo">
-        Killua
-    </div>
-
-    <div class="game-name">
+    <div class="subtitle">
         KILLUACLICKER
     </div>
 
+    <div class="user">
 
-    <!-- ПОЛЬЗОВАТЕЛЬ -->
-
-    <div
-        id="userCard"
-        class="user-card"
-    >
-
-        <div
-            id="avatar"
-            class="avatar"
-        >
-            ?
-        </div>
+        <div class="avatar" id="avatar">?</div>
 
         <div>
-
-            <div
-                id="userName"
-                class="user-name"
-            >
+            <div class="username" id="username">
                 Гость
             </div>
 
-            <div
-                id="userStatus"
-                class="user-status"
-            >
-                Войдите в аккаунт
+            <div class="status" id="status">
+                Войдите или зарегистрируйтесь
             </div>
-
         </div>
 
     </div>
 
+    <button class="play" onclick="openPage('game.html')">
+        ⚡ ИГРАТЬ
+    </button>
 
-    <!-- КНОПКИ -->
+    <button onclick="openPage('shop.html')">
+        🛒 МАГАЗИН
+    </button>
 
-    <div class="buttons">
+    <button onclick="openPage('autoclicker.html')">
+        🤖 АВТОКЛИКЕР
+    </button>
 
+    <button onclick="openPage('tops.html')">
+        🏆 ТОПЫ
+    </button>
 
-        <button
-            class="play"
-            onclick="go('game.html')"
-        >
-            ⚡ ИГРАТЬ
-        </button>
+    <button onclick="openPage('profile.html')">
+        👤 ПРОФИЛЬ
+    </button>
 
+    <button onclick="openPage('settings.html')">
+        ⚙️ НАСТРОЙКИ
+    </button>
 
-        <button
-            onclick="go('shop.html')"
-        >
-            🛒 МАГАЗИН
-        </button>
+    <div id="adminBlock"></div>
 
+    <div id="authButtons">
 
-        <button
-            onclick="go('autoclicker.html')"
-        >
-            🤖 АВТОКЛИКЕР
-        </button>
-
-
-        <button
-            onclick="go('tops.html')"
-        >
-            🏆 ТОПЫ
-        </button>
-
-
-        <button
-            onclick="go('profile.html')"
-        >
-            👤 ПРОФИЛЬ
-        </button>
-
-
-        <button
-            onclick="go('settings.html')"
-        >
-            ⚙️ НАСТРОЙКИ
-        </button>
-
-
-        <!-- АДМИНКА ПОЯВИТСЯ ТОЛЬКО АДМИНУ -->
-
-        <div
-            id="adminContainer"
-        ></div>
-
-
-        <div class="divider"></div>
-
-
-        <button
-            id="loginButton"
-            onclick="go('login.html')"
-        >
+        <button onclick="openPage('login.html')">
             🔐 ВОЙТИ
         </button>
-<button
-            id="registerButton"
-            onclick="go('register.html')"
-        >
+
+        <button onclick="openPage('register.html')">
             📝 РЕГИСТРАЦИЯ
         </button>
 
-
-        <button
-            id="logoutButton"
-            class="logout"
-            onclick="logout()"
-            style="display:none;"
-        >
-            🚪 ВЫЙТИ
-        </button>
-
-
     </div>
 
+    <button
+        id="logoutButton"
+        class="logout"
+        style="display:none"
+        onclick="logout()"
+    >
+        🚪 ВЫЙТИ
+    </button>
 
     <div class="footer">
         KILLUACLICKER • v1.0
     </div>
 
-
 </div>
-
-
-<div
-    id="toast"
-    class="toast"
-></div>
-
 
 <script>
 
+const MAIN_ADMIN = "Killua666";
 
-/* =====================================
-   НАСТРОЙКИ
-===================================== */
-
-
-const MAIN_ADMIN =
-    "Killua666";
-
-
-/* =====================================
-   ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ
-===================================== */
-
-
-const currentUser =
-    localStorage.getItem(
-        "currentUser"
-    );
-
-
-/* =====================================
-   ПЕРЕХОД
-===================================== */
-
-
-function go(page) {
-
-    window.location.href =
-        page;
-
+function openPage(page){
+    window.location.href = page;
 }
 
+function getUsers(){
 
-/* =====================================
-   ПОЛУЧЕНИЕ USERS
-===================================== */
+    try{
 
-
-function getUsers() {
-
-    try {
-
-        const users =
+        const data =
             JSON.parse(
-                localStorage.getItem(
-                    "users"
-                ) || "[]"
+                localStorage.getItem("users") || "[]"
             );
 
+        return Array.isArray(data) ? data : [];
 
-        if (
-            !Array.isArray(users)
-        ) {
-
-            return [];
-
-        }
-
-
-        return users;
-
-    }
-    catch {
+    }catch(error){
 
         return [];
 
@@ -707,267 +232,108 @@ function getUsers() {
 
 }
 
+function getCurrentUser(){
 
-/* =====================================
-   ПРОВЕРКА АДМИНА
-===================================== */
-
-
-function isAdmin() {
-
-
-    /* Killua666 — главный админ */
-
-    if (
-        currentUser === MAIN_ADMIN
-    ) {
-
-        return true;
-
+    const nick =
+        localStorage.getItem("currentUser");
+if(!nick){
+        return null;
     }
 
+    return getUsers().find(
+        user => user.nick === nick
+    ) || null;
 
-    const users =
-        getUsers();
+}
 
+function isAdmin(){
+
+    const nick =
+        localStorage.getItem("currentUser");
+
+    if(!nick){
+        return false;
+    }
+
+    if(nick === MAIN_ADMIN){
+        return true;
+    }
+
+    const user = getCurrentUser();
+
+    return user && user.admin === true;
+
+}
+
+function logout(){
+
+    localStorage.removeItem("currentUser");
+
+    window.location.reload();
+
+}
+
+function updateMenu(){
+
+    const nick =
+        localStorage.getItem("currentUser");
 
     const user =
-        users.find(
-            function (u) {
+        getCurrentUser();
 
-                return (
-                    u.nick ===
-                    currentUser
-                );
+    if(!nick || !user){
 
-            }
-        );
+        document.getElementById("username")
+            .textContent = "Гость";
 
+        document.getElementById("status")
+            .textContent = "Войдите или зарегистрируйтесь";
 
-    return !!(
-        user &&
-        user.admin === true
-    );
+        document.getElementById("avatar")
+            .textContent = "?";
 
-}
+        return;
 
+    }
 
-/* =====================================
-   ЭКРАН ПОЛЬЗОВАТЕЛЯ
-===================================== */
+    document.getElementById("username")
+        .textContent = user.nick;
 
+    document.getElementById("avatar")
+        .textContent =
+        user.nick.charAt(0).toUpperCase();
 
-const userName =
-    document.getElementById(
-        "userName"
-    );
-
-
-const userStatus =
-    document.getElementById(
-        "userStatus"
-    );
-
-
-const avatar =
-    document.getElementById(
-        "avatar"
-    );
-
-
-const loginButton =
-    document.getElementById(
-        "loginButton"
-    );
-
-
-const registerButton =
-    document.getElementById(
-        "registerButton"
-    );
-
-
-const logoutButton =
-    document.getElementById(
-        "logoutButton"
-    );
-
-
-/* =====================================
-   ЕСЛИ ВОШЁЛ
-===================================== */
-
-
-if (
-    currentUser
-) {
-
-    userName.textContent =
-        currentUser;
-
-
-    avatar.textContent =
-        currentUser
-            .charAt(0)
-            .toUpperCase();
-
-
-    if (
+    document.getElementById("status")
+        .textContent =
         isAdmin()
-    ) {
+        ? "👑 Администратор"
+        : "⚡ Игрок";
 
-        userStatus.textContent =
-            "👑 Администратор";
+    document.getElementById("authButtons")
+        .style.display = "none";
+
+    document.getElementById("logoutButton")
+        .style.display = "block";
+
+    if(isAdmin()){
+
+        document.getElementById("adminBlock")
+            .innerHTML = 
+                <button
+                    class="admin"
+                    onclick="openPage('admin.html')"
+                >
+                    👑 АДМИН-ПАНЕЛЬ
+                </button>
+            ;
 
     }
-    else {
-
-        userStatus.textContent =
-            "⚡ Игрок KilluaClicker";
-
-    }
-
-
-    loginButton.style.display =
-        "none";
-
-
-    registerButton.style.display =
-        "none";
-
-
-    logoutButton.style.display =
-        "block";
 
 }
 
-
-/* =====================================
-   ЕСЛИ НЕ ВОШЁЛ
-===================================== */
-
-
-else {
-
-    userName.textContent =
-        "Гость";
-
-
-    userStatus.textContent =
-        "Войдите в аккаунт";
-
-
-    avatar.textContent =
-        "?";
-
-}
-
-
-/* =====================================
-   АДМИН-ПАНЕЛЬ
-===================================== */
-
-
-const adminContainer =
-    document.getElementById(
-        "adminContainer"
-    );
-
-
-if (
-    currentUser &&
-    isAdmin()
-) {
-
-    adminContainer.innerHTML = 
-
-        <button
-            class="admin"
-            onclick="go('admin.html')"
-        >
-            👑 АДМИН-ПАНЕЛЬ
-        </button>
-
-    ;
-
-}
-
-
-/* =====================================
-   ВЫХОД
-===================================== */
-
-
-function logout() {
-
-    localStorage.removeItem(
-        "currentUser"
-    );
-
-
-    showToast(
-        "🚪 Вы вышли из аккаунта"
-    );
-setTimeout(
-        function () {
-
-            location.reload();
-
-        },
-        700
-    );
-
-}
-
-
-/* =====================================
-   TOAST
-===================================== */
-
-
-let toastTimer;
-
-
-function showToast(
-    message
-) {
-
-    const toast =
-        document.getElementById(
-            "toast"
-        );
-
-
-    toast.textContent =
-        message;
-
-
-    toast.classList.add(
-        "show"
-    );
-
-
-    clearTimeout(
-        toastTimer
-    );
-
-
-    toastTimer =
-        setTimeout(
-            function () {
-
-                toast.classList.remove(
-                    "show"
-                );
-
-            },
-            1800
-        );
-
-}
+updateMenu();
 
 </script>
-
 
 </body>
 </html>
