@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KilluaClicker</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    min-height:100vh;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#fff;
+    background:
+        radial-gradient(circle at 15% 10%,#00eaff35,transparent 30%),
+        radial-gradient(circle at 85% 90%,#714cff35,transparent 30%),
+        #050810;
+}
+
+button{
+    font-family:inherit;
+}
+
+.app{
+    width:min(1000px,94%);
+    margin:auto;
+    min-height:100vh;
+    padding:20px 0 100px;
+}
+
+.header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.logo{
+    font-size:28px;
+    font-weight:900;
+    color:#00eaff;
+    text-shadow:0 0 25px #00eaff55;
+}
+
+.user{
+    padding:10px 15px;
+    border-radius:15px;
+    background:#ffffff08;
+    border:1px solid #ffffff0d;
+    color:#aeb9cc;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    padding:25px;
+    border-radius:25px;
+    background:#101625ee;
+    border:1px solid #ffffff0d;
+    box-shadow:0 20px 70px #0005;
+}
+
+.center{
+    text-align:center;
+}
+
+.hero{
+    padding:45px 20px;
+}
+
+.hero h1{
+    font-size:clamp(40px,9vw,75px);
+    color:#00eaff;
+    text-shadow:0 0 40px #00eaff55;
+}
+
+.hero p{
+    color:#66738c;
+    margin-top:8px;
+    letter-spacing:4px;
+    font-size:11px;
+}
+
+.coins{
+    margin:30px 0;
+    font-size:clamp(35px,8vw,60px);
+    font-weight:900;
+    color:#ffe600;
+}
+
+.coin{
+    width:210px;
+    height:210px;
+    max-width:70vw;
+    max-height:70vw;
+    border:0;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:70px;
+    background:
+        radial-gradient(circle at 35% 25%,#fff47c,#ffb300 55%,#ff6100);
+    box-shadow:
+        0 0 25px #ffb30066,
+        0 0 80px #ff8c0033;
+    transition:.08s;
+}
+
+.coin:hover{
+    transform:scale(1.03);
+}
+
+.coin:active{
+    transform:scale(.90);
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:30px;
+}
+
+.stat{
+    padding:18px 10px;
+    border-radius:17px;
+    background:#ffffff08;
+}
+
+.stat span{
+    display:block;
+    color:#77849b;
+    font-size:12px;
+    margin-bottom:7px;
+}
+
+.stat b{
+    font-size:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.shop-item{
+    padding:22px;
+    border-radius:20px;
+    background:#ffffff07;
+    border:1px solid #ffffff0b;
+}
+
+.shop-item h3{
+    margin-bottom:8px;
+}
+
+.shop-item p{
+    color:#7c879b;
+    font-size:13px;
+    min-height:35px;
+    margin-bottom:15px;
+}
+
+.btn{
+    width:100%;
+    padding:15px;
+    border:0;
+    border-radius:14px;
+    cursor:pointer;
+    color:white;
+    font-weight:800;
+    background:#ffffff0b;
+    transition:.18s;
+}
+
+.btn:hover{
+    transform:translateY(-2px);
+    background:#ffffff15;
+}
+
+.primary{
+    color:#06101b;
+    background:linear-gradient(135deg,#00eaff,#5965ff);
+}
+
+.yellow{
+    color:#111;
+    background:linear-gradient(135deg,#ffe600,#ff7900);
+}
+
+.danger{
+    color:#ff8ba3;
+    background:#ff416a12;
+}
+
+.back{
+    margin-top:15px;
+}
+
+h2{
+    margin-bottom:20px;
+    color:#00eaff;
+}
+
+.list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.player{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:16px;
+    border-radius:16px;
+    background:#ffffff07;
+}
+
+.place{
+    width:40px;
+    font-size:20px;
+    font-weight:900;
+}
+
+.player-name{
+    flex:1;
+    font-weight:800;
+}
+
+.player-coins{
+    color:#ffe600;
+    font-weight:800;
+}
+
+input{
+    width:100%;
+    padding:15px;
+    margin:6px 0;
+    border:1px solid #ffffff0d;
+    border-radius:13px;
+    outline:none;
+    background:#070b14;
+    color:white;
+}
+
+.auth{
+    width:min(450px,100%);
+    margin:50px auto;
+}
+
+.auth h1{
+    text-align:center;
+    color:#00eaff;
+    margin-bottom:25px;
+}
+
+.auth .btn{
+    margin-top:7px;
+}
+.profile-avatar{
+    width:110px;
+    height:110px;
+    margin:0 auto 15px;
+    border-radius:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:45px;
+    font-weight:900;
+    color:#06101b;
+    background:linear-gradient(135deg,#00eaff,#5965ff);
+}
+
+.bottom-nav{
+    position:fixed;
+    z-index:100;
+    left:50%;
+    bottom:15px;
+    transform:translateX(-50%);
+    width:min(750px,94%);
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+    padding:8px;
+    border-radius:22px;
+    background:#0c1220ee;
+    border:1px solid #ffffff12;
+    backdrop-filter:blur(20px);
+    box-shadow:0 15px 50px #0008;
+}
+
+.nav-btn{
+    border:0;
+    padding:11px 5px;
+    border-radius:15px;
+    cursor:pointer;
+    color:#718097;
+    background:transparent;
+    font-size:11px;
+    font-weight:800;
+}
+
+.nav-btn.active{
+    color:#00eaff;
+    background:#00eaff12;
+}
+
+.toast{
+    position:fixed;
+    z-index:200;
+    left:50%;
+    top:25px;
+    transform:translate(-50%,-20px);
+    opacity:0;
+    pointer-events:none;
+    padding:14px 20px;
+    border-radius:15px;
+    background:#121b2d;
+    border:1px solid #ffffff15;
+    transition:.25s;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translate(-50%,0);
+}
+
+.hidden{
+    display:none!important;
+}
+
+@media(max-width:650px){
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .bottom-nav{
+        grid-template-columns:repeat(5,1fr);
+    }
+
+    .nav-btn{
+        font-size:9px;
+    }
+
+    .coin{
+        width:180px;
+        height:180px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+
+    <div class="logo">
+        ⚡ KilluaClicker
+    </div>
+
+    <div class="user">
+        👤 <span id="headerUser">Гость</span>
+    </div>
+
+</header>
+
+
+<!-- ================= ИГРА ================= -->
+
+<section id="gamePage" class="page active">
+
+    <div class="card hero center">
+
+        <h1>Killua</h1>
+
+        <p>KILLUACLICKER</p>
+
+        <div class="coins">
+            🪙 <span id="gameCoins">0</span>
+        </div>
+
+        <button class="coin" onclick="clickCoin()">
+            🪙
+        </button>
+
+        <div class="stats">
+
+            <div class="stat">
+                <span>⚡ Сила клика</span>
+                <b id="gamePower">1</b>
+            </div>
+
+            <div class="stat">
+                <span>🤖 Автокликер</span>
+                <b id="gameAuto">0</b>
+            </div>
+
+            <div class="stat">
+                <span>👤 Игрок</span>
+                <b id="gameNick">Гость</b>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= МАГАЗИН ================= -->
+
+<section id="shopPage" class="page">
+
+    <div class="card">
+
+        <h2>🛒 Магазин</h2>
+
+        <div class="coins">
+            🪙 <span id="shopCoins">0</span>
+        </div>
+
+        <div class="grid">
+
+            <div class="shop-item">
+
+                <h3>⚡ +1 к клику</h3>
+
+                <p>
+                    Увеличивает силу каждого клика.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyPower(1,100)">
+                    100 🪙
+                </button>
+
+            </div>
+
+
+            <div class="shop-item">
+
+                <h3>⚡ +10 к клику</h3>
+
+                <p>
+                    Добавляет 10 к силе клика.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyPower(10,1000)">
+                    1 000 🪙
+                </button>
+
+            </div>
+
+
+            <div class="shop-item">
+
+                <h3>⚡ +1000 к клику</h3>
+
+                <p>
+                    Огромное увеличение силы.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyPower(1000,100000)">
+                    100 000 🪙
+                </button>
+
+            </div>
+
+
+            <div class="shop-item">
+
+                <h3>⚡ +1 000 000 к клику</h3>
+<p>
+                    Очень мощное улучшение.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyPower(1000000,100000000)">
+                    100 000 000 🪙
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= АВТОКЛИКЕР ================= -->
+
+<section id="autoPage" class="page">
+
+    <div class="card">
+
+        <h2>🤖 Автокликер</h2>
+
+        <div class="coins">
+            🤖 <span id="autoLevel">0</span>/сек
+        </div>
+
+        <div class="grid">
+
+            <div class="shop-item">
+
+                <h3>+1 / сек</h3>
+
+                <p>
+                    Добавляет 1 монету каждую секунду.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyAuto(1,500)">
+                    500 🪙
+                </button>
+
+            </div>
+
+
+            <div class="shop-item">
+
+                <h3>+10 / сек</h3>
+
+                <p>
+                    Добавляет 10 монет каждую секунду.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyAuto(10,5000)">
+                    5 000 🪙
+                </button>
+
+            </div>
+
+
+            <div class="shop-item">
+
+                <h3>+1000 / сек</h3>
+
+                <p>
+                    Очень мощный автокликер.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyAuto(1000,500000)">
+                    500 000 🪙
+                </button>
+
+            </div>
+
+
+            <div class="shop-item">
+
+                <h3>+1 000 000 / сек</h3>
+
+                <p>
+                    Максимальная скорость.
+                </p>
+
+                <button class="btn primary"
+                    onclick="buyAuto(1000000,100000000)">
+                    100 000 000 🪙
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ТОПЫ ================= -->
+
+<section id="topsPage" class="page">
+
+    <div class="card">
+
+        <h2>🏆 Топ игроков</h2>
+
+        <div id="topList" class="list"></div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ПРОФИЛЬ ================= -->
+
+<section id="profilePage" class="page">
+
+    <div class="card center">
+
+        <div class="profile-avatar" id="profileAvatar">
+            ?
+        </div>
+
+        <h2 id="profileNick">
+            Гость
+        </h2>
+
+        <div class="stats">
+
+            <div class="stat">
+                <span>🪙 Монеты</span>
+                <b id="profileCoins">0</b>
+            </div>
+
+            <div class="stat">
+                <span>⚡ Клик</span>
+                <b id="profilePower">1</b>
+            </div>
+
+            <div class="stat">
+                <span>🤖 Авто</span>
+                <b id="profileAuto">0</b>
+            </div>
+
+        </div>
+
+        <button
+            class="btn primary"
+            onclick="showPage('settings')">
+            ⚙️ Настройки
+        </button>
+
+        <button
+            class="btn danger"
+            onclick="logout()">
+            🚪 Выйти
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- ================= НАСТРОЙКИ ================= -->
+
+<section id="settingsPage" class="page">
+
+    <div class="card">
+
+        <h2>⚙️ Настройки</h2>
+
+        <button class="btn"
+            onclick="toggleSound()">
+            🔊 Звук
+        </button>
+
+        <button class="btn"
+            onclick="toggleAnimation()">
+            ✨ Анимации
+        </button>
+
+        <button class="btn danger"
+            onclick="resetProgress()">
+            🗑 Сбросить прогресс
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- ================= АДМИН ================= -->
+
+<section id="adminPage" class="page">
+
+    <div class="card">
+
+        <h2>👑 Админ-панель</h2>
+
+        <div id="adminContent"></div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ВХОД ================= -->
+
+<section id="loginPage" class="page">
+
+    <div class="card auth">
+
+        <h1>🔐 Вход</h1>
+<input
+            id="loginNick"
+            placeholder="Ник">
+
+        <input
+            id="loginPassword"
+            type="password"
+            placeholder="Пароль">
+
+        <button class="btn primary"
+            onclick="login()">
+            ВОЙТИ
+        </button>
+
+        <button class="btn"
+            onclick="showPage('register')">
+            📝 Регистрация
+        </button>
+
+        <div id="loginError"></div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= РЕГИСТРАЦИЯ ================= -->
+
+<section id="registerPage" class="page">
+
+    <div class="card auth">
+
+        <h1>📝 Регистрация</h1>
+
+        <input
+            id="registerNick"
+            placeholder="Ник"
+            maxlength="20">
+
+        <input
+            id="registerPassword"
+            type="password"
+            placeholder="Пароль">
+
+        <button class="btn primary"
+            onclick="register()">
+            СОЗДАТЬ АККАУНТ
+        </button>
+
+        <button class="btn"
+            onclick="showPage('login')">
+            Уже есть аккаунт
+        </button>
+
+        <div id="registerError"></div>
+
+    </div>
+
+</section>
+
+
+</div>
+
+
+<!-- ================= НИЖНЕЕ МЕНЮ ================= -->
+
+<nav class="bottom-nav">
+
+    <button class="nav-btn active"
+        data-page="game"
+        onclick="showPage('game')">
+        ⚡<br>Игра
+    </button>
+
+    <button class="nav-btn"
+        data-page="shop"
+        onclick="showPage('shop')">
+        🛒<br>Магазин
+    </button>
+
+    <button class="nav-btn"
+        data-page="auto"
+        onclick="showPage('auto')">
+        🤖<br>Авто
+    </button>
+
+    <button class="nav-btn"
+        data-page="tops"
+        onclick="showPage('tops')">
+        🏆<br>Топ
+    </button>
+
+    <button class="nav-btn"
+        data-page="profile"
+        onclick="showPage('profile')">
+        👤<br>Профиль
+    </button>
+
+</nav>
+
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+/* =====================================================
+   ОСНОВНЫЕ ДАННЫЕ
+===================================================== */
+
+const MAIN_ADMIN = "Killua666";
+
+const DEFAULT_USER = {
+    nick:"",
+    password:"",
+    coins:0,
+    power:1,
+    auto:0,
+    admin:false
+};
+
+
+/* =====================================================
+   ПОЛЬЗОВАТЕЛИ
+===================================================== */
+
+function getUsers(){
+
+    try{
+
+        const users =
+            JSON.parse(
+                localStorage.getItem("killua_users") || "[]"
+            );
+
+        return Array.isArray(users)
+            ? users
+            : [];
+
+    }catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+function saveUsers(users){
+
+    localStorage.setItem(
+        "killua_users",
+        JSON.stringify(users)
+    );
+
+}
+
+
+function getCurrentNick(){
+
+    return localStorage.getItem(
+        "killua_current_user"
+    );
+
+}
+
+
+function getCurrentUser(){
+
+    const nick = getCurrentNick();
+
+    if(!nick){
+        return null;
+    }
+
+    const users = getUsers();
+
+    return users.find(
+        user => user.nick === nick
+    ) || null;
+
+}
+
+
+function saveCurrentUser(user){
+
+    const users = getUsers();
+
+    const index = users.findIndex(
+        item => item.nick === user.nick
+    );
+
+    if(index === -1){
+        return;
+    }
+
+    users[index] = user;
+
+    saveUsers(users);
+
+}
+
+
+/* =====================================================
+   СТРАНИЦЫ
+===================================================== */
+
+function showPage(page){
+
+    const pages =
+        document.querySelectorAll(".page");
+
+    pages.forEach(
+        element => element.classList.remove("active")
+    );
+
+
+    const selected =
+        document.getElementById(page + "Page");
+
+    if(!selected){
+        return;
+    }
+
+    selected.classList.add("active");
+
+
+    const navButtons =
+        document.querySelectorAll(".nav-btn");
+
+    navButtons.forEach(
+        button => button.classList.remove("active")
+    );
+
+
+    const activeButton =
+        document.querySelector(
+            .nav-btn[data-page="${page}"]
+        );
+
+    if(activeButton){
+        activeButton.classList.add("active");
+    }
+if(page === "tops"){
+        renderTops();
+    }
+
+    if(page === "admin"){
+        renderAdmin();
+    }
+
+    updateUI();
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+
+}
+
+
+/* =====================================================
+   РЕГИСТРАЦИЯ
+===================================================== */
+
+function register(){
+
+    const nick =
+        document.getElementById(
+            "registerNick"
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            "registerPassword"
+        ).value;
+
+
+    const error =
+        document.getElementById(
+            "registerError"
+        );
+
+
+    error.textContent = "";
+
+
+    if(nick.length < 3){
+
+        error.textContent =
+            "❌ Ник должен быть минимум 3 символа.";
+
+        return;
+
+    }
+
+
+    if(password.length < 4){
+
+        error.textContent =
+            "❌ Пароль должен быть минимум 4 символа.";
+
+        return;
+
+    }
+
+
+    const users = getUsers();
+
+
+    if(
+        users.some(
+            user =>
+                user.nick.toLowerCase()
+                === nick.toLowerCase()
+        )
+    ){
+
+        error.textContent =
+            "❌ Такой ник уже занят.";
+
+        return;
+
+    }
+
+
+    const user = {
+        ...DEFAULT_USER,
+        nick:nick,
+        password:password,
+        admin:nick === MAIN_ADMIN
+    };
+
+
+    users.push(user);
+
+    saveUsers(users);
+
+
+    localStorage.setItem(
+        "killua_current_user",
+        nick
+    );
+
+
+    toast("✅ Аккаунт создан!");
+
+
+    showPage("game");
+
+}
+
+
+/* =====================================================
+   ВХОД
+===================================================== */
+
+function login(){
+
+    const nick =
+        document.getElementById(
+            "loginNick"
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            "loginPassword"
+        ).value;
+
+
+    const error =
+        document.getElementById(
+            "loginError"
+        );
+
+
+    const user =
+        getUsers().find(
+            item =>
+                item.nick === nick &&
+                item.password === password
+        );
+
+
+    if(!user){
+
+        error.textContent =
+            "❌ Неверный ник или пароль.";
+
+        return;
+
+    }
+
+
+    localStorage.setItem(
+        "killua_current_user",
+        user.nick
+    );
+
+
+    error.textContent = "";
+
+    toast("✅ Вход выполнен!");
+
+    showPage("game");
+
+}
+
+
+/* =====================================================
+   ВЫХОД
+===================================================== */
+
+function logout(){
+
+    localStorage.removeItem(
+        "killua_current_user"
+    );
+
+    toast("👋 Вы вышли из аккаунта.");
+
+    showPage("login");
+
+}
+
+
+/* =====================================================
+   КЛИК
+===================================================== */
+
+function clickCoin(){
+
+    const user = getCurrentUser();
+
+
+    if(!user){
+
+        toast("🔐 Сначала войдите в аккаунт.");
+
+        showPage("login");
+
+        return;
+
+    }
+
+
+    user.coins =
+        Number(user.coins || 0)
+        +
+        Number(user.power || 1);
+
+
+    saveCurrentUser(user);
+
+    updateUI();
+
+}
+
+
+/* =====================================================
+   МАГАЗИН
+===================================================== */
+
+function buyPower(amount,cost){
+
+    const user = getCurrentUser();
+
+
+    if(!user){
+
+        toast("🔐 Сначала войдите.");
+
+        showPage("login");
+
+        return;
+
+    }
+
+
+    if(
+        Number(user.coins || 0)
+        <
+        cost
+    ){
+
+        toast("❌ Не хватает монет!");
+
+        return;
+
+    }
+
+
+    user.coins -= cost;
+
+    user.power =
+        Number(user.power || 1)
+        +
+        amount;
+
+
+    saveCurrentUser(user);
+
+    toast(
+        "⚡ Сила клика увеличена!"
+    );
+
+    updateUI();
+
+}
+
+
+/* =====================================================
+   АВТОКЛИКЕР
+===================================================== */
+
+function buyAuto(amount,cost){
+
+    const user = getCurrentUser();
+
+
+    if(!user){
+
+        toast("🔐 Сначала войдите.");
+
+        showPage("login");
+
+        return;
+
+    }
+if(
+        Number(user.coins || 0)
+        <
+        cost
+    ){
+
+        toast("❌ Не хватает монет!");
+
+        return;
+
+    }
+
+
+    user.coins -= cost;
+
+    user.auto =
+        Number(user.auto || 0)
+        +
+        amount;
+
+
+    saveCurrentUser(user);
+
+    toast("🤖 Автокликер улучшен!");
+
+    updateUI();
+
+}
+
+
+/* =====================================================
+   АВТОКЛИК
+===================================================== */
+
+setInterval(function(){
+
+    const user = getCurrentUser();
+
+    if(!user){
+        return;
+    }
+
+
+    const auto =
+        Number(user.auto || 0);
+
+
+    if(auto <= 0){
+        return;
+    }
+
+
+    user.coins =
+        Number(user.coins || 0)
+        +
+        auto;
+
+
+    saveCurrentUser(user);
+
+    updateUI();
+
+},1000);
+
+
+/* =====================================================
+   ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
+===================================================== */
+
+function updateUI(){
+
+    const user = getCurrentUser();
+
+
+    const nick =
+        user
+        ? user.nick
+        : "Гость";
+
+
+    const coins =
+        user
+        ? Number(user.coins || 0)
+        : 0;
+
+
+    const power =
+        user
+        ? Number(user.power || 1)
+        : 1;
+
+
+    const auto =
+        user
+        ? Number(user.auto || 0)
+        : 0;
+
+
+    document.getElementById(
+        "headerUser"
+    ).textContent = nick;
+
+
+    document.getElementById(
+        "gameNick"
+    ).textContent = nick;
+
+
+    document.getElementById(
+        "gameCoins"
+    ).textContent =
+        coins.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "shopCoins"
+    ).textContent =
+        coins.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "gamePower"
+    ).textContent =
+        power.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "gameAuto"
+    ).textContent =
+        auto.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "autoLevel"
+    ).textContent =
+        auto.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "profileNick"
+    ).textContent = nick;
+
+
+    document.getElementById(
+        "profileAvatar"
+    ).textContent =
+        user
+        ? nick.charAt(0).toUpperCase()
+        : "?";
+
+
+    document.getElementById(
+        "profileCoins"
+    ).textContent =
+        coins.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "profilePower"
+    ).textContent =
+        power.toLocaleString("ru-RU");
+
+
+    document.getElementById(
+        "profileAuto"
+    ).textContent =
+        auto.toLocaleString("ru-RU");
+
+}
+
+
+/* =====================================================
+   ТОП
+===================================================== */
+
+function renderTops(){
+
+    const container =
+        document.getElementById(
+            "topList"
+        );
+
+
+    let users = getUsers();
+
+
+    users.sort(
+        (a,b) =>
+            Number(b.coins || 0)
+            -
+            Number(a.coins || 0)
+    );
+
+
+    if(users.length === 0){
+
+        container.innerHTML = 
+            <div class="player">
+                Пока нет зарегистрированных игроков.
+            </div>
+        ;
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    users.forEach(
+        (user,index) => {
+
+            let place =
+                ${index + 1}.;
+
+            if(index === 0){
+                place = "🥇";
+            }
+
+            if(index === 1){
+                place = "🥈";
+            }
+
+            if(index === 2){
+                place = "🥉";
+            }
+
+
+            const row =
+                document.createElement("div");
+
+            row.className = "player";
+
+
+            const placeElement =
+                document.createElement("div");
+
+            placeElement.className = "place";
+
+            placeElement.textContent = place;
+
+
+            const name =
+                document.createElement("div");
+
+            name.className = "player-name";
+
+            name.textContent = user.nick;
+
+
+            const coins =
+                document.createElement("div");
+
+            coins.className =
+                "player-coins";
+coins.textContent =
+                "🪙 "
+                +
+                Number(
+                    user.coins || 0
+                ).toLocaleString("ru-RU");
+
+
+            row.appendChild(placeElement);
+
+            row.appendChild(name);
+
+            row.appendChild(coins);
+
+            container.appendChild(row);
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   АДМИН
+===================================================== */
+
+function isAdmin(){
+
+    const user =
+        getCurrentUser();
+
+
+    if(!user){
+        return false;
+    }
+
+
+    if(user.nick === MAIN_ADMIN){
+        return true;
+    }
+
+
+    return user.admin === true;
+
+}
+
+
+function renderAdmin(){
+
+    const container =
+        document.getElementById(
+            "adminContent"
+        );
+
+
+    if(!isAdmin()){
+
+        container.innerHTML = 
+            <div class="shop-item">
+                ❌ У вас нет доступа к админ-панели.
+            </div>
+        ;
+
+        return;
+
+    }
+
+
+    const users = getUsers();
+
+
+    if(users.length === 0){
+
+        container.innerHTML =
+            "Нет зарегистрированных игроков.";
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    users.forEach(
+        (user,index) => {
+
+            const card =
+                document.createElement("div");
+
+            card.className = "shop-item";
+
+
+            card.innerHTML = 
+                <h3>
+                    👤 ${escapeHTML(user.nick)}
+                </h3>
+
+                <p>
+                    ${user.admin ? "👑 Администратор" : "Игрок"}
+                </p>
+
+                <input
+                    id="adminCoins${index}"
+                    type="number"
+                    min="0"
+                    value="${Number(user.coins || 0)}"
+                    placeholder="Монеты">
+
+                <input
+                    id="adminPower${index}"
+                    type="number"
+                    min="1"
+                    value="${Number(user.power || 1)}"
+                    placeholder="Сила клика">
+
+                <input
+                    id="adminAuto${index}"
+                    type="number"
+                    min="0"
+                    value="${Number(user.auto || 0)}"
+                    placeholder="Автокликер">
+
+                <button
+                    class="btn primary"
+                    onclick="saveAdminPlayer(${index})">
+                    💾 СОХРАНИТЬ
+                </button>
+
+                ${
+                    user.nick !== MAIN_ADMIN
+                    ?
+                    
+                    <button
+                        class="btn"
+                        onclick="toggleAdmin(${index})">
+                        ${
+                            user.admin
+                            ? "🚫 Снять админку"
+                            : "👑 Выдать админку"
+                        }
+                    </button>
+                    
+                    :
+                    ""
+                }
+
+            ;
+
+
+            container.appendChild(card);
+
+        }
+    );
+
+}
+
+
+function saveAdminPlayer(index){
+
+    if(!isAdmin()){
+        return;
+    }
+
+
+    const users = getUsers();
+
+    const user = users[index];
+
+
+    const coins =
+        Number(
+            document.getElementById(
+                adminCoins${index}
+            ).value
+        );
+
+
+    const power =
+        Number(
+            document.getElementById(
+                adminPower${index}
+            ).value
+        );
+
+
+    const auto =
+        Number(
+            document.getElementById(
+                adminAuto${index}
+            ).value
+        );
+
+
+    if(
+        !Number.isFinite(coins) ||
+        !Number.isFinite(power) ||
+        !Number.isFinite(auto) ||
+        coins < 0 ||
+        power < 1 ||
+        auto < 0
+    ){
+
+        toast("❌ Неверные значения!");
+
+        return;
+
+    }
+
+
+    user.coins =
+        Math.floor(coins);
+
+    user.power =
+        Math.floor(power);
+
+    user.auto =
+        Math.floor(auto);
+
+
+    saveUsers(users);
+
+    toast("✅ Игрок сохранён!");
+renderAdmin();
+
+    updateUI();
+
+}
+
+
+function toggleAdmin(index){
+
+    if(!isAdmin()){
+        return;
+    }
+
+
+    const users = getUsers();
+
+    const user = users[index];
+
+
+    if(user.nick === MAIN_ADMIN){
+
+        toast(
+            "❌ Главного администратора изменить нельзя."
+        );
+
+        return;
+
+    }
+
+
+    user.admin =
+        !Boolean(user.admin);
+
+
+    saveUsers(users);
+
+
+    toast(
+        user.admin
+        ? "👑 Админка выдана!"
+        : "🚫 Админка снята!"
+    );
+
+
+    renderAdmin();
+
+}
+
+
+/* =====================================================
+   НАСТРОЙКИ
+===================================================== */
+
+function toggleSound(){
+
+    const current =
+        localStorage.getItem(
+            "killua_sound"
+        ) !== "off";
+
+
+    localStorage.setItem(
+        "killua_sound",
+        current ? "off" : "on"
+    );
+
+
+    toast(
+        current
+        ? "🔇 Звук выключен"
+        : "🔊 Звук включён"
+    );
+
+}
+
+
+function toggleAnimation(){
+
+    const current =
+        localStorage.getItem(
+            "killua_animation"
+        ) !== "off";
+
+
+    localStorage.setItem(
+        "killua_animation",
+        current ? "off" : "on"
+    );
+
+
+    toast(
+        current
+        ? "✨ Анимации выключены"
+        : "✨ Анимации включены"
+    );
+
+}
+
+
+function resetProgress(){
+
+    const user =
+        getCurrentUser();
+
+
+    if(!user){
+
+        showPage("login");
+
+        return;
+
+    }
+
+
+    if(
+        !confirm(
+            "Точно сбросить монеты, силу клика и автокликер?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    user.coins = 0;
+
+    user.power = 1;
+
+    user.auto = 0;
+
+
+    saveCurrentUser(user);
+
+    updateUI();
+
+    toast("🗑 Прогресс сброшен!");
+
+}
+
+
+/* =====================================================
+   ВСПОМОГАТЕЛЬНОЕ
+===================================================== */
+
+function escapeHTML(text){
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+
+let toastTimer;
+
+function toast(message){
+
+    const element =
+        document.getElementById(
+            "toast"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                element.classList.remove(
+                    "show"
+                );
+
+            },
+            1800
+        );
+
+}
+
+
+/* =====================================================
+   СТАРТ
+===================================================== */
+
+updateUI();
+
+</script>
+
+</body>
+</html>
