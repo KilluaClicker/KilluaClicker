@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Регистрация</title>
+<style>
+body{margin:0;background:#060814;color:white;font-family:Arial;text-align:center}
+.box{max-width:400px;margin:70px auto;padding:25px}
+input{width:100%;padding:15px;margin:7px 0;box-sizing:border-box;border:0;border-radius:12px;background:#151b2e;color:white}
+button{width:100%;padding:15px;margin:7px 0;border:0;border-radius:12px;background:#00d9ff;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>Регистрация</h1>
+<input id="nick" placeholder="Ник">
+<input id="pass" type="password" placeholder="Пароль">
+<button onclick="register()">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+<button onclick="location.href='login.html'">У меня уже есть аккаунт</button>
+</div>
+
+<script>
+function register(){
+    const nick=document.getElementById("nick").value.trim();
+    const pass=document.getElementById("pass").value;
+
+    if(!nick||!pass){
+        alert("Заполни все поля");
+        return;
+    }
+
+    let users=JSON.parse(localStorage.getItem("users")||"[]");
+
+    if(users.some(u=>u.nick===nick)){
+        alert("Такой ник уже занят");
+        return;
+    }
+
+    users.push({
+        nick:nick,
+        pass:pass,
+        coins:0,
+        power:1,
+        auto:0
+    });
+
+    localStorage.setItem("users",JSON.stringify(users));
+    localStorage.setItem("currentUser",nick);
+
+    location.href="index.html";
+}
+</script>
+</body>
+</html>
