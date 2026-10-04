@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Игра — KilluaClicker</title>
+
+<style>
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #070914;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.container {
+    padding: 40px 20px;
+}
+
+button {
+    border: 0;
+    border-radius: 15px;
+    padding: 14px 20px;
+    background: #141a2b;
+    color: white;
+    cursor: pointer;
+}
+
+.coins {
+    color: #ffe600;
+    font-size: 45px;
+    font-weight: bold;
+}
+
+.coin {
+    width: 210px;
+    height: 210px;
+    margin: 40px auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#fff000,#ff7900);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.coin:active {
+    transform: scale(.9);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<button onclick="location.href='index.html'">
+← Меню
+</button>
+
+<h2>Твои монетки</h2>
+
+<div id="coins" class="coins">0</div>
+
+<div class="coin" onclick="clickCoin()">
+🪙
+</div>
+
+<p>
+За клик: +<span id="power">1</span>
+</p>
+
+</div>
+
+<script>
+
+let coins =
+Number(localStorage.getItem("coins")) || 0;
+
+let power =
+Number(localStorage.getItem("power")) || 1;
+
+function update() {
+
+document.getElementById("coins").textContent =
+coins.toLocaleString("ru-RU");
+
+document.getElementById("power").textContent =
+power.toLocaleString("ru-RU");
+
+localStorage.setItem("coins", coins);
+localStorage.setItem("power", power);
+
+}
+
+function clickCoin() {
+
+coins += power;
+
+update();
+
+}
+
+update();
+
+</script>
+
+</body>
+</html>
