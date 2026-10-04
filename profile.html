@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Профиль — KilluaClicker</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Arial;color:white;background:radial-gradient(circle,#083c57,transparent 40%),#060810}
+.box{width:min(500px,92%);padding:30px;border-radius:25px;background:#101625ee;text-align:center;border:1px solid #ffffff10}
+.avatar{width:100px;height:100px;margin:auto;border-radius:30px;background:linear-gradient(135deg,#00eaff,#5965ff);display:flex;align-items:center;justify-content:center;color:#06101b;font-size:40px;font-weight:900}
+h1{color:#00eaff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{padding:15px;border-radius:15px;background:#ffffff08}
+.stat b{display:block;font-size:20px;color:#ffe600;margin-top:5px}
+button{width:100%;padding:14px;margin-top:20px;border:0;border-radius:13px;background:#ffffff0a;color:white;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="box">
+<div id="avatar" class="avatar">?</div>
+<h1 id="nick">Игрок</h1>
+
+<div class="stats">
+<div class="stat">🪙<b id="coins">0</b></div>
+<div class="stat">⚡<b id="power">1</b></div>
+<div class="stat">🤖<b id="auto">0</b></div>
+</div>
+
+<button onclick="location.href='index.html'">← Меню</button>
+</div>
+
+<script>
+const nick=localStorage.getItem("currentUser");
+if(!nick)location.href="login.html";
+
+const users=JSON.parse(localStorage.getItem("users")||"[]");
+const user=users.find(u=>u.nick===nick);
+
+document.getElementById("nick").textContent=user.nick;
+document.getElementById("avatar").textContent=user.nick[0].toUpperCase();
+document.getElementById("coins").textContent=Number(user.coins||0).toLocaleString("ru-RU");
+document.getElementById("power").textContent=Number(user.power||1).toLocaleString("ru-RU");
+document.getElementById("auto").textContent=Number(user.auto||0).toLocaleString("ru-RU");
+</script>
+</body>
+</html>

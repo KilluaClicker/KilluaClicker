@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Автокликер — KilluaClicker</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Arial;color:white;background:radial-gradient(circle,#342060,transparent 40%),#060810}
+.box{width:min(500px,92%);padding:30px;border-radius:25px;background:#101625ee;border:1px solid #ffffff10;text-align:center}
+h1{color:#00eaff}
+.speed{font-size:42px;font-weight:900;color:#ffe600;margin:25px}
+button{width:100%;padding:15px;margin:6px 0;border:0;border-radius:14px;background:linear-gradient(135deg,#00eaff,#536dff);font-weight:bold;cursor:pointer}
+.back{background:#ffffff09;color:white}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>🤖 Автокликер</h1>
+<div class="speed"><span id="auto">0</span>/сек</div>
+<p>Покупай автокликер в магазине.</p>
+<button onclick="buyAuto(1,500)">+1/сек — 500 🪙</button>
+<button onclick="buyAuto(10,5000)">+10/сек — 5 000 🪙</button>
+<button onclick="buyAuto(1000,500000)">+1000/сек — 500 000 🪙</button>
+<button onclick="buyAuto(1000000,100000000)">+1 000 000/сек — 100 000 000 🪙</button>
+<button class="back" onclick="location.href='index.html'">← Меню</button>
+</div>
+
+<script>
+const currentUser=localStorage.getItem("currentUser");
+if(!currentUser)location.href="login.html";
+
+function users(){
+return JSON.parse(localStorage.getItem("users")||"[]");
+}
+
+function user(){
+return users().find(u=>u.nick===currentUser);
+}
+
+function save(u){
+const list=users();
+const i=list.findIndex(x=>x.nick===currentUser);
+list[i]=u;
+localStorage.setItem("users",JSON.stringify(list));
+}
+
+function update(){
+document.getElementById("auto").textContent=
+Number(user().auto||0).toLocaleString("ru-RU");
+}
+
+function buyAuto(amount,cost){
+const u=user();
+
+if(Number(u.coins||0)<cost){
+alert("❌ Не хватает монет!");
+return;
+}
+
+u.coins-=cost;
+u.auto=Number(u.auto||0)+amount;
+
+save(u);
+update();
+
+alert("🤖 Автокликер улучшен!");
+}
+
+update();
+</script>
+</body>
+</html>
