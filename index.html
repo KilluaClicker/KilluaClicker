@@ -1,0 +1,2317 @@
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: <!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KilluaClicker</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --yellow:#ffe600;
+    --orange:#ff8c00;
+    --cyan:#00e5ff;
+    --purple:#8b5cf6;
+    --red:#ff4964;
+    --bg:#03050c;
+    --card:rgba(255,255,255,.055);
+    --border:rgba(255,255,255,.1);
+}
+
+body{
+    min-height:100vh;
+    overflow-x:hidden;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    color:white;
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(0,229,255,.14),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(139,92,246,.15),
+            transparent 35%
+        ),
+        var(--bg);
+}
+
+/* ================= ФОН ================= */
+
+.background{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    pointer-events:none;
+    overflow:hidden;
+}
+
+.orb{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(110px);
+    opacity:.16;
+}
+
+.orb1{
+    width:350px;
+    height:350px;
+    background:#00e5ff;
+    left:-120px;
+    top:-100px;
+    animation:float1 8s ease-in-out infinite alternate;
+}
+
+.orb2{
+    width:400px;
+    height:400px;
+    background:#8b5cf6;
+    right:-150px;
+    bottom:-150px;
+    animation:float2 10s ease-in-out infinite alternate;
+}
+
+@keyframes float1{
+    to{
+        transform:translate(100px,80px);
+    }
+}
+
+@keyframes float2{
+    to{
+        transform:translate(-100px,-80px);
+    }
+}
+
+/* ================= APP ================= */
+
+.app{
+    width:100%;
+    max-width:1100px;
+    min-height:100vh;
+
+    margin:auto;
+
+    padding:20px;
+    padding-bottom:110px;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:15px;
+
+    margin-bottom:25px;
+}
+
+.logo{
+    font-size:26px;
+    font-weight:1000;
+    letter-spacing:-1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #fff,
+            #00e5ff,
+            #ffe600,
+            #fff
+        );
+
+    background-size:300%;
+
+    -webkit-background-clip:text;
+    background-clip:text;
+
+    color:transparent;
+
+    animation:gradient 5s linear infinite;
+}
+
+@keyframes gradient{
+    from{
+        background-position:0%;
+    }
+
+    to{
+        background-position:300%;
+    }
+}
+
+.profile{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    padding:6px 11px 6px 6px;
+
+    border-radius:18px;
+
+    background:var(--card);
+    border:1px solid var(--border);
+
+    backdrop-filter:blur(20px);
+}
+
+.avatar{
+    width:38px;
+    height:38px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffe600,
+            #ff8c00
+        );
+
+    color:#211600;
+
+    font-size:18px;
+
+    overflow:hidden;
+}
+
+.avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.profile-name{
+    font-size:9px;
+    font-weight:900;
+}
+
+/* ================= PAGES ================= */
+
+.page{
+    display:none;
+
+    animation:
+        pageIn
+        .25s
+        ease;
+}
+
+.page.active{
+    display:block;
+}
+
+@keyframes pageIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* ================= HOME ================= */
+
+.home{
+    min-height:72vh;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    text-align:center;
+}
+
+.home-title{
+    font-size:
+        clamp(
+            50px,
+            10vw,
+            100px
+        );
+
+    font-weight:1000;
+
+    letter-spacing:-7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            white,
+            #00e5ff 45%,
+            #ffe600 75%
+        );
+
+    -webkit-background-clip:text;
+    background-clip:text;
+
+    color:transparent;
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: filter:
+        drop-shadow(
+            0 0 25px
+            rgba(0,229,255,.15)
+        );
+}
+
+.home-subtitle{
+    margin-top:10px;
+
+    color:#69728a;
+
+    font-size:9px;
+
+    letter-spacing:4px;
+}
+
+.home-buttons{
+    width:min(380px,100%);
+
+    display:flex;
+    flex-direction:column;
+
+    gap:12px;
+
+    margin-top:45px;
+}
+
+.main-button{
+    width:100%;
+    height:60px;
+
+    border:0;
+    border-radius:18px;
+
+    cursor:pointer;
+
+    font-size:11px;
+    font-weight:1000;
+
+    transition:.2s;
+}
+
+.main-button:hover{
+    transform:translateY(-3px);
+}
+
+.main-button:active{
+    transform:scale(.97);
+}
+
+.play{
+    color:#171300;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff000,
+            #ff9000
+        );
+
+    box-shadow:
+        0 15px 45px
+        rgba(255,190,0,.15);
+}
+
+.dark-button{
+    color:white;
+
+    background:
+        rgba(255,255,255,.05);
+
+    border:
+        1px solid
+        var(--border);
+}
+
+/* ================= GAME ================= */
+
+.game-card{
+    max-width:700px;
+
+    margin:30px auto;
+
+    padding:30px;
+
+    text-align:center;
+
+    border-radius:30px;
+
+    background:var(--card);
+
+    border:
+        1px solid
+        var(--border);
+
+    backdrop-filter:blur(25px);
+
+    box-shadow:
+        0 30px 100px
+        rgba(0,0,0,.3);
+}
+
+.back{
+    display:inline-block;
+
+    padding:10px 15px;
+
+    border-radius:12px;
+
+    background:
+        rgba(255,255,255,.05);
+
+    border:
+        1px solid
+        var(--border);
+
+    color:#858da1;
+
+    cursor:pointer;
+
+    font-size:9px;
+    font-weight:900;
+}
+
+.balance-title{
+    margin-top:25px;
+
+    color:#69728a;
+
+    font-size:9px;
+
+    letter-spacing:3px;
+}
+
+.coins{
+    margin-top:8px;
+
+    color:var(--yellow);
+
+    font-size:52px;
+
+    font-weight:1000;
+
+    text-shadow:
+        0 0 30px
+        rgba(255,230,0,.18);
+}
+
+.coin{
+    width:230px;
+    height:230px;
+
+    margin:35px auto;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    border:
+        8px solid
+        rgba(255,255,255,.09);
+
+    cursor:pointer;
+    user-select:none;
+
+    font-size:85px;
+
+    background:
+        radial-gradient(
+            circle at 35% 25%,
+            #fffda4,
+            #ffd000 45%,
+            #ff7500
+        );
+
+    box-shadow:
+        0 0 60px
+        rgba(255,180,0,.25),
+
+        inset
+        0 -20px
+        30px
+        rgba(100,40,0,.18);
+
+    transition:.08s;
+}
+
+.coin:hover{
+    filter:brightness(1.08);
+}
+
+.coin:active{
+    transform:scale(.9);
+}
+
+.coin.pop{
+    animation:
+        pop
+        .13s
+        ease;
+}
+
+@keyframes pop{
+    50%{
+        transform:scale(1.08);
+    }
+}
+
+.game-info{
+    color:#69728a;
+
+    font-size:10px;
+
+    line-height:1.8;
+}
+
+.game-info b{
+    color:white;
+}
+
+/* ================= SHOP ================= */
+
+.page-title{
+    font-size:28px;
+    font-weight:1000;
+}
+
+.page-description{
+    margin-top:6px;
+
+    color:#69728a;
+
+    font-size:10px;
+}
+
+.shop-balance{
+    display:inline-block;
+
+    margin-top:18px;
+
+    padding:10px 16px;
+
+    border-radius:13px;
+
+    background:
+        rgba(255,230,0,.07);
+
+    border:
+        1px solid
+        rgba(255,230,0,.13);
+
+    color:var(--yellow);
+
+    font-size:11px;
+    font-weight:900;
+}
+
+.shop-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(230px,1fr)
+        );
+
+    gap:15px;
+
+    margin-top:25px;
+}
+
+.shop-item{
+    padding:20px;
+
+    border-radius:22px;
+
+    background:var(--card);
+
+    border:
+        1px solid
+        var(--border);
+
+    backdrop-filter:blur(20px);
+
+    transition:.2s;
+}
+
+.shop-item:hover{
+    transform:translateY(-4px);
+
+    border-color:
+        rgba(0,229,255,.25);
+}
+
+.shop-icon{
+    font-size:34px;
+}
+
+.shop-name{
+    margin-top:10px;
+
+    font-size:14px;
+    font-weight:1000;
+}
+
+.shop-description{
+    margin-top:6px;
+
+    color:#69728a;
+
+    font-size:9px;
+
+    line-height:1.5;
+}
+
+.shop-info{
+    margin-top:12px;
+
+    color:#00e5ff;
+
+    font-size:9px;
+    font-weight:900;
+}
+
+.price{
+    margin-top:6px;
+
+    color:#ffe600;
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: font-size:10px;
+    font-weight:900;
+}
+
+.buy{
+    width:100%;
+    height:45px;
+
+    margin-top:15px;
+
+    border:0;
+    border-radius:12px;
+
+    cursor:pointer;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffe600,
+            #ff9000
+        );
+
+    color:#181300;
+
+    font-size:10px;
+    font-weight:1000;
+
+    transition:.2s;
+}
+
+.buy:hover{
+    filter:brightness(1.08);
+}
+
+.buy:active{
+    transform:scale(.97);
+}
+
+.buy:disabled{
+    opacity:.35;
+
+    cursor:not-allowed;
+}
+
+/* ================= SETTINGS ================= */
+
+.settings-card{
+    max-width:650px;
+
+    margin-top:25px;
+
+    padding:22px;
+
+    border-radius:25px;
+
+    background:var(--card);
+
+    border:
+        1px solid
+        var(--border);
+
+    backdrop-filter:blur(20px);
+}
+
+.setting{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:20px;
+
+    padding:18px 0;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.06);
+}
+
+.setting:last-child{
+    border-bottom:0;
+}
+
+.setting-name{
+    font-size:12px;
+    font-weight:900;
+}
+
+.setting-description{
+    margin-top:4px;
+
+    color:#69728a;
+
+    font-size:9px;
+}
+
+.switch{
+    width:50px;
+    height:28px;
+
+    padding:3px;
+
+    border-radius:20px;
+
+    background:#202535;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.switch span{
+    display:block;
+
+    width:22px;
+    height:22px;
+
+    border-radius:50%;
+
+    background:#777e91;
+
+    transition:.2s;
+}
+
+.switch.active{
+    background:#00e5ff;
+}
+
+.switch.active span{
+    transform:translateX(22px);
+
+    background:white;
+}
+
+.upload{
+    display:block;
+
+    margin-top:18px;
+
+    padding:15px;
+
+    text-align:center;
+
+    border:
+        1px dashed
+        rgba(255,255,255,.2);
+
+    border-radius:15px;
+
+    color:#7a8296;
+
+    cursor:pointer;
+
+    font-size:10px;
+}
+
+.upload:hover{
+    color:white;
+
+    border-color:#00e5ff;
+}
+
+#avatarInput{
+    display:none;
+}
+
+.reset{
+    width:100%;
+    height:45px;
+
+    margin-top:18px;
+
+    border-radius:12px;
+
+    border:
+        1px solid
+        rgba(255,73,100,.25);
+
+    background:
+        rgba(255,73,100,.08);
+
+    color:#ff6078;
+
+    cursor:pointer;
+
+    font-size:10px;
+    font-weight:900;
+}
+
+/* ================= NAV ================= */
+
+.bottom-nav{
+    position:fixed;
+
+    left:50%;
+    bottom:16px;
+
+    transform:translateX(-50%);
+
+    width:min(
+        500px,
+        calc(100% - 25px)
+    );
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:5px;
+
+    padding:8px;
+
+    border-radius:22px;
+
+    background:
+        rgba(7,9,17,.85);
+
+    border:
+        1px solid
+        var(--border);
+
+    backdrop-filter:blur(25px);
+
+    box-shadow:
+        0 15px 50px
+        rgba(0,0,0,.45);
+
+    z-index:50;
+}
+
+.nav-button{
+    height:50px;
+
+    border:0;
+    border-radius:15px;
+
+    background:transparent;
+
+    color:#69728a;
+
+    cursor:pointer;
+
+    font-size:9px;
+    font-weight:900;
+
+    transition:.2s;
+}
+
+.nav-button.active{
+    color:white;
+
+    background:
+        rgba(255,255,255,.07);
+}
+
+.nav-icon{
+    display:block;
+
+    margin-bottom:3px;
+
+    font-size:18px;
+}
+
+/* ================= TOAST ================= */
+
+.toast{
+    position:fixed;
+
+    left:50%;
+    top:25px;
+
+    transform:
+        translate(-50%,-20px);
+
+    padding:13px 18px;
+
+    border-radius:14px;
+
+    background:
+        rgba(10,13,22,.94);
+
+    border:
+        1px solid
+        var(--border);
+
+    backdrop-filter:blur(20px);
+
+    color:white;
+
+    font-size:10px;
+    font-weight:900;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transition:.25s;
+
+    z-index:100;
+}
+
+.toast.show{
+    opacity:1;
+
+    transform:
+        translate(-50%,0);
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:600px){
+
+    .app{
+        padding:15px;
+        padding-bottom:105px;
+    }
+
+    .logo{
+        font-size:21px;
+    }
+
+    .home-title{
+        letter-spacing:-4px;
+    }
+
+    .coin{
+        width:185px;
+        height:185px;
+
+        font-size:68px;
+    }
+
+    .game-card{
+        padding:20px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: <!-- ================= ФОН ================= -->
+
+<div
+    id="background"
+    class="background"
+>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+
+<div class="app">
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="header">
+
+        <div class="logo">
+            Killua⚡Clicker
+        </div>
+
+        <div class="profile">
+
+            <div
+                class="avatar"
+                id="avatar"
+            >
+                ⚡
+            </div>
+
+            <div class="profile-name">
+                PLAYER
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ================= HOME ================= -->
+
+    <section
+        id="home"
+        class="page active"
+    >
+
+        <div class="home">
+
+            <div class="home-title">
+                Killua
+            </div>
+
+            <div class="home-subtitle">
+                CLICK • EARN • UPGRADE
+            </div>
+
+            <div class="home-buttons">
+
+                <button
+                    class="main-button play"
+                    onclick="openPage('game')"
+                >
+                    ⚡ ИГРАТЬ
+                </button>
+
+                <button
+                    class="main-button dark-button"
+                    onclick="openPage('shop')"
+                >
+                    🛒 МАГАЗИН
+                </button>
+
+                <button
+                    class="main-button dark-button"
+                    onclick="openPage('settings')"
+                >
+                    ⚙️ НАСТРОЙКИ
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= GAME ================= -->
+
+    <section
+        id="game"
+        class="page"
+    >
+
+        <div class="game-card">
+
+            <button
+                class="back"
+                onclick="openPage('home')"
+            >
+                ← НАЗАД
+            </button>
+
+            <div class="balance-title">
+                ТВОИ МОНЕТКИ
+            </div>
+
+            <div
+                id="coins"
+                class="coins"
+            >
+                0
+            </div>
+
+            <div
+                id="coin"
+                class="coin"
+                onclick="clickCoin()"
+            >
+                🪙
+            </div>
+
+            <div class="game-info">
+
+                За клик:
+                <b>
+                    +<span id="power">1</span>
+                </b>
+                🪙
+
+                <br>
+
+                Автокликер:
+                <b>
+                    <span id="auto">0</span>
+                </b>
+                🪙/сек
+
+                <br>
+
+                Всего заработано:
+                <b>
+                    <span id="total">0</span>
+                </b>
+                🪙
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= SHOP ================= -->
+
+    <section
+        id="shop"
+        class="page"
+    >
+
+        <h1 class="page-title">
+            🛒 Магазин
+        </h1>
+
+        <p class="page-description">
+            Покупай силу и становись богаче.
+        </p>
+
+        <div class="shop-balance">
+            🪙
+            <span id="shopCoins">
+                0
+            </span>
+        </div>
+
+
+        <div class="shop-grid">
+
+
+            <!-- +1 -->
+
+            <div class="shop-item">
+
+                <div class="shop-icon">
+                    ⚡
+                </div>
+
+                <div class="shop-name">
+                    +1 к клику
+                </div>
+
+                <div class="shop-description">
+                    Увеличивает силу одного
+                    клика на 1.
+                </div>
+
+                <div class="shop-info">
+                    Сила:
+                    +1
+                </div>
+
+                <div class="price">
+                    🪙 <span id="cost1">10</span>
+                </div>
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: <button
+                    id="buy1"
+                    class="buy"
+                    onclick="buyClickUpgrade(1)"
+                >
+                    КУПИТЬ
+                </button>
+
+            </div>
+
+
+            <!-- +10 -->
+
+            <div class="shop-item">
+
+                <div class="shop-icon">
+                    ⚡⚡
+                </div>
+
+                <div class="shop-name">
+                    +10 к клику
+                </div>
+
+                <div class="shop-description">
+                    Мощное улучшение,
+                    +10 силы клика.
+                </div>
+
+                <div class="shop-info">
+                    Сила:
+                    +10
+                </div>
+
+                <div class="price">
+                    🪙 <span id="cost10">100</span>
+                </div>
+
+                <button
+                    id="buy10"
+                    class="buy"
+                    onclick="buyClickUpgrade(10)"
+                >
+                    КУПИТЬ
+                </button>
+
+            </div>
+
+
+            <!-- +1000 -->
+
+            <div class="shop-item">
+
+                <div class="shop-icon">
+                    🔥
+                </div>
+
+                <div class="shop-name">
+                    +1000 к клику
+                </div>
+
+                <div class="shop-description">
+                    Огромное усиление.
+                    +1000 силы клика.
+                </div>
+
+                <div class="shop-info">
+                    Сила:
+                    +1 000
+                </div>
+
+                <div class="price">
+                    🪙 <span id="cost1000">10 000</span>
+                </div>
+
+                <button
+                    id="buy1000"
+                    class="buy"
+                    onclick="buyClickUpgrade(1000)"
+                >
+                    КУПИТЬ
+                </button>
+
+            </div>
+
+
+            <!-- +1 MILLION -->
+
+            <div class="shop-item">
+
+                <div class="shop-icon">
+                    💎
+                </div>
+
+                <div class="shop-name">
+                    +1 000 000 к клику
+                </div>
+
+                <div class="shop-description">
+                    Легендарное улучшение.
+                    +1 000 000 силы клика.
+                </div>
+
+                <div class="shop-info">
+                    Сила:
+                    +1 000 000
+                </div>
+
+                <div class="price">
+                    🪙 <span id="costMillion">10 000 000</span>
+                </div>
+
+                <button
+                    id="buyMillion"
+                    class="buy"
+                    onclick="buyClickUpgrade(1000000)"
+                >
+                    КУПИТЬ
+                </button>
+
+            </div>
+
+
+            <!-- AUTO CLICKER -->
+
+            <div class="shop-item">
+
+                <div class="shop-icon">
+                    🤖
+                </div>
+
+                <div class="shop-name">
+                    Автокликер
+                </div>
+
+                <div class="shop-description">
+                    Автоматически приносит
+                    монетки каждую секунду.
+                </div>
+
+                <div class="shop-info">
+                    Сейчас:
+                    <span id="autoLevel">
+                        0
+                    </span>
+                    🪙/сек
+                </div>
+
+                <div class="price">
+                    🪙 <span id="autoCost">100</span>
+                </div>
+
+                <button
+                    id="buyAuto"
+                    class="buy"
+                    onclick="buyAuto()"
+                >
+                    УЛУЧШИТЬ
+                </button>
+
+            </div>
+
+
+            <!-- AUTO x10 -->
+
+            <div class="shop-item">
+
+                <div class="shop-icon">
+                    🚀
+                </div>
+
+                <div class="shop-name">
+                    Супер-автокликер
+                </div>
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: <div class="shop-description">
+                    Добавляет сразу
+                    +10 монет в секунду.
+                </div>
+
+                <div class="shop-info">
+                    Бонус:
+                    +10 🪙/сек
+                </div>
+
+                <div class="price">
+                    🪙 <span id="auto10Cost">5 000</span>
+                </div>
+
+                <button
+                    id="buyAuto10"
+                    class="buy"
+                    onclick="buyAuto10()"
+                >
+                    УЛУЧШИТЬ
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= SETTINGS ================= -->
+
+    <section
+        id="settings"
+        class="page"
+    >
+
+        <h1 class="page-title">
+            ⚙️ Настройки
+        </h1>
+
+        <p class="page-description">
+            Настрой внешний вид игры.
+        </p>
+
+
+        <div class="settings-card">
+
+            <div class="setting">
+
+                <div>
+
+                    <div class="setting-name">
+                        Анимации
+                    </div>
+
+                    <div class="setting-description">
+                        Включить красивые эффекты.
+                    </div>
+
+                </div>
+
+                <div
+                    id="animationSwitch"
+                    class="switch active"
+                    onclick="toggleAnimation()"
+                >
+                    <span></span>
+                </div>
+
+            </div>
+
+
+            <div class="setting">
+
+                <div>
+
+                    <div class="setting-name">
+                        Неоновый фон
+                    </div>
+
+                    <div class="setting-description">
+                        Включить движущиеся свечения.
+                    </div>
+
+                </div>
+
+                <div
+                    id="backgroundSwitch"
+                    class="switch active"
+                    onclick="toggleBackground()"
+                >
+                    <span></span>
+                </div>
+
+            </div>
+
+
+            <label
+                class="upload"
+                for="avatarInput"
+            >
+                📷 ЗАГРУЗИТЬ СВОЮ АВАТАРКУ
+            </label>
+
+            <input
+                id="avatarInput"
+                type="file"
+                accept="image/*"
+                onchange="changeAvatar(event)"
+            >
+
+
+            <button
+                class="reset"
+                onclick="resetGame()"
+            >
+                🗑 СБРОСИТЬ ВЕСЬ ПРОГРЕСС
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- ================= NAV ================= -->
+
+<nav class="bottom-nav">
+
+    <button
+        id="navHome"
+        class="nav-button active"
+        onclick="openPage('home')"
+    >
+        <span class="nav-icon">
+            🏠
+        </span>
+
+        ГЛАВНАЯ
+    </button>
+
+
+    <button
+        id="navShop"
+        class="nav-button"
+        onclick="openPage('shop')"
+    >
+        <span class="nav-icon">
+            🛒
+        </span>
+
+        МАГАЗИН
+    </button>
+
+
+    <button
+        id="navSettings"
+        class="nav-button"
+        onclick="openPage('settings')"
+    >
+        <span class="nav-icon">
+            ⚙️
+        </span>
+
+        НАСТРОЙКИ
+    </button>
+
+</nav>
+
+
+<script>
+
+/* ==========================================
+   ДАННЫЕ
+========================================== */
+
+const defaultData = {
+
+    coins: 0,
+
+    totalCoins: 0,
+
+    power: 1,
+
+    auto: 0,
+
+    cost1: 10,
+
+    cost10: 100,
+
+    cost1000: 10000,
+
+    costMillion: 10000000,
+
+    autoCost: 100,
+
+    auto10Cost: 5000,
+
+    animation: true,
+
+    background: true,
+
+    avatar: ""
+
+};
+
+
+/* ==========================================
+   ЗАГРУЗКА СОХРАНЕНИЯ
+========================================== */
+
+let data =
+    JSON.parse(
+        localStorage.getItem(
+            "KilluaClickerSave"
+        )
+    );
+
+
+/*
+    Если старого сохранения нет —
+    создаём новое.
+*/
+
+if(!data){
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: data =
+        JSON.parse(
+            JSON.stringify(
+                defaultData
+            )
+        );
+
+}
+
+
+/*
+    Добавляем отсутствующие значения,
+    если структура сохранения изменилась.
+*/
+
+data = {
+    ...defaultData,
+    ...data
+};
+
+
+/* ==========================================
+   СОХРАНЕНИЕ
+========================================== */
+
+function save(){
+
+    localStorage.setItem(
+        "KilluaClickerSave",
+        JSON.stringify(data)
+    );
+
+}
+
+
+/* ==========================================
+   ФОРМАТ ЧИСЕЛ
+========================================== */
+
+function number(n){
+
+    return Math.floor(n)
+        .toLocaleString("ru-RU");
+
+}
+
+
+/* ==========================================
+   ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
+========================================== */
+
+function update(){
+
+    /* Монетки */
+
+    document
+        .getElementById("coins")
+        .textContent =
+            number(data.coins);
+
+
+    document
+        .getElementById("shopCoins")
+        .textContent =
+            number(data.coins);
+
+
+    /* Сила */
+
+    document
+        .getElementById("power")
+        .textContent =
+            number(data.power);
+
+
+    /* Автоклик */
+
+    document
+        .getElementById("auto")
+        .textContent =
+            number(data.auto);
+
+
+    document
+        .getElementById("autoLevel")
+        .textContent =
+            number(data.auto);
+
+
+    /* Всего */
+
+    document
+        .getElementById("total")
+        .textContent =
+            number(data.totalCoins);
+
+
+    /* Цены */
+
+    document
+        .getElementById("cost1")
+        .textContent =
+            number(data.cost1);
+
+
+    document
+        .getElementById("cost10")
+        .textContent =
+            number(data.cost10);
+
+
+    document
+        .getElementById("cost1000")
+        .textContent =
+            number(data.cost1000);
+
+
+    document
+        .getElementById("costMillion")
+        .textContent =
+            number(data.costMillion);
+
+
+    document
+        .getElementById("autoCost")
+        .textContent =
+            number(data.autoCost);
+
+
+    document
+        .getElementById("auto10Cost")
+        .textContent =
+            number(data.auto10Cost);
+
+
+    /* Кнопки */
+
+    document
+        .getElementById("buy1")
+        .disabled =
+            data.coins < data.cost1;
+
+
+    document
+        .getElementById("buy10")
+        .disabled =
+            data.coins < data.cost10;
+
+
+    document
+        .getElementById("buy1000")
+        .disabled =
+            data.coins < data.cost1000;
+
+
+    document
+        .getElementById("buyMillion")
+        .disabled =
+            data.coins < data.costMillion;
+
+
+    document
+        .getElementById("buyAuto")
+        .disabled =
+            data.coins < data.autoCost;
+
+
+    document
+        .getElementById("buyAuto10")
+        .disabled =
+            data.coins < data.auto10Cost;
+
+
+    /* Аватар */
+
+    if(data.avatar){
+
+        document
+            .getElementById("avatar")
+            .innerHTML =
+                <img src="${data.avatar}" alt="avatar">;
+
+    }
+
+
+    /* Переключатели */
+
+    document
+        .getElementById("animationSwitch")
+        .classList.toggle(
+            "active",
+            data.animation
+        );
+
+
+    document
+        .getElementById("backgroundSwitch")
+        .classList.toggle(
+            "active",
+            data.background
+        );
+
+
+    /* Фон */
+
+    document
+        .getElementById("background")
+        .style.display =
+            data.background
+            ? "block"
+            : "none";
+
+
+    /* Анимации */
+
+    document
+        .querySelectorAll(
+            ".orb"
+        )
+        .forEach(
+            orb => {
+
+                orb.style.animationPlayState =
+                    data.animation
+                    ? "running"
+                    : "paused";
+
+            }
+        );
+
+
+    save();
+
+}
+
+
+/* ==========================================
+   ПЕРЕХОД МЕЖДУ СТРАНИЦАМИ
+========================================== */
+
+function openPage(page){
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: document
+        .querySelectorAll(".page")
+        .forEach(
+            p =>
+                p.classList.remove(
+                    "active"
+                )
+        );
+
+
+    document
+        .querySelectorAll(".nav-button")
+        .forEach(
+            button =>
+                button.classList.remove(
+                    "active"
+                )
+        );
+
+
+    document
+        .getElementById(page)
+        .classList.add(
+            "active"
+        );
+
+
+    if(page === "home"){
+
+        document
+            .getElementById("navHome")
+            .classList.add(
+                "active"
+            );
+
+    }
+
+
+    if(page === "shop"){
+
+        document
+            .getElementById("navShop")
+            .classList.add(
+                "active"
+            );
+
+    }
+
+
+    if(page === "settings"){
+
+        document
+            .getElementById("navSettings")
+            .classList.add(
+                "active"
+            );
+
+    }
+
+}
+
+
+/* ==========================================
+   КЛИК ПО МОНЕТЕ
+========================================== */
+
+function clickCoin(){
+
+    data.coins +=
+        data.power;
+
+    data.totalCoins +=
+        data.power;
+
+
+    const coin =
+        document.getElementById(
+            "coin"
+        );
+
+
+    if(data.animation){
+
+        coin.classList.remove(
+            "pop"
+        );
+
+        void coin.offsetWidth;
+
+        coin.classList.add(
+            "pop"
+        );
+
+    }
+
+
+    update();
+
+}
+
+
+/* ==========================================
+   ПОКУПКА СИЛЫ КЛИКА
+========================================== */
+
+function buyClickUpgrade(amount){
+
+    let cost;
+
+
+    if(amount === 1){
+
+        cost =
+            data.cost1;
+
+    }
+
+
+    if(amount === 10){
+
+        cost =
+            data.cost10;
+
+    }
+
+
+    if(amount === 1000){
+
+        cost =
+            data.cost1000;
+
+    }
+
+
+    if(amount === 1000000){
+
+        cost =
+            data.costMillion;
+
+    }
+
+
+    if(data.coins < cost){
+
+        toast(
+            "❌ Недостаточно монет!"
+        );
+
+        return;
+
+    }
+
+
+    data.coins -=
+        cost;
+
+
+    data.power +=
+        amount;
+
+
+    /*
+        После покупки цена
+        немного увеличивается.
+    */
+
+    if(amount === 1){
+
+        data.cost1 =
+            Math.ceil(
+                data.cost1 * 1.45
+            );
+
+    }
+
+
+    if(amount === 10){
+
+        data.cost10 =
+            Math.ceil(
+                data.cost10 * 1.55
+            );
+
+    }
+
+
+    if(amount === 1000){
+
+        data.cost1000 =
+            Math.ceil(
+                data.cost1000 * 1.7
+            );
+
+    }
+
+
+    if(amount === 1000000){
+
+        data.costMillion =
+            Math.ceil(
+                data.costMillion * 2
+            );
+
+    }
+
+
+    toast(
+        "⚡ Сила клика +" +
+        number(amount)
+    );
+
+
+    update();
+
+}
+
+
+/* ==========================================
+   АВТОКЛИКЕР +1
+========================================== */
+
+function buyAuto(){
+
+    if(
+        data.coins <
+        data.autoCost
+    ){
+
+        toast(
+            "❌ Недостаточно монет!"
+        );
+
+        return;
+
+    }
+
+
+    data.coins -=
+        data.autoCost;
+
+
+    data.auto +=
+        1;
+
+
+    data.autoCost =
+        Math.ceil(
+            data.autoCost * 1.6
+        );
+
+
+    toast(
+        "🤖 Автокликер улучшен!"
+    );
+
+
+    update();
+
+}
+
+
+/* ==========================================
+   АВТОКЛИКЕР +10
+========================================== */
+
+function buyAuto10(){
+
+    if(
+        data.coins <
+        data.auto10Cost
+    ){
+
+        toast(
+            "❌ Недостаточно монет!"
+        );
+
+        return;
+
+    }
+
+
+    data.coins -=
+        data.auto10Cost;
+
+
+    data.auto +=
+        10;
+
+
+    data.auto10Cost =
+        Math.ceil(
+            data.auto10Cost * 1.8
+        );
+
+
+    toast(
+        "🚀 Автокликер +10!"
+    );
+
+
+    update();
+
+}
+
+
+/* ==========================================
+   АВТОКЛИКЕР
+   РАБОТАЕТ КАЖДУЮ СЕКУНДУ
+========================================== */
+
+setInterval(
+    function(){
+
+        if(data.auto > 0){
+
+            data.coins +=
+                data.auto;
+[04.10.2026 15:23] Ｒｉｃｈ ᴋɪʟʟᴜᴀ 💍: data.totalCoins +=
+                data.auto;
+
+
+            update();
+
+        }
+
+    },
+    1000
+);
+
+
+/* ==========================================
+   АВАТАРКА
+========================================== */
+
+function changeAvatar(event){
+
+    const file =
+        event.target.files[0];
+
+
+    if(!file){
+
+        return;
+
+    }
+
+
+    if(
+        !file.type.startsWith(
+            "image/"
+        )
+    ){
+
+        toast(
+            "❌ Выбери изображение!"
+        );
+
+        return;
+
+    }
+
+
+    /*
+        Максимальный размер:
+        3 MB
+    */
+
+    if(
+        file.size >
+        3 * 1024 * 1024
+    ){
+
+        toast(
+            "❌ Максимальный размер — 3 МБ!"
+        );
+
+        return;
+
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(e){
+
+            data.avatar =
+                e.target.result;
+
+
+            update();
+
+
+            toast(
+                "📷 Аватарка установлена!"
+            );
+
+        };
+
+
+    reader.readAsDataURL(
+        file
+    );
+
+}
+
+
+/* ==========================================
+   АНИМАЦИИ
+========================================== */
+
+function toggleAnimation(){
+
+    data.animation =
+        !data.animation;
+
+    update();
+
+}
+
+
+/* ==========================================
+   ФОН
+========================================== */
+
+function toggleBackground(){
+
+    data.background =
+        !data.background;
+
+    update();
+
+}
+
+
+/* ==========================================
+   СБРОС
+========================================== */
+
+function resetGame(){
+
+    const answer =
+        confirm(
+            "Точно удалить весь прогресс?"
+        );
+
+
+    if(!answer){
+
+        return;
+
+    }
+
+
+    data =
+        JSON.parse(
+            JSON.stringify(
+                defaultData
+            )
+        );
+
+
+    update();
+
+
+    toast(
+        "🗑 Прогресс сброшен!"
+    );
+
+}
+
+
+/* ==========================================
+   УВЕДОМЛЕНИЕ
+========================================== */
+
+let toastTimer;
+
+
+function toast(message){
+
+    const element =
+        document.getElementById(
+            "toast"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(
+            function(){
+
+                element.classList.remove(
+                    "show"
+                );
+
+            },
+            1800
+        );
+
+}
+
+
+/* ==========================================
+   ЗАПУСК
+========================================== */
+
+update();
+
+</script>
+
+</body>
+</html>
