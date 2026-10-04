@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Игра — Killua Clicker</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+
+    <div class="logo">
+        ⚡ KILLUA CLICKER
+    </div>
+
+    <div class="balance">
+        🪙 <span id="headerCoins">0</span>
+    </div>
+
+</header>
+
+<main class="card game center">
+
+    <h1>⚡ КЛИКЕР</h1>
+
+    <div class="coins">
+        🪙 <span id="coins">0</span>
+    </div>
+
+    <!-- ГЛАВНАЯ КНОПКА -->
+
+    <button
+        class="coin"
+        onclick="clickCoin(event)">
+
+        🪙
+
+    </button>
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <span>
+                ⚡ СИЛА КЛИКА
+            </span>
+
+            <b id="power">
+                1
+            </b>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>
+                🤖 АВТОКЛИКЕР
+            </span>
+
+            <b id="auto">
+                0
+            </b>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>
+                👆 КЛИКОВ
+            </span>
+
+            <b id="clicks">
+                0
+            </b>
+
+        </div>
+
+    </div>
+
+</main>
+
+</div>
+
+
+<nav class="nav">
+
+    <a href="index.html">
+        🏠<br>
+        Меню
+    </a>
+
+    <a href="game.html">
+        ⚡<br>
+        Игра
+    </a>
+
+    <a href="shop.html">
+        🛒<br>
+        Магазин
+    </a>
+
+    <a href="profile.html">
+        👤<br>
+        Профиль
+    </a>
+
+    <a href="settings.html">
+        ⚙️<br>
+        Настройки
+    </a>
+
+</nav>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
