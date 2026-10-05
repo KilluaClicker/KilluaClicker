@@ -1,42 +1,84 @@
+"use strict";
+
+
+const usernameEl =
+    document.getElementById("username");
+
+const clicksEl =
+    document.getElementById("clicks");
+
+const miniClicksEl =
+    document.getElementById("miniClicks");
+
+const rankEl =
+    document.getElementById("rank");
+
+const clickButton =
+    document.getElementById("clickButton");
+
+const logoutBtn =
+    document.getElementById("logoutBtn");
+
+const adminLink =
+    document.getElementById("adminLink");
+
+const toastEl =
+    document.getElementById("toast");
+
+
 let currentUser = null;
 let clicking = false;
-
-const usernameEl = document.getElementById("username");
-const clicksEl = document.getElementById("clicks");
-const miniClicksEl = document.getElementById("miniClicks");
-const rankEl = document.getElementById("rank");
-const clickButton = document.getElementById("clickButton");
-const logoutBtn = document.getElementById("logoutBtn");
-const adminLink = document.getElementById("adminLink");
-const toast = document.getElementById("toast");
+let toastTimer = null;
 
 
-function formatClicks(value) {
+function formatNumber(value) {
+
     try {
+
         return BigInt(value).toLocaleString("ru-RU");
+
     } catch {
+
         return String(value);
+
     }
-}
 
-
-function showToast(message) {
-    toast.textContent = message;
-    toast.classList.add("show");
-
-    clearTimeout(window.toastTimer);
-
-    window.toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2200);
 }
 
 
 function updateClicks(value) {
-    const formatted = formatClicks(value);
 
-    clicksEl.textContent = formatted;
-    miniClicksEl.textContent = formatted;
+    const formatted =
+        formatNumber(value);
+
+    clicksEl.textContent =
+        formatted;
+
+    miniClicksEl.textContent =
+        formatted;
+
+}
+
+
+function showToast(message) {
+
+    if (!toastEl) {
+        return;
+    }
+
+    toastEl.textContent =
+        message;
+
+    toastEl.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+
+        toastEl.classList.remove("show");
+
+    }, 2200);
+
 }
 
 
@@ -44,26 +86,61 @@ async function loadUser() {
 
     try {
 
-        const response = await fetch("/api/me", {
-            credentials: "include"
-        });
+        const response =
+            await fetch("/api/me", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store"
+            });
 
-        const data = await response.json();
+
+        if (!response.ok) {
+
+            usernameEl.textContent =
+                "Не авторизован";
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
 
         if (!data.success || !data.user) {
-            window.location.href = "/";
+
+            usernameEl.textContent =
+                "Не авторизован";
+
             return;
+
         }
 
-        currentUser = data.user;
 
-        usernameEl.textContent = currentUser.username;
+        currentUser =
+            data.user;
 
-        updateClicks(currentUser.clicks);
 
-        if (currentUser.username === "Killua666") {
-            adminLink.style.display = "flex";
+        usernameEl.textContent =
+            currentUser.username;
+
+
+        updateClicks(
+            currentUser.clicks
+        );
+
+
+        if (
+            currentUser.username ===
+            "Killua666"
+        ) {
+
+            adminLink.style.display =
+                "flex";
+
         }
+
 
         await loadRank();
 
@@ -71,43 +148,70 @@ async function loadUser() {
 
         console.error(error);
 
-        showToast("Ошибка соединения с сервером");
+        usernameEl.textContent =
+            "Ошибка соединения";
 
     }
+
 }
 
 
 async function loadRank() {
 
+    if (!currentUser) {
+        return;
+    }
+
+
     try {
 
-        const response = await fetch("/api/top", {
-            credentials: "include"
-        });
+        const response =
+            await fetch("/api/top", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store"
+            });
+
 
         if (!response.ok) {
             return;
         }
 
-        const data = await response.json();
 
-        if (!data.success || !Array.isArray(data.users)) {
+        const data =
+            await response.json();
+
+
+        if (
+            !data.success ||
+            !Array.isArray(data.users)
+        ) {
+
             return;
+
         }
 
-        const index = data.users.findIndex(
-            user => user.username === currentUser.username
-        );
 
-        if (index !== -1) {
-            rankEl.textContent = "#" + (index + 1);
-        } else {
-            rankEl.textContent = "—";
-        }
+        const index =
+            data.users.findIndex(
+                user =>
+                    user.username ===
+                    currentUser.username
+            );
+
+
+        rankEl.textContent =
+            index >= 0
+                ? "#" + (index + 1)
+                : "—";
+
 
     } catch (error) {
+
         console.error(error);
+
     }
+
 }
 
 
@@ -117,89 +221,203 @@ async function makeClick() {
         return;
     }
 
+
     clicking = true;
+
+
+    clickButton.classList.add(
+        "pressed"
+    );
+
 
     try {
 
-        const response = await fetch("/api/click", {
-            method: "POST",
-            credentials: "include"
-        });
+        const response =
+            await fetch("/api/click", {
+                method: "POST",
 
-        const data = await response.json();
+                credentials: "include",
 
-        if (!response.ok || !data.success) {
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
 
-            if (response.status === 401) {
-                window.location.href = "/";
-                return;
-            }
+                cache: "no-store",
+
+                body: JSON.stringify({})
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            showToast(
+                "Сессия закончилась. Войдите снова."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
 
             throw new Error(
-                data.message || "Ошибка клика"
+                data.message ||
+                "Ошибка клика"
             );
+
         }
 
-        if (data.clicks !== undefined) {
-            updateClicks(data.clicks);
-            currentUser.clicks = data.clicks;
+
+        if (
+            data.clicks !== undefined
+        ) {
+
+            currentUser.clicks =
+                data.clicks;
+
+            updateClicks(
+                data.clicks
+            );
+
         }
 
-        loadRank();
 
     } catch (error) {
 
         console.error(error);
 
         showToast(
-            error.message || "Не удалось сделать клик"
+            error.message ||
+            "Ошибка клика"
         );
 
     } finally {
 
         setTimeout(() => {
+
+            clickButton.classList.remove(
+                "pressed"
+            );
+
             clicking = false;
+
         }, 40);
 
     }
+
 }
 
 
-clickButton.addEventListener("click", makeClick);
+clickButton.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        makeClick();
+
+    }
+);
 
 
-document.addEventListener("keydown", event => {
+document.addEventListener(
+    "submit",
+    function(event) {
 
-    if (
-        event.code === "Space" &&
-        document.activeElement.tagName !== "INPUT" &&
-        document.activeElement.tagName !== "TEXTAREA"
-    ) {
+        event.preventDefault();
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.code !== "Space"
+        ) {
+            return;
+        }
+
+
+        const active =
+            document.activeElement;
+
+
+        if (
+            active &&
+            (
+                active.tagName === "INPUT" ||
+                active.tagName === "TEXTAREA"
+            )
+        ) {
+
+            return;
+
+        }
+
 
         event.preventDefault();
 
         makeClick();
+
     }
+);
 
-});
+
+logoutBtn.addEventListener(
+    "click",
+    async function(event) {
+
+        event.preventDefault();
+        event.stopPropagation();
 
 
-logoutBtn.addEventListener("click", async () => {
+        logoutBtn.disabled = true;
 
-    try {
+        logoutBtn.textContent =
+            "Выход...";
 
-        await fetch("/api/logout", {
-            method: "POST",
-            credentials: "include"
-        });
 
-    } catch (error) {
-        console.error(error);
+        try {
+
+            await fetch(
+                "/api/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+
+        /*
+         * Здесь переход происходит только
+         * после нажатия пользователем "Выйти".
+         */
+
+        window.location.href = "/";
+
     }
-
-    window.location.href = "/";
-
-});
+);
 
 
 loadUser();
