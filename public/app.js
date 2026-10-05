@@ -1,3 +1,4 @@
+```js
 const $ = (id) =>
     document.getElementById(id);
 
@@ -70,6 +71,8 @@ async function api(
             {
                 ...options,
 
+                credentials: "include",
+
                 headers: {
                     "Content-Type":
                         "application/json",
@@ -141,6 +144,7 @@ loginTab.addEventListener(
 
     }
 );
+
 
 registerTab.addEventListener(
     "click",
@@ -334,20 +338,12 @@ registerButton.addEventListener(
 
 
 // ============================================
-// CLICK
+// CLICK — БЫСТРЫЕ КЛИКИ
 // ============================================
-
-let clickBusy = false;
 
 clickButton.addEventListener(
     "click",
     async (event) => {
-
-        if (clickBusy) {
-            return;
-        }
-
-        clickBusy = true;
 
         try {
 
@@ -376,11 +372,10 @@ clickButton.addEventListener(
 
         } catch (error) {
 
-            console.error(error);
-
-        } finally {
-
-            clickBusy = false;
+            console.error(
+                "Ошибка клика:",
+                error
+            );
 
         }
 
@@ -512,7 +507,10 @@ async function loadLeaderboard() {
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Ошибка загрузки лидерборда:",
+            error
+        );
 
     }
 
@@ -527,12 +525,23 @@ logoutButton.addEventListener(
     "click",
     async () => {
 
-        await api(
-            "/api/logout",
-            {
-                method: "POST"
-            }
-        );
+        try {
+
+            await api(
+                "/api/logout",
+                {
+                    method: "POST"
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Ошибка выхода:",
+                error
+            );
+
+        }
 
         location.reload();
 
@@ -547,11 +556,26 @@ logoutButton.addEventListener(
 function escapeHtml(value) {
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
@@ -587,6 +611,7 @@ async function loadUser() {
 
 }
 
+
 loadUser();
 
 
@@ -611,3 +636,4 @@ document.addEventListener(
 
     }
 );
+```
