@@ -1439,3 +1439,345 @@ footer {
     }
 
 }
+/* =========================
+   CLANS + SHOP
+========================= */
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  transition: .2s;
+}
+
+.nav-button:hover,
+.nav-button.active {
+  background: rgba(145,70,255,.25);
+  border-color: rgba(170,100,255,.6);
+  transform: translateY(-1px);
+}
+
+.clans-page {
+  width: min(1100px, calc(100% - 30px));
+  margin: 35px auto 80px;
+}
+
+.clan-hero {
+  padding: 35px;
+  margin-bottom: 22px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(140,70,255,.25), transparent 35%),
+    rgba(20,15,35,.85);
+  border: 1px solid rgba(170,100,255,.2);
+  box-shadow: 0 20px 70px rgba(0,0,0,.3);
+}
+
+.small-title {
+  color: #a875ff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.clan-hero h1 {
+  margin: 8px 0;
+  font-size: 42px;
+}
+
+.clan-hero p {
+  margin: 0;
+  color: #a7a1b5;
+}
+
+.panel {
+  margin-bottom: 22px;
+  padding: 25px;
+  border-radius: 20px;
+  background: rgba(20,16,30,.8);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.clan-create-form {
+  display: grid;
+  grid-template-columns: 1fr 180px 180px;
+  gap: 12px;
+}
+
+.clan-create-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  outline: none;
+  background: rgba(0,0,0,.25);
+  color: white;
+}
+
+.clan-create-form button,
+.join-clan-button,
+.shop-buy {
+  border: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 13px 18px;
+  color: white;
+  font-weight: 700;
+  background: linear-gradient(135deg, #7b35e8, #a64dff);
+  transition: .2s;
+}
+
+.clan-create-form button:hover,
+.join-clan-button:hover,
+.shop-buy:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.clan-row {
+  display: grid;
+  grid-template-columns: 70px 55px 1fr 100px 160px 120px;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.clan-row:last-child {
+  border-bottom: 0;
+}
+
+.clan-place {
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.clan-icon {
+  font-size: 30px;
+}
+
+.clan-name {
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.clan-tag-small {
+  margin-left: 6px;
+  color: #a875ff;
+  font-size: 12px;
+}
+
+.clan-owner {
+  margin-top: 5px;
+  color: #777080;
+  font-size: 12px;
+}
+
+.clan-members-count,
+.clan-total-clicks {
+  color: #b8b1c4;
+  text-align: center;
+}
+
+.clan-total-clicks {
+  color: #c58cff;
+  font-weight: 800;
+}
+
+.join-clan-button {
+  padding: 9px 12px;
+}
+
+.my-clan-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: rgba(130,60,255,.08);
+  border: 1px solid rgba(150,90,255,.15);
+}
+
+.clan-big-icon {
+  font-size: 45px;
+}
+
+.my-clan-info {
+  flex: 1;
+}
+
+.clan-tag {
+  color: #a875ff;
+  font-weight: 800;
+}
+
+.my-clan-info h3 {
+  margin: 4px 0;
+  font-size: 25px;
+}
+
+.my-clan-info p {
+  margin: 0;
+  color: #85808e;
+}
+
+.danger-button {
+  border: 1px solid rgba(255,70,100,.3);
+  background: rgba(255,50,80,.1);
+  color: #ff7088;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.member-row {
+  display: grid;
+  grid-template-columns: 60px 45px 1fr 160px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.member-rank {
+  color: #777080;
+}
+
+.member-avatar {
+  font-size: 22px;
+}
+
+.member-name {
+  font-weight: 700;
+}
+
+.member-clicks {
+  text-align: right;
+  color: #bd7cff;
+  font-weight: 700;
+}
+
+.members-title {
+  margin: 20px 0 10px;
+  font-weight: 800;
+}
+
+/* SHOP */
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.shop-card {
+  padding: 20px 12px;
+  text-align: center;
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+  transition: .2s;
+}
+
+.shop-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(160,90,255,.4);
+}
+
+.shop-icon {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.shop-name {
+  min-height: 40px;
+  font-weight: 800;
+}
+
+.shop-price {
+  margin: 10px 0;
+  color: #bd7cff;
+  font-size: 13px;
+}
+
+.shop-buy {
+  width: 100%;
+}
+
+#shopMessage,
+#clanMessage {
+  margin-top: 15px;
+  color: #bd8aff;
+  font-weight: 700;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.loading {
+  padding: 30px;
+  text-align: center;
+  color: #777080;
+}
+
+@media (max-width: 900px) {
+
+  .shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .clan-row {
+    grid-template-columns: 50px 45px 1fr 80px;
+  }
+
+  .clan-total-clicks,
+  .join-clan-button {
+    display: none;
+  }
+
+  .clan-create-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .clan-hero h1 {
+    font-size: 32px;
+  }
+
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-clan-card {
+    flex-wrap: wrap;
+  }
+
+  .member-row {
+    grid-template-columns: 40px 35px 1fr;
+  }
+
+  .member-clicks {
+    display: none;
+  }
+}

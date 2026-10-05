@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>KilluaClicker — Кланы</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="page">
+
+  <header class="topbar">
+    <div class="logo">
+      ⚡ KilluaClicker
+    </div>
+
+    <div class="nav-buttons">
+      <a href="/" class="nav-button">⚡ Кликер</a>
+      <a href="/clans.html" class="nav-button active">🏰 Кланы</a>
+    </div>
+  </header>
+
+  <main class="clans-page">
+
+    <section class="clan-hero">
+      <div>
+        <div class="small-title">KILLUACLICKER</div>
+        <h1>🏰 Кланы</h1>
+        <p>Создавай кланы, собирай игроков и поднимайся в мировом топе.</p>
+      </div>
+    </section>
+
+    <section id="myClanSection" class="panel hidden">
+      <h2>👑 Мой клан</h2>
+
+      <div id="myClan"></div>
+    </section>
+
+    <section id="createClanSection" class="panel">
+      <h2>⚔️ Создать клан</h2>
+
+      <div class="clan-create-form">
+
+        <input
+          id="clanName"
+          type="text"
+          maxlength="32"
+          placeholder="Название клана"
+        >
+
+        <input
+          id="clanTag"
+          type="text"
+          maxlength="8"
+          placeholder="TAG"
+        >
+
+        <button id="createClanButton">
+          🏰 Создать клан
+        </button>
+
+      </div>
+
+      <div id="clanMessage"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title-row">
+        <div>
+          <h2>🏆 Топ кланов</h2>
+          <p>Рейтинг по общему количеству кликов участников.</p>
+        </div>
+      </div>
+
+      <div id="clanLeaderboard">
+        <div class="loading">Загрузка кланов...</div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<script src="clans.js"></script>
+
+</body>
+</html>

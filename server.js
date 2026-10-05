@@ -17,20 +17,12 @@ const pool = new Pool({
   }
 });
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Killua666";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Kotkova2015";
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// =========================
-// SESSION
-// =========================
 
 app.use(
   session({
     store: new pgSession({
-      pool: pool,
+      pool,
       tableName: "user_sessions",
       createTableIfMissing: true
     }),
@@ -40,15 +32,11 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax"
     }
   })
 );
-
-// =========================
-// STATIC
-// =========================
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -68,22 +56,40 @@ async function initDatabase() {
     )
   `);
 
-  const adminCheck = await pool.query(
-    "SELECT id FROM users WHERE LOWER(username) = LOWER($1)",
-    [ADMIN_USERNAME]
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clans (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(32) UNIQUE NOT NULL,
+      tag VARCHAR(8) UNIQUE NOT NULL,
+      owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clan_members (
+      id SERIAL PRIMARY KEY,
+      clan_id INTEGER NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  const adminPassword = await bcrypt.hash(
+    process.env.ADMIN_PASSWORD || "Kotkova2015",
+    10
   );
 
-  if (adminCheck.rows.length === 0) {
-    const hash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+  await pool.query(
+    `
+    INSERT INTO users (username, password)
+    VALUES ($1, $2)
+    ON CONFLICT (username) DO NOTHING
+    `,
+    [process.env.ADMIN_USERNAME || "Killua666", adminPassword]
+  );
 
-    await pool.query(
-      `INSERT INTO users (username, password, clicks, banned)
-       VALUES ($1, $2, 0, false)`,
-      [ADMIN_USERNAME, hash]
-    );
-
-    console.log("Администратор создан:", ADMIN_USERNAME);
-  }
+  console.log("Database initialized");
 }
 
 // =========================
@@ -94,51 +100,44 @@ function requireAuth(req, res, next) {
   if (!req.session.userId) {
     return res.status(401).json({
       success: false,
-      message: "Вы не авторизованы"
+      error: "Необходимо войти в аккаунт"
     });
   }
 
   next();
 }
 
-async function getUserById(id) {
+async function getUser(userId) {
   const result = await pool.query(
-    `SELECT id, username, clicks, banned, created_at
-     FROM users
-     WHERE id = $1`,
-    [id]
+    `
+    SELECT id, username, clicks, banned, created_at
+    FROM users
+    WHERE id = $1
+    `,
+    [userId]
   );
 
   return result.rows[0];
 }
 
 async function requireAdmin(req, res, next) {
-  try {
-    if (!req.session.userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Не авторизован"
-      });
-    }
-
-    const user = await getUserById(req.session.userId);
-
-    if (!user || user.username !== ADMIN_USERNAME) {
-      return res.status(403).json({
-        success: false,
-        message: "Доступ только для администратора"
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error("ADMIN AUTH ERROR:", error);
-
-    res.status(500).json({
+  if (!req.session.userId) {
+    return res.status(401).json({
       success: false,
-      message: "Ошибка проверки администратора"
+      error: "Не авторизован"
     });
   }
+
+  const user = await getUser(req.session.userId);
+
+  if (!user || user.username !== (process.env.ADMIN_USERNAME || "Killua666")) {
+    return res.status(403).json({
+      success: false,
+      error: "Нет доступа"
+    });
+  }
+
+  next();
 }
 
 // =========================
@@ -155,11 +154,9 @@ app.get("/api/health", async (req, res) => {
       database: "connected"
     });
   } catch (error) {
-    console.error("HEALTH ERROR:", error);
-
     res.status(500).json({
       success: false,
-      message: "База данных недоступна"
+      error: "Database error"
     });
   }
 });
@@ -170,99 +167,77 @@ app.get("/api/health", async (req, res) => {
 
 app.post("/api/register", async (req, res) => {
   try {
-    console.log("REGISTER REQUEST:", req.body);
-
-    const username = String(req.body?.username || "").trim();
-    const password = String(req.body?.password || "");
+    const { username, password } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: "Введите логин и пароль"
+        error: "Заполни все поля"
       });
     }
 
-    if (username.length < 3 || username.length > 32) {
+    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
       return res.status(400).json({
         success: false,
-        message: "Логин должен быть от 3 до 32 символов"
+        error: "Логин: 3-32 символа, только буквы, цифры и _"
       });
     }
 
     if (password.length < 4) {
       return res.status(400).json({
         success: false,
-        message: "Пароль должен быть минимум 4 символа"
+        error: "Пароль должен быть минимум 4 символа"
       });
     }
 
-    // Проверяем существование пользователя
-    const exists = await pool.query(
-      `SELECT id
-       FROM users
-       WHERE LOWER(username) = LOWER($1)`,
+    const existing = await pool.query(
+      "SELECT id FROM users WHERE LOWER(username) = LOWER($1)",
       [username]
     );
 
-    if (exists.rows.length > 0) {
+    if (existing.rows.length) {
       return res.status(400).json({
         success: false,
-        message: "Такой пользователь уже существует"
+        error: "Такой пользователь уже существует"
       });
     }
 
-    // Хешируем пароль
-    const hash = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Создаём пользователя
     const result = await pool.query(
-      `INSERT INTO users (username, password, clicks, banned)
-       VALUES ($1, $2, 0, false)
-       RETURNING id, username, clicks, banned, created_at`,
-      [username, hash]
+      `
+      INSERT INTO users (username, password)
+      VALUES ($1, $2)
+      RETURNING id, username, clicks, banned
+      `,
+      [username, hashedPassword]
     );
 
     const user = result.rows[0];
 
-    console.log("USER CREATED:", user.username);
-
-    // Создаём авторизацию
     req.session.userId = user.id;
 
-    // ВАЖНО:
-    // Явно сохраняем сессию перед отправкой ответа.
-    await new Promise((resolve, reject) => {
-      req.session.save((error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
+    req.session.save((err) => {
+      if (err) {
+        console.error(err);
+
+        return res.status(500).json({
+          success: false,
+          error: "Ошибка сохранения сессии"
+        });
+      }
+
+      res.json({
+        success: true,
+        user
       });
     });
-
-    console.log("SESSION SAVED FOR:", user.username);
-
-    return res.json({
-      success: true,
-      user
-    });
-
   } catch (error) {
-    console.error("REGISTER ERROR:");
-    console.error(error);
+    console.error("REGISTER ERROR:", error);
 
-    // Если пользователь уже существует
-    if (error.code === "23505") {
-      return res.status(400).json({
-        success: false,
-        message: "Такой пользователь уже существует"
-      });
-    }
-
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: "Ошибка регистрации: " + (error.message || "неизвестная ошибка")
+      error: "Ошибка сервера"
     });
   }
 });
@@ -273,74 +248,66 @@ app.post("/api/register", async (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   try {
-    const username = String(req.body?.username || "").trim();
-    const password = String(req.body?.password || "");
-
-    if (!username || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Введите логин и пароль"
-      });
-    }
+    const { username, password } = req.body;
 
     const result = await pool.query(
-      `SELECT *
-       FROM users
-       WHERE LOWER(username) = LOWER($1)`,
+      "SELECT * FROM users WHERE LOWER(username) = LOWER($1)",
       [username]
     );
 
-    const user = result.rows[0];
-
-    if (!user) {
+    if (!result.rows.length) {
       return res.status(401).json({
         success: false,
-        message: "Неверный логин или пароль"
+        error: "Неверный логин или пароль"
       });
     }
 
-    if (user.banned) {
-      return res.status(403).json({
-        success: false,
-        message: "Ваш аккаунт заблокирован"
-      });
-    }
+    const user = result.rows[0];
 
     const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
       return res.status(401).json({
         success: false,
-        message: "Неверный логин или пароль"
+        error: "Неверный логин или пароль"
+      });
+    }
+
+    if (user.banned) {
+      return res.status(403).json({
+        success: false,
+        error: "Ваш аккаунт заблокирован"
       });
     }
 
     req.session.userId = user.id;
 
-    await new Promise((resolve, reject) => {
-      req.session.save((error) => {
-        if (error) reject(error);
-        else resolve();
+    req.session.save((err) => {
+      if (err) {
+        console.error(err);
+
+        return res.status(500).json({
+          success: false,
+          error: "Ошибка сессии"
+        });
+      }
+
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          clicks: user.clicks,
+          banned: user.banned
+        }
       });
     });
-
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        clicks: user.clicks,
-        banned: user.banned,
-        created_at: user.created_at
-      }
-    });
-
   } catch (error) {
     console.error("LOGIN ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message: "Ошибка входа: " + (error.message || "неизвестная ошибка")
+      error: "Ошибка сервера"
     });
   }
 });
@@ -350,18 +317,7 @@ app.post("/api/login", async (req, res) => {
 // =========================
 
 app.post("/api/logout", (req, res) => {
-  req.session.destroy((error) => {
-    if (error) {
-      console.error("LOGOUT ERROR:", error);
-
-      return res.status(500).json({
-        success: false,
-        message: "Ошибка выхода"
-      });
-    }
-
-    res.clearCookie("connect.sid");
-
+  req.session.destroy(() => {
     res.json({
       success: true
     });
@@ -369,17 +325,17 @@ app.post("/api/logout", (req, res) => {
 });
 
 // =========================
-// CURRENT USER
+// ME
 // =========================
 
 app.get("/api/me", requireAuth, async (req, res) => {
   try {
-    const user = await getUserById(req.session.userId);
+    const user = await getUser(req.session.userId);
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        message: "Пользователь не найден"
+        error: "Пользователь не найден"
       });
     }
 
@@ -387,13 +343,10 @@ app.get("/api/me", requireAuth, async (req, res) => {
       success: true,
       user
     });
-
   } catch (error) {
-    console.error("ME ERROR:", error);
-
     res.status(500).json({
       success: false,
-      message: "Ошибка получения профиля"
+      error: "Ошибка сервера"
     });
   }
 });
@@ -405,69 +358,512 @@ app.get("/api/me", requireAuth, async (req, res) => {
 app.post("/api/click", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `UPDATE users
-       SET clicks = clicks + 1
-       WHERE id = $1
-       RETURNING id, username, clicks, banned, created_at`,
+      `
+      UPDATE users
+      SET clicks = clicks + 1
+      WHERE id = $1 AND banned = FALSE
+      RETURNING clicks
+      `,
       [req.session.userId]
     );
 
-    const user = result.rows[0];
-
-    if (!user) {
-      return res.status(404).json({
+    if (!result.rows.length) {
+      return res.status(403).json({
         success: false,
-        message: "Пользователь не найден"
+        error: "Аккаунт заблокирован"
       });
     }
 
     res.json({
       success: true,
-      clicks: user.clicks,
-      user
+      clicks: result.rows[0].clicks
     });
-
   } catch (error) {
-    console.error("CLICK ERROR:", error);
+    console.error(error);
 
     res.status(500).json({
       success: false,
-      message: "Ошибка клика"
+      error: "Ошибка клика"
     });
   }
 });
 
 // =========================
-// TOP
+// TOP PLAYERS
 // =========================
 
 app.get("/api/top", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, username, clicks
+      SELECT username, clicks
       FROM users
-      WHERE banned = false
+      WHERE banned = FALSE
       ORDER BY clicks DESC
+      LIMIT 100
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка загрузки топа"
+    });
+  }
+});
+
+// ======================================================
+// STORE
+// ======================================================
+
+const STORE_ITEMS = [
+  {
+    id: "1",
+    name: "1 клик",
+    amount: "1",
+    price: "0"
+  },
+  {
+    id: "10",
+    name: "10 кликов",
+    amount: "10",
+    price: "5"
+  },
+  {
+    id: "100",
+    name: "100 кликов",
+    amount: "100",
+    price: "40"
+  },
+  {
+    id: "1000",
+    name: "1 000 кликов",
+    amount: "1000",
+    price: "350"
+  },
+  {
+    id: "million",
+    name: "1 миллион",
+    amount: "1000000",
+    price: "300000"
+  },
+  {
+    id: "billion",
+    name: "1 миллиард",
+    amount: "1000000000",
+    price: "300000000"
+  },
+  {
+    id: "trillion",
+    name: "1 триллион",
+    amount: "1000000000000",
+    price: "300000000000"
+  },
+  {
+    id: "quadrillion",
+    name: "1 квадриллион",
+    amount: "1000000000000000",
+    price: "300000000000000"
+  },
+  {
+    id: "quintillion",
+    name: "1 квинтиллион",
+    amount: "1000000000000000000",
+    price: "300000000000000000"
+  },
+  {
+    id: "sextillion",
+    name: "1 секстиллион",
+    amount: "1000000000000000000000",
+    price: "300000000000000000000"
+  }
+];
+
+app.get("/api/shop", requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    items: STORE_ITEMS
+  });
+});
+
+app.post("/api/shop/buy", requireAuth, async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { itemId } = req.body;
+
+    const item = STORE_ITEMS.find((x) => x.id === itemId);
+
+    if (!item) {
+      return res.status(400).json({
+        success: false,
+        error: "Товар не найден"
+      });
+    }
+
+    const price = BigInt(item.price);
+    const amount = BigInt(item.amount);
+
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `
+      SELECT clicks
+      FROM users
+      WHERE id = $1
+      FOR UPDATE
+      `,
+      [req.session.userId]
+    );
+
+    if (!result.rows.length) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        success: false,
+        error: "Пользователь не найден"
+      });
+    }
+
+    const currentClicks = BigInt(result.rows[0].clicks);
+
+    if (currentClicks < price) {
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        success: false,
+        error: "Недостаточно кликов"
+      });
+    }
+
+    const newClicks = currentClicks - price + amount;
+
+    await client.query(
+      `
+      UPDATE users
+      SET clicks = $1
+      WHERE id = $2
+      `,
+      [newClicks.toString(), req.session.userId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      clicks: newClicks.toString(),
+      message: `Получено ${item.name}`
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    console.error("SHOP ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Ошибка покупки"
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// ======================================================
+// CLANS
+// ======================================================
+
+// Получить клан игрока
+app.get("/api/clans/my", requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.name,
+        c.tag,
+        c.owner_id,
+        c.created_at,
+        u.username AS owner_username
+      FROM clan_members cm
+      JOIN clans c ON c.id = cm.clan_id
+      JOIN users u ON u.id = c.owner_id
+      WHERE cm.user_id = $1
+      `,
+      [req.session.userId]
+    );
+
+    if (!result.rows.length) {
+      return res.json({
+        success: true,
+        clan: null
+      });
+    }
+
+    const clan = result.rows[0];
+
+    const members = await pool.query(
+      `
+      SELECT
+        u.id,
+        u.username,
+        u.clicks
+      FROM clan_members cm
+      JOIN users u ON u.id = cm.user_id
+      WHERE cm.clan_id = $1
+      ORDER BY u.clicks DESC
+      `,
+      [clan.id]
+    );
+
+    res.json({
+      success: true,
+      clan,
+      members: members.rows
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      error: "Ошибка загрузки клана"
+    });
+  }
+});
+
+// Создать клан
+app.post("/api/clans/create", requireAuth, async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    let { name, tag } = req.body;
+
+    name = String(name || "").trim();
+    tag = String(tag || "").trim().toUpperCase();
+
+    if (name.length < 3 || name.length > 32) {
+      return res.status(400).json({
+        success: false,
+        error: "Название клана: 3-32 символа"
+      });
+    }
+
+    if (!/^[a-zA-Z0-9а-яА-Я_ ]+$/.test(name)) {
+      return res.status(400).json({
+        success: false,
+        error: "Недопустимые символы в названии"
+      });
+    }
+
+    if (!/^[A-Z0-9]{2,8}$/.test(tag)) {
+      return res.status(400).json({
+        success: false,
+        error: "Тег: 2-8 букв или цифр"
+      });
+    }
+
+    const already = await client.query(
+      `
+      SELECT clan_id
+      FROM clan_members
+      WHERE user_id = $1
+      `,
+      [req.session.userId]
+    );
+
+    if (already.rows.length) {
+      return res.status(400).json({
+        success: false,
+        error: "Ты уже состоишь в клане"
+      });
+    }
+
+    await client.query("BEGIN");
+
+    const clan = await client.query(
+      `
+      INSERT INTO clans (name, tag, owner_id)
+      VALUES ($1, $2, $3)
+      RETURNING *
+      `,
+      [name, tag, req.session.userId]
+    );
+
+    await client.query(
+      `
+      INSERT INTO clan_members (clan_id, user_id)
+      VALUES ($1, $2)
+      `,
+      [clan.rows[0].id, req.session.userId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      clan: clan.rows[0]
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    if (error.code === "23505") {
+      return res.status(400).json({
+        success: false,
+        error: "Такое название или тег уже заняты"
+      });
+    }
+
+    console.error("CREATE CLAN ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Ошибка создания клана"
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Все кланы
+app.get("/api/clans", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        c.id,
+        c.name,
+        c.tag,
+        c.owner_id,
+        u.username AS owner_username,
+        COUNT(cm.user_id)::INTEGER AS members,
+        COALESCE(SUM(u2.clicks), 0)::TEXT AS clicks
+      FROM clans c
+      JOIN users u ON u.id = c.owner_id
+      LEFT JOIN clan_members cm ON cm.clan_id = c.id
+      LEFT JOIN users u2 ON u2.id = cm.user_id
+      GROUP BY c.id, u.username
+      ORDER BY COALESCE(SUM(u2.clicks), 0) DESC
       LIMIT 100
     `);
 
     res.json({
       success: true,
-      users: result.rows
+      clans: result.rows
     });
-
   } catch (error) {
-    console.error("TOP ERROR:", error);
+    console.error(error);
 
     res.status(500).json({
       success: false,
-      message: "Ошибка загрузки топа"
+      error: "Ошибка загрузки кланов"
+    });
+  }
+});
+
+// Вступить
+app.post("/api/clans/:id/join", requireAuth, async (req, res) => {
+  try {
+    const clanId = Number(req.params.id);
+
+    if (!Number.isInteger(clanId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Неверный клан"
+      });
+    }
+
+    const already = await pool.query(
+      `
+      SELECT clan_id
+      FROM clan_members
+      WHERE user_id = $1
+      `,
+      [req.session.userId]
+    );
+
+    if (already.rows.length) {
+      return res.status(400).json({
+        success: false,
+        error: "Ты уже состоишь в клане"
+      });
+    }
+
+    const clan = await pool.query(
+      "SELECT id FROM clans WHERE id = $1",
+      [clanId]
+    );
+
+    if (!clan.rows.length) {
+      return res.status(404).json({
+        success: false,
+        error: "Клан не найден"
+      });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO clan_members (clan_id, user_id)
+      VALUES ($1, $2)
+      `,
+      [clanId, req.session.userId]
+    );
+
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка вступления"
+    });
+  }
+});
+
+// Выйти
+app.post("/api/clans/leave", requireAuth, async (req, res) => {
+  try {
+    const membership = await pool.query(
+      `
+      SELECT cm.clan_id, c.owner_id
+      FROM clan_members cm
+      JOIN clans c ON c.id = cm.clan_id
+      WHERE cm.user_id = $1
+      `,
+      [req.session.userId]
+    );
+
+    if (!membership.rows.length) {
+      return res.status(400).json({
+        success: false,
+        error: "Ты не состоишь в клане"
+      });
+    }
+
+    if (membership.rows[0].owner_id === req.session.userId) {
+      return res.status(400).json({
+        success: false,
+        error: "Создатель не может выйти из клана. Передай клан или удали его."
+      });
+    }
+
+    await pool.query(
+      `
+      DELETE FROM clan_members
+      WHERE user_id = $1
+      `,
+      [req.session.userId]
+    );
+
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка выхода из клана"
     });
   }
 });
 
 // =========================
-// ADMIN USERS
+// ADMIN
 // =========================
 
 app.get("/api/admin/users", requireAdmin, async (req, res) => {
@@ -475,311 +871,142 @@ app.get("/api/admin/users", requireAdmin, async (req, res) => {
     const result = await pool.query(`
       SELECT id, username, clicks, banned, created_at
       FROM users
-      ORDER BY id ASC
+      ORDER BY clicks DESC
     `);
 
     res.json({
       success: true,
       users: result.rows
     });
-
   } catch (error) {
-    console.error("ADMIN USERS ERROR:", error);
-
     res.status(500).json({
       success: false,
-      message: "Ошибка загрузки пользователей"
+      error: "Ошибка"
+    });
+  }
+});
+
+app.post("/api/admin/user/:id/clicks", requireAdmin, async (req, res) => {
+  try {
+    const clicks = String(req.body.clicks || "0");
+
+    await pool.query(
+      `
+      UPDATE users
+      SET clicks = $1
+      WHERE id = $2
+      `,
+      [clicks, req.params.id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка"
+    });
+  }
+});
+
+app.post("/api/admin/user/:id/add-clicks", requireAdmin, async (req, res) => {
+  try {
+    const amount = String(req.body.amount || "0");
+
+    await pool.query(
+      `
+      UPDATE users
+      SET clicks = clicks + $1
+      WHERE id = $2
+      `,
+      [amount, req.params.id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка"
+    });
+  }
+});
+
+app.post("/api/admin/user/:id/ban", requireAdmin, async (req, res) => {
+  try {
+    await pool.query(
+      `
+      UPDATE users
+      SET banned = NOT banned
+      WHERE id = $1
+      `,
+      [req.params.id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка"
+    });
+  }
+});
+
+app.post("/api/admin/user/:id/username", requireAdmin, async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+
+    await pool.query(
+      `
+      UPDATE users
+      SET username = $1
+      WHERE id = $2
+      `,
+      [username, req.params.id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка"
+    });
+  }
+});
+
+app.delete("/api/admin/user/:id", requireAdmin, async (req, res) => {
+  try {
+    if (Number(req.params.id) === req.session.userId) {
+      return res.status(400).json({
+        success: false,
+        error: "Нельзя удалить самого себя"
+      });
+    }
+
+    await pool.query(
+      "DELETE FROM users WHERE id = $1",
+      [req.params.id]
+    );
+
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Ошибка"
     });
   }
 });
 
 // =========================
-// ADMIN SET CLICKS
-// =========================
-
-app.post(
-  "/api/admin/user/:id/clicks",
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const clicks = Number(req.body?.clicks);
-
-      if (!Number.isFinite(id) || !Number.isFinite(clicks)) {
-        return res.status(400).json({
-          success: false,
-          message: "Неверные данные"
-        });
-      }
-
-      const result = await pool.query(
-        `UPDATE users
-         SET clicks = $1
-         WHERE id = $2
-         RETURNING id, username, clicks, banned, created_at`,
-        [Math.floor(Math.max(0, clicks)), id]
-      );
-
-      if (!result.rows[0]) {
-        return res.status(404).json({
-          success: false,
-          message: "Пользователь не найден"
-        });
-      }
-
-      res.json({
-        success: true,
-        user: result.rows[0]
-      });
-
-    } catch (error) {
-      console.error("SET CLICKS ERROR:", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Ошибка изменения кликов"
-      });
-    }
-  }
-);
-
-// =========================
-// ADMIN ADD CLICKS
-// =========================
-
-app.post(
-  "/api/admin/user/:id/add-clicks",
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const amount = Number(req.body?.amount);
-
-      if (!Number.isFinite(id) || !Number.isFinite(amount)) {
-        return res.status(400).json({
-          success: false,
-          message: "Неверные данные"
-        });
-      }
-
-      const result = await pool.query(
-        `UPDATE users
-         SET clicks = GREATEST(0, clicks + $1)
-         WHERE id = $2
-         RETURNING id, username, clicks, banned, created_at`,
-        [Math.floor(amount), id]
-      );
-
-      if (!result.rows[0]) {
-        return res.status(404).json({
-          success: false,
-          message: "Пользователь не найден"
-        });
-      }
-
-      res.json({
-        success: true,
-        user: result.rows[0]
-      });
-
-    } catch (error) {
-      console.error("ADD CLICKS ERROR:", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Ошибка добавления кликов"
-      });
-    }
-  }
-);
-
-// =========================
-// ADMIN BAN
-// =========================
-
-app.post(
-  "/api/admin/user/:id/ban",
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const banned = Boolean(req.body?.banned);
-
-      const target = await getUserById(id);
-
-      if (!target) {
-        return res.status(404).json({
-          success: false,
-          message: "Пользователь не найден"
-        });
-      }
-
-      if (target.username === ADMIN_USERNAME) {
-        return res.status(400).json({
-          success: false,
-          message: "Администратора нельзя заблокировать"
-        });
-      }
-
-      const result = await pool.query(
-        `UPDATE users
-         SET banned = $1
-         WHERE id = $2
-         RETURNING id, username, clicks, banned, created_at`,
-        [banned, id]
-      );
-
-      res.json({
-        success: true,
-        user: result.rows[0]
-      });
-
-    } catch (error) {
-      console.error("BAN ERROR:", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Ошибка блокировки"
-      });
-    }
-  }
-);
-
-// =========================
-// ADMIN CHANGE USERNAME
-// =========================
-
-app.post(
-  "/api/admin/user/:id/username",
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const username = String(req.body?.username || "").trim();
-
-      const target = await getUserById(id);
-
-      if (!target) {
-        return res.status(404).json({
-          success: false,
-          message: "Пользователь не найден"
-        });
-      }
-
-      if (target.username === ADMIN_USERNAME) {
-        return res.status(400).json({
-          success: false,
-          message: "Логин администратора нельзя изменить"
-        });
-      }
-
-      if (username.length < 3 || username.length > 32) {
-        return res.status(400).json({
-          success: false,
-          message: "Логин должен быть от 3 до 32 символов"
-        });
-      }
-
-      const exists = await pool.query(
-        `SELECT id
-         FROM users
-         WHERE LOWER(username) = LOWER($1)
-         AND id != $2`,
-        [username, id]
-      );
-
-      if (exists.rows.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Этот логин уже занят"
-        });
-      }
-
-      const result = await pool.query(
-        `UPDATE users
-         SET username = $1
-         WHERE id = $2
-         RETURNING id, username, clicks, banned, created_at`,
-        [username, id]
-      );
-
-      res.json({
-        success: true,
-        user: result.rows[0]
-      });
-
-    } catch (error) {
-      console.error("USERNAME ERROR:", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Ошибка изменения логина"
-      });
-    }
-  }
-);
-
-// =========================
-// ADMIN DELETE
-// =========================
-
-app.delete(
-  "/api/admin/user/:id",
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-
-      const target = await getUserById(id);
-
-      if (!target) {
-        return res.status(404).json({
-          success: false,
-          message: "Пользователь не найден"
-        });
-      }
-
-      if (target.username === ADMIN_USERNAME) {
-        return res.status(400).json({
-          success: false,
-          message: "Администратора нельзя удалить"
-        });
-      }
-
-      await pool.query(
-        "DELETE FROM users WHERE id = $1",
-        [id]
-      );
-
-      res.json({
-        success: true
-      });
-
-    } catch (error) {
-      console.error("DELETE ERROR:", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Ошибка удаления"
-      });
-    }
-  }
-);
-
-// =========================
-// ERROR HANDLER
+// ERROR
 // =========================
 
 app.use((err, req, res, next) => {
-  console.error("SERVER ERROR:", err);
-
-  if (res.headersSent) {
-    return next(err);
-  }
+  console.error(err);
 
   res.status(500).json({
     success: false,
-    message: "Ошибка сервера"
+    error: "Внутренняя ошибка сервера"
   });
 });
 
@@ -787,35 +1014,13 @@ app.use((err, req, res, next) => {
 // START
 // =========================
 
-async function start() {
-  try {
-    console.log("Подключение к Supabase...");
-
-    await pool.query("SELECT 1");
-
-    console.log("Supabase PostgreSQL подключена.");
-
-    await initDatabase();
-
+initDatabase()
+  .then(() => {
     app.listen(PORT, () => {
-      console.log("");
-      console.log("====================================");
-      console.log("      KILLUACLICKER SERVER");
-      console.log("====================================");
-      console.log(`Server: http://localhost:${PORT}`);
-      console.log("Database: Supabase PostgreSQL");
-      console.log("====================================");
-      console.log("");
+      console.log(`KilluaClicker запущен на порту ${PORT}`);
     });
-
-  } catch (error) {
-    console.error("");
-    console.error("НЕ УДАЛОСЬ ЗАПУСТИТЬ СЕРВЕР");
-    console.error(error);
-    console.error("");
-
+  })
+  .catch((error) => {
+    console.error("DATABASE INIT ERROR:", error);
     process.exit(1);
-  }
-}
-
-start();
+  });
