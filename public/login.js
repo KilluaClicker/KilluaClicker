@@ -1,181 +1,249 @@
+```js
 document.addEventListener("DOMContentLoaded", () => {
-    const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
 
-    const showRegisterButton = document.getElementById("showRegister");
-    const hideRegisterButton = document.getElementById("hideRegister");
+    const loginForm =
+        document.getElementById("loginForm");
 
-    const registerBox = document.getElementById("registerBox");
+    const registerForm =
+        document.getElementById("registerForm");
 
-    if (showRegisterButton) {
-        showRegisterButton.addEventListener("click", () => {
-            registerBox.classList.add("show");
-            showMessage("");
-        });
+    const showRegister =
+        document.getElementById("showRegister");
+
+    const hideRegister =
+        document.getElementById("hideRegister");
+
+    const registerBox =
+        document.getElementById("registerBox");
+
+    const message =
+        document.getElementById("message");
+
+    // ==========================================
+    // MESSAGE
+    // ==========================================
+
+    function showMessage(text, success = false) {
+        message.textContent = text;
+
+        message.style.display = "block";
+
+        if (success) {
+            message.classList.add("success");
+        } else {
+            message.classList.remove("success");
+        }
     }
 
-    if (hideRegisterButton) {
-        hideRegisterButton.addEventListener("click", () => {
-            registerBox.classList.remove("show");
-            showMessage("");
-        });
-    }
+    // ==========================================
+    // SHOW REGISTER
+    // ==========================================
 
-    if (loginForm) {
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
+    showRegister.addEventListener("click", () => {
+        registerBox.style.display = "block";
+        showRegister.style.display = "none";
 
-            const username = document
-                .getElementById("loginUsername")
+        message.textContent = "";
+        message.style.display = "none";
+    });
+
+    // ==========================================
+    // HIDE REGISTER
+    // ==========================================
+
+    hideRegister.addEventListener("click", () => {
+        registerBox.style.display = "none";
+        showRegister.style.display = "block";
+
+        message.textContent = "";
+        message.style.display = "none";
+    });
+
+    // ==========================================
+    // LOGIN
+    // ==========================================
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const username =
+            document.getElementById("loginUsername")
                 .value
                 .trim();
 
-            const password = document
-                .getElementById("loginPassword")
+        const password =
+            document.getElementById("loginPassword")
                 .value;
 
-            if (!username || !password) {
-                showMessage("Заполни логин и пароль", true);
-                return;
-            }
+        if (!username || !password) {
+            showMessage(
+                "Введите логин и пароль."
+            );
 
-            const button = document.getElementById("loginButton");
+            return;
+        }
 
-            button.disabled = true;
-            button.textContent = "Вход...";
+        const button =
+            document.getElementById("loginButton");
 
-            try {
-                const response = await fetch("/api/login", {
+        button.disabled = true;
+        button.textContent = "Вход...";
+
+        try {
+            const response = await fetch(
+                "/api/login",
+                {
                     method: "POST",
-                    credentials: "include",
+
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
+
+                    credentials: "include",
+
                     body: JSON.stringify({
                         username,
                         password
                     })
-                });
-
-                const data = await response.json().catch(() => ({}));
-
-                if (!response.ok || !data.success) {
-                    showMessage(
-                        data.error || "Не удалось войти",
-                        true
-                    );
-
-                    return;
                 }
+            );
 
-                showMessage("Успешный вход!");
+            const data =
+                await response.json();
 
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 300);
-
-            } catch (error) {
-                console.error(error);
-
+            if (!response.ok || !data.success) {
                 showMessage(
-                    "Ошибка соединения с сервером",
-                    true
+                    data.message ||
+                    "Не удалось войти."
                 );
 
-            } finally {
                 button.disabled = false;
                 button.textContent = "Войти";
-            }
-        });
-    }
 
-    if (registerForm) {
-        registerForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-
-            const username = document
-                .getElementById("registerUsername")
-                .value
-                .trim();
-
-            const password = document
-                .getElementById("registerPassword")
-                .value;
-
-            if (!username || !password) {
-                showMessage("Заполни все поля", true);
                 return;
             }
 
-            const button = document.getElementById("registerButton");
+            showMessage(
+                "Вход выполнен! Переходим...",
+                true
+            );
+
+            // СРАЗУ В КЛИКЕР
+            window.location.replace("/");
+
+        } catch (error) {
+            console.error(error);
+
+            showMessage(
+                "Ошибка соединения с сервером."
+            );
+
+            button.disabled = false;
+            button.textContent = "Войти";
+        }
+    });
+
+    // ==========================================
+    // REGISTER
+    // ==========================================
+
+    registerForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+            const username =
+                document.getElementById(
+                    "registerUsername"
+                )
+                    .value
+                    .trim();
+
+            const password =
+                document.getElementById(
+                    "registerPassword"
+                )
+                    .value;
+
+            if (!username || !password) {
+                showMessage(
+                    "Введите логин и пароль."
+                );
+
+                return;
+            }
+
+            const button =
+                document.getElementById(
+                    "registerButton"
+                );
 
             button.disabled = true;
-            button.textContent = "Регистрация...";
+            button.textContent =
+                "Регистрация...";
 
             try {
-                const response = await fetch("/api/register", {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        username,
-                        password
-                    })
-                });
+                const response =
+                    await fetch(
+                        "/api/register",
+                        {
+                            method: "POST",
 
-                const data = await response.json().catch(() => ({}));
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
 
-                if (!response.ok || !data.success) {
-                    showMessage(
-                        data.error || "Не удалось зарегистрироваться",
-                        true
+                            credentials: "include",
+
+                            body: JSON.stringify({
+                                username,
+                                password
+                            })
+                        }
                     );
+
+                const data =
+                    await response.json();
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+                    showMessage(
+                        data.message ||
+                        "Не удалось зарегистрироваться."
+                    );
+
+                    button.disabled = false;
+                    button.textContent =
+                        "Зарегистрироваться";
 
                     return;
                 }
 
-                showMessage("Аккаунт создан!");
+                showMessage(
+                    "Аккаунт создан! Переходим...",
+                    true
+                );
 
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 300);
+                // СРАЗУ В КЛИКЕР
+                window.location.replace("/");
 
             } catch (error) {
                 console.error(error);
 
                 showMessage(
-                    "Ошибка соединения с сервером",
-                    true
+                    "Ошибка соединения с сервером."
                 );
 
-            } finally {
                 button.disabled = false;
-                button.textContent = "Зарегистрироваться";
+                button.textContent =
+                    "Зарегистрироваться";
             }
-        });
-    }
+        }
+    );
 });
-
-function showMessage(message, error = false) {
-    const element = document.getElementById("message");
-
-    if (!element) {
-        return;
-    }
-
-    element.textContent = message;
-
-    element.className = "auth-message";
-
-    if (error) {
-        element.classList.add("error");
-    }
-
-    if (!message) {
-        element.style.display = "none";
-    } else {
-        element.style.display = "block";
-    }
-}
+```

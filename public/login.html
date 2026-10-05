@@ -1,44 +1,54 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>KilluaClicker — Вход</title>
+
     <link rel="stylesheet" href="/style.css">
 </head>
 
-<body>
-
-<div class="auth-page">
+<body class="auth-page">
 
     <div class="auth-card">
 
         <div class="auth-logo">
-            K
+            Killua<span>Clicker</span>
         </div>
 
-        <h1>KilluaClicker</h1>
-        <p class="auth-subtitle">Войди в свой аккаунт</p>
+        <div class="auth-subtitle">
+            Кликер нового поколения
+        </div>
 
-        <div id="message" class="auth-message"></div>
+        <!-- ВХОД -->
 
         <form id="loginForm">
 
+            <h2>Вход</h2>
+
             <div class="auth-field">
-                <label for="loginUsername">Логин</label>
+                <label for="loginUsername">
+                    Логин
+                </label>
 
                 <input
                     id="loginUsername"
                     type="text"
                     placeholder="Введите логин"
                     autocomplete="username"
-                    maxlength="32"
                     required
                 >
             </div>
 
             <div class="auth-field">
-                <label for="loginPassword">Пароль</label>
+                <label for="loginPassword">
+                    Пароль
+                </label>
 
                 <input
                     id="loginPassword"
@@ -50,9 +60,9 @@
             </div>
 
             <button
+                class="auth-button"
                 id="loginButton"
                 type="submit"
-                class="auth-button"
             >
                 Войти
             </button>
@@ -60,38 +70,47 @@
         </form>
 
         <div class="auth-divider">
-            <span>или</span>
+            или
         </div>
 
         <button
+            class="auth-secondary-button"
             id="showRegister"
             type="button"
-            class="auth-secondary-button"
         >
             Создать аккаунт
         </button>
 
-        <div id="registerBox" class="register-box">
+        <!-- РЕГИСТРАЦИЯ -->
+
+        <div
+            id="registerBox"
+            class="register-box"
+            style="display: none;"
+        >
 
             <h2>Регистрация</h2>
 
             <form id="registerForm">
 
                 <div class="auth-field">
-                    <label for="registerUsername">Логин</label>
+                    <label for="registerUsername">
+                        Логин
+                    </label>
 
                     <input
                         id="registerUsername"
                         type="text"
                         placeholder="Придумайте логин"
                         autocomplete="username"
-                        maxlength="32"
                         required
                     >
                 </div>
 
                 <div class="auth-field">
-                    <label for="registerPassword">Пароль</label>
+                    <label for="registerPassword">
+                        Пароль
+                    </label>
 
                     <input
                         id="registerPassword"
@@ -103,9 +122,9 @@
                 </div>
 
                 <button
-                    type="submit"
-                    id="registerButton"
                     class="auth-button"
+                    id="registerButton"
+                    type="submit"
                 >
                     Зарегистрироваться
                 </button>
@@ -113,20 +132,24 @@
             </form>
 
             <button
+                class="auth-secondary-button"
                 id="hideRegister"
                 type="button"
-                class="auth-secondary-button"
             >
                 Назад ко входу
             </button>
 
         </div>
 
+        <div
+            id="message"
+            class="auth-message"
+        ></div>
+
     </div>
 
-</div>
-
-<script src="/login.js"></script>
+    <script src="/login.js"></script>
 
 </body>
 </html>
+```
