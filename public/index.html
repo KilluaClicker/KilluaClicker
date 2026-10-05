@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>KilluaClicker</title>
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="logo">
+    <div class="logo-light">⚡</div>
+    <span>KilluaClicker</span>
+  </div>
+
+  <nav class="nav-buttons">
+
+    <a
+      href="/"
+      class="nav-button active">
+      ⚡ Кликер
+    </a>
+
+    <a
+      href="/#shopSection"
+      class="nav-button">
+      🛒 Магазин
+    </a>
+
+    <a
+      href="/clans.html"
+      class="nav-button">
+      🏰 Кланы
+    </a>
+
+    <a
+      href="/admin.html"
+      id="adminLink"
+      class="nav-button hidden">
+      🛡️ Админка
+    </a>
+
+  </nav>
+
+</header>
+
+
+<main>
+
+  <!-- AUTH -->
+
+  <section id="authScreen" class="auth-screen">
+
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        ⚡
+      </div>
+
+      <h1>KilluaClicker</h1>
+
+      <p class="auth-subtitle">
+        Кликер нового поколения
+      </p>
+
+
+      <div class="auth-tabs">
+
+        <button
+          type="button"
+          id="loginTab"
+          class="auth-tab active">
+          Войти
+        </button>
+
+        <button
+          type="button"
+          id="registerTab"
+          class="auth-tab">
+          Регистрация
+        </button>
+
+      </div>
+
+
+      <!-- LOGIN -->
+
+      <div id="loginForm">
+
+        <input
+          id="loginUsername"
+          type="text"
+          placeholder="Логин"
+          maxlength="32">
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Пароль">
+
+        <button
+          type="button"
+          id="loginButton"
+          class="main-button">
+
+          ⚡ Войти
+
+        </button>
+
+      </div>
+
+
+      <!-- REGISTER -->
+
+      <div
+        id="registerForm"
+        class="hidden">
+
+        <input
+          id="registerUsername"
+          type="text"
+          placeholder="Придумай логин"
+          maxlength="32">
+
+        <input
+          id="registerPassword"
+          type="password"
+          placeholder="Придумай пароль">
+
+        <button
+          type="button"
+          id="registerButton"
+          class="main-button">
+
+          🚀 Создать аккаунт
+
+        </button>
+
+      </div>
+
+
+      <div
+        id="authMessage"
+        class="auth-message">
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- GAME -->
+
+  <section
+    id="gameScreen"
+    class="game-screen hidden">
+
+
+    <div class="player-card">
+
+      <div class="player-info">
+
+        <div class="player-avatar">
+          ⚡
+        </div>
+
+        <div>
+
+          <div class="player-label">
+            Игрок
+          </div>
+
+          <div
+            id="playerName"
+            class="player-name">
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        type="button"
+        id="logoutButton"
+        class="logout-button">
+        Выйти
+      </button>
+
+    </div>
+
+
+    <!-- SCORE -->
+
+    <div class="score-card">
+
+      <div class="score-label">
+        Твои клики
+      </div>
+
+      <div
+        id="score"
+        class="score">
+        0
+      </div>
+
+      <div class="score-description">
+        Нажимай и набирай больше
+      </div>
+
+    </div>
+
+
+    <!-- CLICK -->
+
+    <div class="click-area">
+
+      <button
+        type="button"
+        id="clickButton"
+        class="click-button">
+
+        <span class="click-icon">
+          ⚡
+        </span>
+
+        КЛИК
+
+      </button>
+
+    </div>
+
+
+    <!-- PROFILE -->
+
+    <div class="profile-card">
+
+      <div class="profile-title">
+        👤 Профиль
+      </div>
+
+      <div class="profile-stat">
+
+        <span>
+          Всего кликов
+        </span>
+
+        <strong id="profileClicks">
+          0
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- SHOP -->
+
+    <section
+      id="shopSection"
+      class="content-section">
+
+      <div class="section-header">
+
+        <div>
+
+          <div class="section-title">
+            🛒 Магазин
+          </div>
+
+          <div class="section-subtitle">
+            Покупай клики за клики
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="shopMessage"
+        class="shop-message">
+      </div>
+
+
+      <div
+        id="shopGrid"
+        class="shop-grid">
+
+        <div class="loading">
+          Загрузка магазина...
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- LEADERBOARD -->
+
+    <section class="content-section">
+
+      <div class="section-header">
+
+        <div>
+
+          <div class="section-title">
+            🏆 Топ игроков
+          </div>
+
+          <div class="section-subtitle">
+            Лучшие кликеры KilluaClicker
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="leaderboard"
+        class="leaderboard">
+
+        <div class="loading">
+          Загрузка игроков...
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CLANS -->
+
+    <section class="clan-promo">
+
+      <div class="clan-promo-icon">
+        🏰
+      </div>
+
+      <div class="clan-promo-content">
+
+        <h2>
+          Кланы
+        </h2>
+
+        <p>
+          Создавай клан, собирай игроков
+          и поднимайся в топе.
+        </p>
+
+      </div>
+
+      <a
+        href="/clans.html"
+        class="main-button">
+
+        Открыть кланы
+
+      </a>
+
+    </section>
+
+
+  </section>
+
+</main>
+
+
+<script src="/app.js"></script>
+
+</body>
+</html>
