@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>KilluaClicker — Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <style>
+
+        .admin-page {
+
+            width:
+                min(
+                    1300px,
+                    calc(100% - 40px)
+                );
+
+            margin: 35px auto;
+
+        }
+
+        .admin-title {
+
+            margin-bottom: 25px;
+
+        }
+
+        .admin-title h1 {
+
+            font-size: 34px;
+
+            letter-spacing: -1px;
+
+        }
+
+        .admin-title p {
+
+            margin-top: 5px;
+
+            color: #68687b;
+
+            font-size: 12px;
+
+        }
+
+        .stats {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3,1fr);
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+        }
+
+        .stat-card {
+
+            padding: 22px;
+
+            border-radius: 20px;
+
+        }
+
+        .stat-icon {
+
+            font-size: 25px;
+
+        }
+
+        .stat-label {
+
+            margin-top: 15px;
+
+            color: #66667a;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 1.5px;
+
+        }
+
+        .stat-value {
+
+            margin-top: 5px;
+
+            font-size: 30px;
+
+            font-weight: 900;
+
+        }
+
+        .users-card {
+
+            padding: 25px;
+
+            border-radius: 24px;
+
+        }
+
+        .users-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content:
+                space-between;
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+        }
+
+        .search {
+
+            width: 280px;
+
+            padding: 12px 14px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            border-radius: 12px;
+
+            outline: none;
+
+            color: white;
+
+            background:
+                rgba(0,0,0,.25);
+
+        }
+
+        .user-table {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 8px;
+
+        }
+
+        .user-row {
+
+            display: grid;
+
+            grid-template-columns:
+                40px
+                1.5fr
+                1fr
+                100px
+                260px;
+
+            gap: 12px;
+
+            align-items: center;
+
+            padding: 12px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.05);
+
+            border-radius: 13px;
+
+            background:
+                rgba(255,255,255,.025);
+
+        }
+
+        .user-row.header {
+
+            color: #66667a;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 1px;
+
+            background:
+                transparent;
+
+            border: 0;
+
+        }
+
+        .user-number {
+
+            color: #66667a;
+
+            font-size: 11px;
+
+        }
+
+        .user-name {
+
+            font-weight: 800;
+
+            font-size: 12px;
+
+        }
+
+        .user-clicks {
+
+            color: #a78bfa;
+
+            font-weight: 900;
+
+            font-size: 12px;
+
+        }
+
+        .banned {
+
+            color: #f87171;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+        }
+
+        .active {
+
+            color: #4ade80;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+        }
+
+        .actions {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 5px;
+
+        }
+
+        .action {
+
+            padding: 7px 9px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            border-radius: 8px;
+
+            color: #ddd;
+
+            background:
+                rgba(255,255,255,.04);
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+        }
+
+        .action:hover {
+
+            background:
+                rgba(139,92,246,.15);
+
+            border-color:
+                rgba(139,92,246,.35);
+
+        }
+
+        .action.danger:hover {
+
+            background:
+                rgba(239,68,68,.12);
+
+            border-color:
+                rgba(239,68,68,.3);
+
+        }
+
+        .admin-back {
+
+            display: inline-block;
+
+            margin-top: 20px;
+
+            color: #8f82db;
+
+            text-decoration: none;
+
+            font-size: 11px;
+
+        }
+
+        @media (max-width: 900px) {
+
+            .user-row {
+
+                grid-template-columns:
+                    35px
+                    1fr
+                    1fr;
+
+            }
+
+            .user-row > :nth-child(4),
+            .user-row > :nth-child(5) {
+
+                grid-column:
+                    2 / -1;
+
+            }
+
+            .user-row.header {
+
+                display: none;
+
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .stats {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .users-header {
+
+                align-items: stretch;
+
+                flex-direction: column;
+
+            }
+
+            .search {
+
+                width: 100%;
+
+            }
+
+            .admin-page {
+
+                width:
+                    calc(100% - 20px);
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="background">
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+</div>
+
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            ⚡
+        </div>
+
+        <div>
+
+            <div class="brand-name">
+                KilluaClicker
+            </div>
+
+            <div class="brand-status">
+                ADMIN PANEL
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="top-actions">
+
+        <a
+            href="/"
+            class="admin-link"
+        >
+            ← На сайт
+        </a>
+
+        <button
+            id="logoutButton"
+            class="logout-button"
+        >
+            Выйти
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="admin-page">
+
+    <div class="admin-title">
+
+        <h1>
+            ⚙ Панель администратора
+        </h1>
+
+        <p>
+            Управление игроками KilluaClicker
+        </p>
+
+    </div>
+
+
+    <section class="stats">
+
+        <div class="stat-card glass">
+
+            <div class="stat-icon">
+                👥
+            </div>
+
+            <div class="stat-label">
+                ВСЕГО ИГРОКОВ
+            </div>
+
+            <div
+                id="totalUsers"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card glass">
+
+            <div class="stat-icon">
+                ⚡
+            </div>
+
+            <div class="stat-label">
+                ВСЕГО КЛИКОВ
+            </div>
+
+            <div
+                id="totalClicks"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card glass">
+
+            <div class="stat-icon">
+                🚫
+            </div>
+
+            <div class="stat-label">
+                ЗАБЛОКИРОВАНО
+            </div>
+
+            <div
+                id="bannedUsers"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="users-card glass">
+
+        <div class="users-header">
+
+            <div>
+
+                <div class="section-tag">
+                    DATABASE
+                </div>
+
+                <h2>
+                    Игроки
+                </h2>
+
+            </div>
+
+            <input
+                id="search"
+                class="search"
+                placeholder="🔎 Поиск игрока..."
+            >
+
+        </div>
+
+
+        <div class="user-table">
+
+            <div class="user-row header">
+
+                <div>
+                    #
+                </div>
+
+                <div>
+                    ИГРОК
+                </div>
+
+                <div>
+                    КЛИКИ
+                </div>
+
+                <div>
+                    СТАТУС
+                </div>
+
+                <div>
+                    ДЕЙСТВИЯ
+                </div>
+
+            </div>
+
+            <div id="users">
+                Загрузка...
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <a
+        href="/"
+        class="admin-back"
+    >
+        ← Вернуться в KilluaClicker
+    </a>
+
+</main>
+
+
+<script src="admin.js"></script>
+
+</body>
+</html>

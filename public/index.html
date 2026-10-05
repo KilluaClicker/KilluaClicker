@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>KilluaClicker</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<!-- =====================================
+     AUTH
+===================================== -->
+
+<div
+    id="authScreen"
+    class="screen"
+>
+
+    <div class="auth-card">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                ⚡
+            </div>
+
+            <div>
+                <div class="logo-title">
+                    KilluaClicker
+                </div>
+
+                <div class="logo-subtitle">
+                    ULTIMATE CLICKER
+                </div>
+            </div>
+
+        </div>
+
+        <div class="auth-tabs">
+
+            <button
+                id="loginTab"
+                class="auth-tab active"
+            >
+                Вход
+            </button>
+
+            <button
+                id="registerTab"
+                class="auth-tab"
+            >
+                Регистрация
+            </button>
+
+        </div>
+
+        <div id="loginForm">
+
+            <input
+                id="loginUsername"
+                class="input"
+                placeholder="Никнейм"
+                maxlength="20"
+            >
+
+            <input
+                id="loginPassword"
+                class="input"
+                type="password"
+                placeholder="Пароль"
+            >
+
+            <button
+                id="loginButton"
+                class="primary-button"
+            >
+                <span>⚡</span>
+                Войти
+            </button>
+
+        </div>
+
+        <div
+            id="registerForm"
+            class="hidden"
+        >
+
+            <input
+                id="registerUsername"
+                class="input"
+                placeholder="Придумай ник"
+                maxlength="20"
+            >
+
+            <input
+                id="registerPassword"
+                class="input"
+                type="password"
+                placeholder="Придумай пароль"
+            >
+
+            <button
+                id="registerButton"
+                class="primary-button"
+            >
+                <span>🚀</span>
+                Создать аккаунт
+            </button>
+
+        </div>
+
+        <div
+            id="authMessage"
+            class="message"
+        ></div>
+
+        <div class="auth-footer">
+            KilluaClicker © 2026
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================
+     GAME
+===================================== -->
+
+<div
+    id="gameScreen"
+    class="hidden"
+>
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                ⚡
+            </div>
+
+            <div>
+                <div class="brand-name">
+                    KilluaClicker
+                </div>
+
+                <div class="brand-status">
+                    ONLINE
+                </div>
+            </div>
+
+        </div>
+
+        <div class="top-actions">
+
+            <a
+                id="adminLink"
+                href="/admin.html"
+                class="admin-link hidden"
+            >
+                ⚙ Админка
+            </a>
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+            >
+                Выйти
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <main class="game-container">
+
+        <section class="profile-card glass">
+
+            <div class="profile-avatar">
+                ⚡
+            </div>
+
+            <div class="profile-info">
+
+                <div class="small-label">
+                    ИГРОК
+                </div>
+
+                <div
+                    id="playerName"
+                    class="player-name"
+                >
+                    ...
+                </div>
+
+                <div class="online-dot">
+                    <span></span>
+                    В сети
+                </div>
+
+            </div>
+
+            <div class="profile-stat">
+
+                <div class="small-label">
+                    ТВОЙ СЧЁТ
+                </div>
+
+                <div
+                    id="profileClicks"
+                    class="profile-clicks"
+                >
+                    0
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="hero-grid">
+
+
+            <!-- CLICK AREA -->
+
+            <div class="click-card glass">
+
+                <div class="section-tag">
+                    ⚡ POWER CORE
+                </div>
+
+                <h1>
+                    Нажимай
+                    <span>и набирай очки</span>
+                </h1>
+
+                <p class="description">
+                    Каждый клик приносит тебе
+                    +1 энергию.
+                </p>
+
+                <div class="score">
+
+                    <div class="score-label">
+                        ТВОЯ ЭНЕРГИЯ
+                    </div>
+
+                    <div
+                        id="score"
+                        class="score-number"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="click-zone">
+
+                    <button
+                        id="clickButton"
+                        class="click-button"
+                    >
+
+                        <div class="click-ring ring-one"></div>
+                        <div class="click-ring ring-two"></div>
+
+                        <div class="click-core">
+
+                            <div class="bolt">
+                                ⚡
+                            </div>
+
+                            <div class="click-text">
+                                CLICK
+                            </div>
+
+                            <div class="click-plus">
+                                +1
+                            </div>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+                <div class="click-hint">
+                    Нажми на ядро энергии
+                </div>
+
+            </div>
+
+
+            <!-- LEADERBOARD -->
+
+            <div class="leaderboard-card glass">
+
+                <div class="leader-header">
+
+                    <div>
+
+                        <div class="section-tag">
+                            🏆 RANKING
+                        </div>
+
+                        <h2>
+                            Лидеры
+                        </h2>
+
+                    </div>
+
+                    <div class="trophy">
+                        🏆
+                    </div>
+
+                </div>
+
+                <div
+                    id="leaderboard"
+                    class="leaderboard"
+                >
+                    <div class="loading">
+                        Загрузка...
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="features">
+
+            <div class="feature glass">
+
+                <div class="feature-icon">
+                    ⚡
+                </div>
+
+                <div>
+                    <strong>
+                        Быстрые клики
+                    </strong>
+
+                    <p>
+                        Нажимай сколько угодно
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="feature glass">
+
+                <div class="feature-icon">
+                    🏆
+                </div>
+
+                <div>
+                    <strong>
+                        Таблица лидеров
+                    </strong>
+
+                    <p>
+                        Стань номером один
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="feature glass">
+
+                <div class="feature-icon">
+                    🔒
+                </div>
+
+                <div>
+                    <strong>
+                        Сохранение
+                    </strong>
+
+                    <p>
+                        Прогресс хранится в БД
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+
+        <span>
+            ⚡ KilluaClicker
+        </span>
+
+        <span>
+            Made for clickers
+        </span>
+
+    </footer>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

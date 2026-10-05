@@ -1,0 +1,17 @@
+{
+  "name": "killuaclicker",
+  "version": "3.0.0",
+  "description": "KilluaClicker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "pg": "^8.16.3"
+  }
+}
