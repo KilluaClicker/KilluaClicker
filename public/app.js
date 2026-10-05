@@ -4,173 +4,228 @@ document.addEventListener("DOMContentLoaded", () => {
     const usernameElement = document.getElementById("username");
     const logoutButton = document.getElementById("logoutButton");
 
+    let clickPower = 1n;
     let clickInProgress = false;
 
     function formatNumber(value) {
         try {
-            const n = BigInt(String(value));
+            const number = BigInt(String(value));
 
-            if (n < 1000n) {
-                return n.toString();
+            if (number < 1000n) {
+                return number.toString();
             }
 
             const units = [
-                "",
-                "тыс.",
-                "млн",
-                "млрд",
-                "трлн",
-                "квадр.",
-                "квинт.",
-                "секст.",
-                "септ.",
-                "окт.",
-                "нонил.",
-                "дец."
+                {
+                    value: 1000000000000000000000000n,
+                    name: "септиллион"
+                },
+                {
+                    value: 1000000000000000000000n,
+                    name: "сикстиллион"
+                },
+                {
+                    value: 1000000000000000n,
+                    name: "квадриллион"
+                },
+                {
+                    value: 1000000000000n,
+                    name: "триллион"
+                },
+                {
+                    value: 1000000000n,
+                    name: "миллиард"
+                },
+                {
+                    value: 1000000n,
+                    name: "миллион"
+                },
+                {
+                    value: 1000n,
+                    name: "тысяча"
+                }
             ];
 
-            let number = n;
-            let unit = 0;
+            for (const unit of units) {
+                if (number >= unit.value) {
+                    const whole = number / unit.value;
+                    const remainder = number % unit.value;
 
-            while (
-                number >= 1000n &&
-                unit < units.length - 1
-            ) {
-                number /= 1000n;
-                unit++;
+                    if (remainder === 0n) {
+                        return `${whole} ${unit.name}`;
+                    }
+
+                    const decimal =
+                        Number(remainder) / Number(unit.value);
+
+                    const formatted = decimal
+                        .toFixed(2)
+                        .replace(/\.?0+$/, "");
+
+                    return `${whole}${formatted.slice(1)} ${unit.name}`;
+                }
             }
 
-            return `${number.toString()} ${units[unit]}`;
-        } catch {
-            return String(value);
+            return number.toString();
+        } catch (error) {
+            return "0";
         }
     }
 
-    function showClicks(value) {
-        if (!clicksElement) return;
+    function updateClickPower() {
+        let powerElement = document.getElementById("clickPower");
 
-        clicksElement.textContent = formatNumber(value);
+        if (!powerElement) {
+            const stats = document.querySelector(".stats");
+
+            if (stats) {
+                const powerCard = document.createElement("div");
+
+                powerCard.className = "stat-card";
+                powerCard.innerHTML = `
+                    <div class="stat-label">За клик</div>
+                    <div class="stat-value" id="clickPower">+1</div>
+                `;
+
+                stats.appendChild(powerCard);
+                powerElement =
+                    document.getElementById("clickPower");
+            }
+        }
+
+        if (powerElement) {
+            powerElement.textContent =
+                "+" + formatNumber(clickPower);
+        }
+    }
+
+    function updateUser(user) {
+        if (!user) {
+            return;
+        }
+
+        if (usernameElement) {
+            usernameElement.textContent =
+                user.username || "";
+        }
+
+        if (clicksElement) {
+            clicksElement.textContent =
+                formatNumber(user.clicks ?? 0);
+        }
+
+        /*
+         * Главное исправление:
+         * сервер теперь возвращает click_power.
+         *
+         * Если по какой-то причине старый сервер
+         * не прислал это поле — используем 1,
+         * поэтому undefined больше не появится.
+         */
+        try {
+            clickPower = BigInt(
+                String(user.click_power ?? "1")
+            );
+        } catch {
+            clickPower = 1n;
+        }
+
+        updateClickPower();
     }
 
     async function loadUser() {
         try {
             const response = await fetch("/api/me", {
-                credentials: "include",
-                cache: "no-store"
+                credentials: "include"
             });
 
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-                window.location.replace("/login.html");
+                window.location.href = "/login.html";
                 return;
             }
 
-            if (usernameElement) {
-                usernameElement.textContent =
-                    data.user.username;
-            }
-
-            showClicks(data.user.clicks);
+            updateUser(data.user);
         } catch (error) {
-            console.error("Ошибка загрузки пользователя:", error);
+            console.error(
+                "Ошибка загрузки пользователя:",
+                error
+            );
         }
     }
 
     async function makeClick() {
-        if (!clickButton) return;
-
-        /*
-         * Не ставим длинный cooldown.
-         * Один запрос может идти одновременно,
-         * но следующий можно отправить сразу после ответа.
-         */
-        if (clickInProgress) {
+        if (!clickButton || clickInProgress) {
             return;
         }
 
         clickInProgress = true;
 
+        clickButton.classList.add("pressed");
+        clickButton.classList.add("click-animation");
+
         try {
             const response = await fetch("/api/click", {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json"
-                },
-                credentials: "include",
-                cache: "no-store"
+                }
             });
 
             const data = await response.json();
 
             if (response.status === 401) {
-                window.location.replace("/login.html");
+                window.location.href = "/login.html";
                 return;
             }
 
             if (!response.ok || !data.success) {
                 console.error(
-                    data.message || "Ошибка клика"
+                    data.message || "Ошибка клика."
                 );
                 return;
             }
 
-            showClicks(data.clicks);
-
-            clickButton.classList.remove("click-animation");
-
-            /*
-             * Перезапускаем маленькую анимацию,
-             * но без задержки между кликами.
-             */
-            void clickButton.offsetWidth;
-
-            clickButton.classList.add("click-animation");
+            updateUser(data.user);
         } catch (error) {
-            console.error("CLICK ERROR:", error);
+            console.error(
+                "Ошибка клика:",
+                error
+            );
         } finally {
-            clickInProgress = false;
+            setTimeout(() => {
+                clickButton.classList.remove("pressed");
+                clickButton.classList.remove("click-animation");
+                clickInProgress = false;
+            }, 30);
         }
-    }
-
-    async function logout() {
-        if (logoutButton) {
-            logoutButton.disabled = true;
-        }
-
-        try {
-            await fetch("/api/logout", {
-                method: "POST",
-                credentials: "include"
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        window.location.replace("/login.html");
     }
 
     if (clickButton) {
-        clickButton.addEventListener("click", makeClick);
-
-        /*
-         * Клик мышью без искусственного cooldown.
-         */
-        clickButton.addEventListener("mousedown", () => {
-            clickButton.classList.add("pressed");
-        });
-
-        clickButton.addEventListener("mouseup", () => {
-            clickButton.classList.remove("pressed");
-        });
-
-        clickButton.addEventListener("mouseleave", () => {
-            clickButton.classList.remove("pressed");
-        });
+        clickButton.addEventListener(
+            "click",
+            makeClick
+        );
     }
 
     if (logoutButton) {
-        logoutButton.addEventListener("click", logout);
+        logoutButton.addEventListener(
+            "click",
+            async () => {
+                try {
+                    await fetch("/api/logout", {
+                        method: "POST",
+                        credentials: "include"
+                    });
+                } catch (error) {
+                    console.error(error);
+                }
+
+                window.location.href = "/login.html";
+            }
+        );
     }
 
     loadUser();
