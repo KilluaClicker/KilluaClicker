@@ -1,4 +1,3 @@
-```js
 "use strict";
 
 let users = [];
@@ -8,393 +7,234 @@ const searchInput = document.getElementById("search");
 const message = document.getElementById("message");
 
 function escapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+return String(value ?? "")
+.replace(/&/g, "&")
+.replace(/</g, "<")
+.replace(/>/g, ">")
+.replace(/"/g, """)
+.replace(/'/g, "'");
+}
+
+function big(value) {
+try {
+return BigInt(String(value ?? "0"));
+} catch {
+return 0n;
+}
 }
 
 function formatBig(value) {
-    const str = String(value ?? "0");
+const str = String(value ?? "0");
 
-    try {
-        return BigInt(str).toLocaleString("ru-RU");
-    } catch {
-        return str;
-    }
+```
+try {
+    return BigInt(str).toLocaleString("ru-RU");
+} catch {
+    return str;
+}
+```
+
 }
 
 function showMessage(text, error = false) {
-    message.textContent = text;
-    message.style.color = error ? "#ff6b6b" : "#caa8ff";
-
-    setTimeout(() => {
-        if (message.textContent === text) {
-            message.textContent = "";
-        }
-    }, 3500);
+if (!message) {
+return;
 }
 
+```
+message.textContent = text;
+message.style.color = error ? "#ff6b6b" : "#caa8ff";
+
+setTimeout(() => {
+    if (message.textContent === text) {
+        message.textContent = "";
+    }
+}, 3500);
+```
+
+}
+
+/* =========================================================
+API
+========================================================= */
+
 async function api(url, options = {}) {
-    try {
-        const response = await fetch(url, {
-            credentials: "same-origin",
-            ...options,
-            headers: {
-                ...(options.body
-                    ? {
-                        "Content-Type": "application/json"
-                    }
-                    : {}),
-                ...(options.headers || {})
-            }
-        });
+try {
+const response = await fetch(url, {
+credentials: "same-origin",
+...options,
+headers: {
+...(options.body
+? {
+"Content-Type": "application/json"
+}
+: {}),
+...(options.headers || {})
+}
+});
 
-        const text = await response.text();
+```
+    const text = await response.text();
 
-        let data = {};
+    let data = {};
 
+    if (text) {
         try {
-            data = text ? JSON.parse(text) : {};
-        } catch {
+            data = JSON.parse(text);
+        } catch (error) {
+            console.error("Неверный JSON от сервера:", text);
+
             throw new Error(
                 `Сервер вернул неправильный ответ (${response.status})`
             );
         }
+    }
 
-        if (!response.ok) {
-            if (
-                response.status === 401 ||
-                response.status === 403
-            ) {
-                if (data.message) {
-                    throw new Error(data.message);
-                }
-
-                location.href = "/login.html";
-                return null;
-            }
-
+    if (!response.ok) {
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
             throw new Error(
                 data.message ||
                 data.error ||
-                `Ошибка сервера (${response.status})`
+                "Нет доступа к админ-панели."
             );
         }
 
-        return data;
-
-    } catch (error) {
-        console.error("API ERROR:", url, error);
-        throw error;
+        throw new Error(
+            data.message ||
+            data.error ||
+            `Ошибка сервера (${response.status})`
+        );
     }
+
+    return data;
+} catch (error) {
+    console.error("API ERROR:", url, error);
+    throw error;
+}
+```
+
 }
 
 /* =========================================================
-   LOAD USERS
+LOAD USERS
 ========================================================= */
 
 async function loadUsers() {
-    try {
-        const data = await api("/api/admin/users");
+if (!usersContainer) {
+console.error("Элемент #users не найден.");
+return;
+}
 
-        if (!data) {
-            return;
-        }
+```
+usersContainer.innerHTML = `
+    <div class="empty">
+        ⏳ Загрузка игроков...
+    </div>
+`;
 
-        users = Array.isArray(data.users)
-            ? data.users
-            : [];
+try {
+    const data = await api("/api/admin/users");
 
-        renderUsers();
+    console.log("Ответ /api/admin/users:", data);
 
-    } catch (error) {
-        console.error(error);
-
-        usersContainer.innerHTML = `
-            <div class="empty">
-                ❌ ${escapeHtml(error.message)}
-            </div>
-        `;
+    if (Array.isArray(data)) {
+        users = data;
+    } else if (Array.isArray(data.users)) {
+        users = data.users;
+    } else {
+        users = [];
     }
+
+    renderUsers();
+} catch (error) {
+    console.error("LOAD USERS ERROR:", error);
+
+    usersContainer.innerHTML = `
+        <div class="empty">
+            ❌ ${escapeHtml(error.message)}
+        </div>
+    `;
+
+    showMessage(
+        `Ошибка загрузки игроков: ${error.message}`,
+        true
+    );
+}
+```
+
 }
 
 /* =========================================================
-   RENDER
+RENDER
 ========================================================= */
 
 function renderUsers() {
-    const search = searchInput.value
-        .trim()
-        .toLowerCase();
+if (!usersContainer) {
+return;
+}
 
-    const filtered = users.filter(user =>
-        String(user.username || "")
-            .toLowerCase()
-            .includes(search)
-    );
+```
+const search = searchInput
+    ? searchInput.value.trim().toLowerCase()
+    : "";
 
-    if (!filtered.length) {
-        usersContainer.innerHTML = `
-            <div class="empty">
-                Игроки не найдены.
-            </div>
-        `;
-        return;
-    }
+const filtered = users.filter(user =>
+    String(user.username || "")
+        .toLowerCase()
+        .includes(search)
+);
 
-    usersContainer.innerHTML = filtered.map(user => {
-        const isMainAdmin =
-            String(user.username).toLowerCase() ===
-            "killua666";
+if (!filtered.length) {
+    usersContainer.innerHTML = `
+        <div class="empty">
+            Игроки не найдены.
+        </div>
+    `;
+    return;
+}
 
-        const isAdmin =
-            user.is_admin === true ||
-            user.is_admin === "true";
+usersContainer.innerHTML = filtered.map(user => {
+    const isMainAdmin =
+        String(user.username || "").toLowerCase() ===
+        "killua666";
 
-        return `
-            <div
-                class="user-card ${isAdmin ? "admin" : ""}"
-                data-id="${user.id}"
-            >
+    const isAdmin =
+        user.is_admin === true ||
+        user.is_admin === "true";
 
-                <div class="user-top">
+    return `
+        <div
+            class="user-card ${isAdmin ? "admin" : ""}"
+            data-id="${escapeHtml(user.id)}"
+        >
 
-                    <div class="username">
-                        👤 ${escapeHtml(user.username)}
-                    </div>
+            <div class="user-top">
 
-                    <div class="badges">
-
-                        ${
-                            isAdmin
-                                ? `
-                                    <span class="badge badge-admin">
-                                        👑 ADMIN
-                                    </span>
-                                `
-                                : ""
-                        }
-
-                        ${
-                            user.banned
-                                ? `
-                                    <span class="badge badge-ban">
-                                        🚫 BAN
-                                    </span>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
+                <div class="username">
+                    👤 ${escapeHtml(user.username)}
                 </div>
 
-                <div class="stats">
-
-                    <div class="stat">
-
-                        <div class="stat-title">
-                            Баланс
-                        </div>
-
-                        <div class="stat-value">
-                            ${formatBig(user.clicks)}
-                        </div>
-
-                    </div>
-
-                    <div class="stat">
-
-                        <div class="stat-title">
-                            За клик
-                        </div>
-
-                        <div class="stat-value">
-                            ${formatBig(user.click_power)}
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="field">
-
-                    <label>
-                        Ник
-                    </label>
-
-                    <input
-                        class="nickname-input"
-                        value="${escapeHtml(user.username)}"
-                    >
-
-                </div>
-
-                <div class="field">
-
-                    <label>
-                        Установить баланс
-                    </label>
-
-                    <input
-                        class="balance-input"
-                        type="text"
-                        inputmode="numeric"
-                        placeholder="Например: 1000000"
-                    >
-
-                </div>
-
-                <div class="field">
-
-                    <label>
-                        Установить силу клика
-                    </label>
-
-                    <input
-                        class="power-input"
-                        type="text"
-                        inputmode="numeric"
-                        placeholder="Например: 100"
-                    >
-
-                </div>
-
-                <div class="section-title">
-                    ➕ Выдать дополнительно
-                </div>
-
-                <div class="field">
-
-                    <input
-                        class="give-balance-input"
-                        type="text"
-                        inputmode="numeric"
-                        placeholder="Сколько кликов выдать"
-                    >
-
-                </div>
-
-                <button
-                    class="give"
-                    data-action="give-balance"
-                >
-                    💰 Выдать баланс
-                </button>
-
-                <div
-                    class="field"
-                    style="margin-top:8px;"
-                >
-
-                    <input
-                        class="give-power-input"
-                        type="text"
-                        inputmode="numeric"
-                        placeholder="Сколько добавить к клику"
-                    >
-
-                </div>
-
-                <button
-                    class="power"
-                    data-action="give-power"
-                >
-                    ⚡ Выдать к клику
-                </button>
-
-                <div class="buttons">
-
-                    <button
-                        class="save"
-                        data-action="save"
-                    >
-                        💾 Сохранить
-                    </button>
+                <div class="badges">
 
                     ${
                         isAdmin
                             ? `
-                                ${
-                                    !isMainAdmin
-                                        ? `
-                                            <button
-                                                class="remove-admin"
-                                                data-action="remove-admin"
-                                            >
-                                                👑 Забрать админку
-                                            </button>
-                                        `
-                                        : `
-                                            <button
-                                                class="admin"
-                                                disabled
-                                                style="
-                                                    opacity:.6;
-                                                    cursor:not-allowed;
-                                                "
-                                            >
-                                                👑 Главный админ
-                                            </button>
-                                        `
-                                }
+                                <span class="badge badge-admin">
+                                    👑 ADMIN
+                                </span>
                             `
-                            : `
-                                <button
-                                    class="admin"
-                                    data-action="give-admin"
-                                >
-                                    👑 Выдать админку
-                                </button>
-                            `
+                            : ""
                     }
-
-                    <button
-                        class="login-as"
-                        data-action="impersonate"
-                    >
-                        👤 Зайти в аккаунт
-                    </button>
 
                     ${
                         user.banned
                             ? `
-                                <button
-                                    class="unban"
-                                    data-action="unban"
-                                >
-                                    ✅ Разбанить
-                                </button>
-                            `
-                            : `
-                                <button
-                                    class="ban"
-                                    data-action="ban"
-                                >
-                                    🚫 Забанить
-                                </button>
-                            `
-                    }
-
-                    <button
-                        class="reset"
-                        data-action="reset"
-                    >
-                        🔄 Сбросить
-                    </button>
-
-                    ${
-                        !isMainAdmin
-                            ? `
-                                <button
-                                    class="delete"
-                                    data-action="delete"
-                                >
-                                    🗑️ Удалить аккаунт
-                                </button>
+                                <span class="badge badge-ban">
+                                    🚫 BAN
+                                </span>
                             `
                             : ""
                     }
@@ -402,497 +242,694 @@ function renderUsers() {
                 </div>
 
             </div>
-        `;
-    }).join("");
+
+            <div class="stats">
+
+                <div class="stat">
+
+                    <div class="stat-title">
+                        Баланс
+                    </div>
+
+                    <div class="stat-value">
+                        ${formatBig(user.clicks)}
+                    </div>
+
+                </div>
+
+                <div class="stat">
+
+                    <div class="stat-title">
+                        За клик
+                    </div>
+
+                    <div class="stat-value">
+                        ${formatBig(user.click_power)}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    Ник
+                </label>
+
+                <input
+                    class="nickname-input"
+                    value="${escapeHtml(user.username)}"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    Установить баланс
+                </label>
+
+                <input
+                    class="balance-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Например: 1000000"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    Установить силу клика
+                </label>
+
+                <input
+                    class="power-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Например: 100"
+                >
+
+            </div>
+
+            <div class="section-title">
+                ➕ Выдать дополнительно
+            </div>
+
+            <div class="field">
+
+                <input
+                    class="give-balance-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Сколько кликов выдать"
+                >
+
+            </div>
+
+            <button
+                class="give"
+                data-action="give-balance"
+            >
+                💰 Выдать баланс
+            </button>
+
+            <div
+                class="field"
+                style="margin-top:8px;"
+            >
+
+                <input
+                    class="give-power-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Сколько добавить к клику"
+                >
+
+            </div>
+
+            <button
+                class="power"
+                data-action="give-power"
+            >
+                ⚡ Выдать к клику
+            </button>
+
+            <div class="buttons">
+
+                <button
+                    class="save"
+                    data-action="save"
+                >
+                    💾 Сохранить
+                </button>
+
+                ${
+                    isAdmin
+                        ? `
+                            ${
+                                !isMainAdmin
+                                    ? `
+                                        <button
+                                            class="remove-admin"
+                                            data-action="remove-admin"
+                                        >
+                                            👑 Забрать админку
+                                        </button>
+                                    `
+                                    : `
+                                        <button
+                                            class="admin"
+                                            disabled
+                                            style="opacity:.6;cursor:not-allowed;"
+                                        >
+                                            👑 Главный админ
+                                        </button>
+                                    `
+                            }
+                        `
+                        : `
+                            <button
+                                class="admin"
+                                data-action="give-admin"
+                            >
+                                👑 Выдать админку
+                            </button>
+                        `
+                }
+
+                <button
+                    class="login-as"
+                    data-action="impersonate"
+                >
+                    👤 Зайти в аккаунт
+                </button>
+
+                ${
+                    user.banned
+                        ? `
+                            <button
+                                class="unban"
+                                data-action="unban"
+                            >
+                                ✅ Разбанить
+                            </button>
+                        `
+                        : `
+                            <button
+                                class="ban"
+                                data-action="ban"
+                            >
+                                🚫 Забанить
+                            </button>
+                        `
+                }
+
+                <button
+                    class="reset"
+                    data-action="reset"
+                >
+                    🔄 Сбросить
+                </button>
+
+                ${
+                    !isMainAdmin
+                        ? `
+                            <button
+                                class="delete"
+                                data-action="delete"
+                            >
+                                🗑️ Удалить аккаунт
+                            </button>
+                        `
+                        : ""
+                }
+
+            </div>
+
+        </div>
+    `;
+});
+```
+
 }
 
 /* =========================================================
-   SAVE USER
+SAVE USER
 ========================================================= */
 
 async function saveUser(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    const nickname =
-        card.querySelector(
-            ".nickname-input"
-        ).value.trim();
+```
+const nickname =
+    card.querySelector(".nickname-input")?.value.trim() || "";
 
-    const balance =
-        card.querySelector(
-            ".balance-input"
-        ).value.trim();
+const balance =
+    card.querySelector(".balance-input")?.value.trim() || "";
 
-    const power =
-        card.querySelector(
-            ".power-input"
-        ).value.trim();
+const power =
+    card.querySelector(".power-input")?.value.trim() || "";
 
-    const body = {};
+const body = {};
 
-    if (nickname) {
-        body.username = nickname;
-    }
+if (nickname) {
+    body.username = nickname;
+}
 
-    if (balance) {
-        if (!/^\d+$/.test(balance)) {
-            showMessage(
-                "Баланс должен быть целым числом.",
-                true
-            );
-            return;
-        }
-
-        body.clicks = balance;
-    }
-
-    if (power) {
-        if (!/^\d+$/.test(power)) {
-            showMessage(
-                "Сила клика должна быть целым числом.",
-                true
-            );
-            return;
-        }
-
-        body.click_power = power;
-    }
-
-    if (!Object.keys(body).length) {
+if (balance) {
+    if (!/^\d+$/.test(balance)) {
         showMessage(
-            "Нечего сохранять.",
+            "Баланс должен быть целым числом.",
             true
         );
         return;
     }
 
-    try {
+    body.clicks = balance;
+}
 
-        /*
-            ВАЖНО:
-            server.js использует
-            POST /api/admin/users/:id/edit
-        */
-
-        await api(
-            `/api/admin/users/${id}/edit`,
-            {
-                method: "POST",
-                body: JSON.stringify(body)
-            }
-        );
-
+if (power) {
+    if (!/^\d+$/.test(power)) {
         showMessage(
-            "✅ Пользователь сохранён."
-        );
-
-        await loadUsers();
-
-    } catch (error) {
-
-        showMessage(
-            error.message,
+            "Сила клика должна быть целым числом.",
             true
         );
+        return;
     }
+
+    body.click_power = power;
+}
+
+if (!Object.keys(body).length) {
+    showMessage(
+        "Нечего сохранять.",
+        true
+    );
+    return;
+}
+
+try {
+    await api(
+        `/api/admin/users/${id}/edit`,
+        {
+            method: "POST",
+            body: JSON.stringify(body)
+        }
+    );
+
+    showMessage(
+        "✅ Пользователь сохранён."
+    );
+
+    await loadUsers();
+
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
+
 }
 
 /* =========================================================
-   GIVE BALANCE
+GIVE BALANCE
 ========================================================= */
 
 async function giveBalance(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    const input =
-        card.querySelector(
-            ".give-balance-input"
-        );
+```
+const input =
+    card.querySelector(".give-balance-input");
 
-    const amount =
-        input.value.trim();
+if (!input) {
+    return;
+}
 
-    if (
-        !/^\d+$/.test(amount) ||
-        amount === "0"
-    ) {
-        showMessage(
-            "Введите положительное целое число.",
-            true
-        );
-        return;
-    }
+const amount = input.value.trim();
 
-    try {
+if (!/^\d+$/.test(amount) || amount === "0") {
+    showMessage(
+        "Введите положительное целое число.",
+        true
+    );
+    return;
+}
 
-        await api(
-            `/api/admin/users/${id}/give-balance`,
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    amount
-                })
-            }
-        );
+try {
+    await api(
+        `/api/admin/users/${id}/give-balance`,
+        {
+            method: "POST",
+            body: JSON.stringify({
+                amount
+            })
+        }
+    );
 
-        input.value = "";
+    input.value = "";
 
-        showMessage(
-            `💰 Выдано ${formatBig(amount)} кликов.`
-        );
+    showMessage(
+        `💰 Выдано ${formatBig(amount)} кликов.`
+    );
 
-        await loadUsers();
+    await loadUsers();
 
-    } catch (error) {
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   GIVE CLICK POWER
+GIVE CLICK POWER
 ========================================================= */
 
 async function givePower(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    const input =
-        card.querySelector(
-            ".give-power-input"
-        );
+```
+const input =
+    card.querySelector(".give-power-input");
 
-    const amount =
-        input.value.trim();
+if (!input) {
+    return;
+}
 
-    if (
-        !/^\d+$/.test(amount) ||
-        amount === "0"
-    ) {
-        showMessage(
-            "Введите положительное целое число.",
-            true
-        );
-        return;
-    }
+const amount = input.value.trim();
 
-    try {
+if (!/^\d+$/.test(amount) || amount === "0") {
+    showMessage(
+        "Введите положительное целое число.",
+        true
+    );
+    return;
+}
 
-        await api(
-            `/api/admin/users/${id}/give-click-power`,
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    amount
-                })
-            }
-        );
+try {
+    await api(
+        `/api/admin/users/${id}/give-click-power`,
+        {
+            method: "POST",
+            body: JSON.stringify({
+                amount
+            })
+        }
+    );
 
-        input.value = "";
+    input.value = "";
 
-        showMessage(
-            `⚡ Добавлено ${formatBig(amount)} к силе клика.`
-        );
+    showMessage(
+        `⚡ Добавлено ${formatBig(amount)} к силе клика.`
+    );
 
-        await loadUsers();
+    await loadUsers();
 
-    } catch (error) {
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   GIVE ADMIN
+GIVE ADMIN
 ========================================================= */
 
 async function giveAdmin(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    if (
-        !confirm(
-            "Выдать этому игроку права администратора?"
-        )
-    ) {
-        return;
-    }
+```
+if (
+    !confirm(
+        "Выдать этому игроку права администратора?"
+    )
+) {
+    return;
+}
 
-    try {
-
-        const data = await api(
-            `/api/admin/users/${id}/give-admin`,
-            {
-                method: "POST"
-            }
-        );
-
-        if (!data) {
-            return;
+try {
+    await api(
+        `/api/admin/users/${id}/give-admin`,
+        {
+            method: "POST"
         }
+    );
 
-        showMessage(
-            "👑 Админка выдана."
-        );
+    showMessage(
+        "👑 Админка выдана."
+    );
 
-        await loadUsers();
+    await loadUsers();
 
-    } catch (error) {
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   REMOVE ADMIN
+REMOVE ADMIN
 ========================================================= */
 
 async function removeAdmin(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    if (
-        !confirm(
-            "Забрать у этого игрока права администратора?"
-        )
-    ) {
-        return;
-    }
+```
+if (
+    !confirm(
+        "Забрать у этого игрока права администратора?"
+    )
+) {
+    return;
+}
 
-    try {
+try {
+    await api(
+        `/api/admin/users/${id}/remove-admin`,
+        {
+            method: "POST"
+        }
+    );
 
-        await api(
-            `/api/admin/users/${id}/remove-admin`,
-            {
-                method: "POST"
-            }
-        );
+    showMessage(
+        "👑 Админка забрана."
+    );
 
-        showMessage(
-            "👑 Админка забрана."
-        );
+    await loadUsers();
 
-        await loadUsers();
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   IMPERSONATE
+IMPERSONATE
 ========================================================= */
 
 async function impersonate(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    if (
-        !confirm(
-            "Зайти в аккаунт этого игрока?"
-        )
-    ) {
-        return;
-    }
+```
+if (
+    !confirm(
+        "Зайти в аккаунт этого игрока?"
+    )
+) {
+    return;
+}
 
-    try {
+try {
+    await api(
+        `/api/admin/users/${id}/impersonate`,
+        {
+            method: "POST"
+        }
+    );
 
-        await api(
-            `/api/admin/users/${id}/impersonate`,
-            {
-                method: "POST"
-            }
-        );
+    location.href = "/";
 
-        location.href = "/";
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   BAN
+BAN
 ========================================================= */
 
 async function banUser(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    if (
-        !confirm(
-            "Забанить этого игрока?"
-        )
-    ) {
-        return;
-    }
+```
+if (
+    !confirm(
+        "Забанить этого игрока?"
+    )
+) {
+    return;
+}
 
-    try {
+try {
+    await api(
+        `/api/admin/users/${id}/ban`,
+        {
+            method: "POST"
+        }
+    );
 
-        await api(
-            `/api/admin/users/${id}/ban`,
-            {
-                method: "POST"
-            }
-        );
+    showMessage(
+        "🚫 Игрок забанен."
+    );
 
-        showMessage(
-            "🚫 Игрок забанен."
-        );
+    await loadUsers();
 
-        await loadUsers();
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   UNBAN
+UNBAN
 ========================================================= */
 
 async function unbanUser(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    try {
+```
+try {
+    await api(
+        `/api/admin/users/${id}/unban`,
+        {
+            method: "POST"
+        }
+    );
 
-        await api(
-            `/api/admin/users/${id}/unban`,
-            {
-                method: "POST"
-            }
-        );
+    showMessage(
+        "✅ Игрок разбанен."
+    );
 
-        showMessage(
-            "✅ Игрок разбанен."
-        );
+    await loadUsers();
 
-        await loadUsers();
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   RESET
+RESET
 ========================================================= */
 
 async function resetUser(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    if (
-        !confirm(
-            "Сбросить баланс и силу клика этого игрока?"
-        )
-    ) {
-        return;
-    }
+```
+if (
+    !confirm(
+        "Сбросить баланс и силу клика этого игрока?"
+    )
+) {
+    return;
+}
 
-    try {
+try {
+    await api(
+        `/api/admin/users/${id}/reset`,
+        {
+            method: "POST"
+        }
+    );
 
-        await api(
-            `/api/admin/users/${id}/reset`,
-            {
-                method: "POST"
-            }
-        );
+    showMessage(
+        "🔄 Данные сброшены."
+    );
 
-        showMessage(
-            "🔄 Данные сброшены."
-        );
+    await loadUsers();
 
-        await loadUsers();
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   DELETE
+DELETE
 ========================================================= */
 
 async function deleteUser(card) {
-    const id = card.dataset.id;
+const id = card.dataset.id;
 
-    if (
-        !confirm(
-            "⚠️ УДАЛИТЬ АККАУНТ НАВСЕГДА?\n\nЭто действие нельзя отменить."
-        )
-    ) {
-        return;
-    }
+```
+if (
+    !confirm(
+        "⚠️ УДАЛИТЬ АККАУНТ НАВСЕГДА?\n\nЭто действие нельзя отменить."
+    )
+) {
+    return;
+}
 
-    try {
+try {
+    await api(
+        `/api/admin/users/${id}/delete`,
+        {
+            method: "POST"
+        }
+    );
 
-        await api(
-            `/api/admin/users/${id}/delete`,
-            {
-                method: "POST"
-            }
-        );
+    showMessage(
+        "🗑️ Аккаунт удалён."
+    );
 
-        showMessage(
-            "🗑️ Аккаунт удалён."
-        );
+    await loadUsers();
 
-        await loadUsers();
+} catch (error) {
+    showMessage(
+        error.message,
+        true
+    );
+}
+```
 
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-    }
 }
 
 /* =========================================================
-   BUTTON HANDLER
+BUTTON EVENTS
 ========================================================= */
 
+if (usersContainer) {
 usersContainer.addEventListener(
-    "click",
-    async event => {
+"click",
+async event => {
+const button =
+event.target.closest("[data-action]");
 
-        const button =
-            event.target.closest(
-                "[data-action]"
-            );
-
+```
         if (!button) {
             return;
         }
 
         const card =
-            button.closest(
-                ".user-card"
-            );
+            button.closest(".user-card");
 
         if (!card) {
             return;
@@ -942,19 +979,19 @@ usersContainer.addEventListener(
         }
     }
 );
+```
 
-/* =========================================================
-   SEARCH
-========================================================= */
+}
 
+if (searchInput) {
 searchInput.addEventListener(
-    "input",
-    renderUsers
+"input",
+renderUsers
 );
+}
 
 /* =========================================================
-   START
+START
 ========================================================= */
 
 loadUsers();
-```
