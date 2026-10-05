@@ -1,462 +1,248 @@
-"use strict";
+document.addEventListener("DOMContentLoaded", () => {
+    const shopGrid =
+        document.getElementById("shopGrid");
 
+    const shopMessage =
+        document.getElementById("shopMessage");
 
-const usernameEl =
-    document.getElementById("username");
+    function formatNumber(value) {
+        try {
+            const n = BigInt(String(value));
 
-const balanceEl =
-    document.getElementById("balance");
+            if (n < 1000n) {
+                return n.toString();
+            }
 
-const shopGrid =
-    document.getElementById("shopGrid");
+            const units = [
+                "",
+                "тыс.",
+                "млн",
+                "млрд",
+                "трлн",
+                "квадр.",
+                "квинт.",
+                "секст.",
+                "септ.",
+                "окт.",
+                "нонил.",
+                "дец."
+            ];
 
-const logoutBtn =
-    document.getElementById("logoutBtn");
+            let number = n;
+            let unit = 0;
 
-const adminLink =
-    document.getElementById("adminLink");
+            while (
+                number >= 1000n &&
+                unit < units.length - 1
+            ) {
+                number /= 1000n;
+                unit++;
+            }
 
-const toastEl =
-    document.getElementById("toast");
-
-
-let currentUser = null;
-let toastTimer = null;
-
-
-const STORE_ITEMS = [
-
-    {
-        id: "1",
-        name: "+1 клик",
-        amount: "1",
-        price: "0",
-        icon: "✦"
-    },
-
-    {
-        id: "10",
-        name: "+10 кликов",
-        amount: "10",
-        price: "5",
-        icon: "✦"
-    },
-
-    {
-        id: "100",
-        name: "+100 кликов",
-        amount: "100",
-        price: "40",
-        icon: "✦"
-    },
-
-    {
-        id: "1000",
-        name: "+1 000 кликов",
-        amount: "1000",
-        price: "350",
-        icon: "⚡"
-    },
-
-    {
-        id: "million",
-        name: "+1 миллион",
-        amount: "1000000",
-        price: "300000",
-        icon: "◆"
-    },
-
-    {
-        id: "billion",
-        name: "+1 миллиард",
-        amount: "1000000000",
-        price: "300000000",
-        icon: "◆"
-    },
-
-    {
-        id: "quadrillion",
-        name: "+1 квадриллион",
-        amount: "1000000000000000",
-        price: "300000000000000",
-        icon: "♛"
-    },
-
-    {
-        id: "sextillion",
-        name: "+1 сикстиллион",
-        amount: "1000000000000000000000",
-        price: "300000000000000000000",
-        icon: "♛"
+            return `${number.toString()} ${units[unit]}`;
+        } catch {
+            return String(value);
+        }
     }
 
-];
-
-
-function formatNumber(value) {
-
-    try {
-
-        return BigInt(value)
-            .toLocaleString("ru-RU");
-
-    } catch {
-
-        return String(value);
-
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
-}
+    function showMessage(text, type = "") {
+        if (!shopMessage) return;
 
+        shopMessage.textContent = text;
+        shopMessage.className = "shop-message";
 
-function showToast(message) {
+        if (type) {
+            shopMessage.classList.add(type);
+        }
+    }
 
-    toastEl.textContent =
-        message;
-
-    toastEl.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-
-        toastEl.classList.remove("show");
-
-    }, 2200);
-
-}
-
-
-function updateBalance(value) {
-
-    balanceEl.textContent =
-        formatNumber(value);
-
-}
-
-
-async function loadUser() {
-
-    try {
-
-        const response =
-            await fetch("/api/me", {
-                method: "GET",
+    async function loadShop() {
+        try {
+            const response = await fetch("/api/shop", {
                 credentials: "include",
                 cache: "no-store"
             });
 
+            const data = await response.json();
 
-        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.replace("/login.html");
+                return;
+            }
 
-            usernameEl.textContent =
-                "Не авторизован";
+            if (!response.ok || !data.success) {
+                showMessage(
+                    data.message ||
+                    "Не удалось загрузить магазин.",
+                    "error"
+                );
+                return;
+            }
 
-            return;
+            renderShop(data.items);
+        } catch (error) {
+            console.error("SHOP ERROR:", error);
 
+            showMessage(
+                "Ошибка соединения с сервером.",
+                "error"
+            );
         }
-
-
-        const data =
-            await response.json();
-
-
-        if (!data.success || !data.user) {
-
-            usernameEl.textContent =
-                "Не авторизован";
-
-            return;
-
-        }
-
-
-        currentUser =
-            data.user;
-
-
-        usernameEl.textContent =
-            currentUser.username;
-
-
-        updateBalance(
-            currentUser.clicks
-        );
-
-
-        if (
-            currentUser.username ===
-            "Killua666"
-        ) {
-
-            adminLink.style.display =
-                "flex";
-
-        }
-
-
-        renderShop();
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        usernameEl.textContent =
-            "Ошибка соединения";
-
     }
 
-}
+    function renderShop(items) {
+        if (!shopGrid) return;
 
+        shopGrid.innerHTML = "";
 
-function renderShop() {
+        if (!Array.isArray(items) || items.length === 0) {
+            shopGrid.innerHTML = `
+                <div class="empty-state">
+                    Магазин пока пуст.
+                </div>
+            `;
+            return;
+        }
 
-    shopGrid.innerHTML = "";
+        items.forEach((item) => {
+            const card =
+                document.createElement("div");
 
+            card.className = "shop-card";
 
-    STORE_ITEMS.forEach(item => {
-
-        const card =
-            document.createElement("div");
-
-
-        card.className =
-            "stat-card shop-card";
-
-
-        card.innerHTML = `
-
-            <div class="stat-icon purple">
-                ${item.icon}
-            </div>
-
-            <div class="shop-info">
-
-                <div class="stat-label">
-                    ПАКЕТ КЛИКОВ
+            card.innerHTML = `
+                <div class="shop-icon">
+                    ${escapeHtml(item.icon || "✦")}
                 </div>
 
-                <div class="shop-name">
-                    ${item.name}
+                <div class="shop-info">
+                    <div class="shop-name">
+                        ${escapeHtml(item.name)}
+                    </div>
+
+                    <div class="shop-amount">
+                        Получишь:
+                        <strong>
+                            +${formatNumber(item.amount)}
+                        </strong>
+                    </div>
+
+                    <div class="shop-price">
+                        Цена:
+                        <strong>
+                            ${formatNumber(item.price)}
+                        </strong>
+                        кликов
+                    </div>
+
+                    <button
+                        class="shop-buy"
+                        data-item-id="${escapeHtml(item.id)}"
+                    >
+                        Купить
+                    </button>
                 </div>
+            `;
 
-                <div class="shop-price">
-                    Цена:
-                    <strong>
-                        ${formatNumber(item.price)}
-                    </strong>
-                    кликов
-                </div>
-
-                <button
-                    type="button"
-                    class="shop-buy"
-                    data-id="${item.id}"
-                >
-                    Купить
-                </button>
-
-            </div>
-
-        `;
-
-
-        shopGrid.appendChild(card);
-
-    });
-
-
-    document
-        .querySelectorAll(".shop-buy")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                function(event) {
-
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    buyItem(
-                        this.dataset.id
-                    );
-
-                }
-            );
-
+            shopGrid.appendChild(card);
         });
 
-}
-
-
-async function buyItem(itemId) {
-
-    const item =
-        STORE_ITEMS.find(
-            x => x.id === itemId
-        );
-
-
-    if (!item) {
-        return;
+        document
+            .querySelectorAll(".shop-buy")
+            .forEach((button) => {
+                button.addEventListener(
+                    "click",
+                    () => {
+                        buyItem(
+                            button.dataset.itemId,
+                            button
+                        );
+                    }
+                );
+            });
     }
 
-
-    const buttons =
-        document.querySelectorAll(
-            ".shop-buy"
-        );
-
-
-    buttons.forEach(button => {
+    async function buyItem(itemId, button) {
+        if (!button) return;
 
         button.disabled = true;
+        button.textContent = "Покупка...";
 
-    });
+        showMessage("");
 
-
-    try {
-
-        const response =
-            await fetch(
+        try {
+            const response = await fetch(
                 "/api/shop/buy",
                 {
                     method: "POST",
-
-                    credentials: "include",
-
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
-
-                    cache: "no-store",
-
+                    credentials: "include",
                     body: JSON.stringify({
-                        itemId: itemId
+                        itemId
                     })
                 }
             );
 
+            const data = await response.json();
 
-        const data =
-            await response.json();
+            if (response.status === 401) {
+                window.location.replace(
+                    "/login.html"
+                );
+                return;
+            }
 
+            if (!response.ok || !data.success) {
+                showMessage(
+                    data.message ||
+                    "Покупка не удалась.",
+                    "error"
+                );
+                return;
+            }
 
-        if (
-            response.status === 401
-        ) {
-
-            showToast(
-                "Сессия закончилась."
+            showMessage(
+                "Покупка успешно совершена!",
+                "success"
             );
 
-            return;
+            const clicksElement =
+                document.getElementById("clicks");
 
-        }
-
-
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            throw new Error(
-                data.message ||
-                "Недостаточно кликов"
-            );
-
-        }
-
-
-        if (
-            data.clicks !== undefined
-        ) {
-
-            currentUser.clicks =
-                data.clicks;
-
-            updateBalance(
-                data.clicks
-            );
-
-        }
-
-
-        showToast(
-            "Покупка выполнена: " +
-            item.name
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            error.message ||
-            "Ошибка покупки"
-        );
-
-    } finally {
-
-        buttons.forEach(button => {
-
-            button.disabled = false;
-
-        });
-
-    }
-
-}
-
-
-logoutBtn.addEventListener(
-    "click",
-    async function(event) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        logoutBtn.disabled = true;
-
-        logoutBtn.textContent =
-            "Выход...";
-
-
-        try {
-
-            await fetch(
-                "/api/logout",
-                {
-                    method: "POST",
-                    credentials: "include"
-                }
-            );
-
+            if (
+                clicksElement &&
+                data.clicks !== undefined
+            ) {
+                clicksElement.textContent =
+                    formatNumber(data.clicks);
+            }
         } catch (error) {
+            console.error(
+                "BUY ERROR:",
+                error
+            );
 
-            console.error(error);
-
+            showMessage(
+                "Ошибка соединения с сервером.",
+                "error"
+            );
+        } finally {
+            button.disabled = false;
+            button.textContent = "Купить";
         }
-
-
-        window.location.href = "/";
-
     }
-);
 
-
-document.addEventListener(
-    "submit",
-    function(event) {
-
-        event.preventDefault();
-
-    }
-);
-
-
-loadUser();
+    loadShop();
+});

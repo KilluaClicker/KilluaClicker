@@ -1,270 +1,177 @@
 document.addEventListener("DOMContentLoaded", () => {
-    initApp();
-});
-
-let currentUser = null;
-let isClicking = false;
-
-/* =========================================================
-   INIT
-========================================================= */
-
-async function initApp() {
-    setupButtons();
-    await loadCurrentUser();
-}
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-function setupButtons() {
     const clickButton = document.getElementById("clickButton");
+    const clicksElement = document.getElementById("clicks");
+    const usernameElement = document.getElementById("username");
     const logoutButton = document.getElementById("logoutButton");
 
-    if (clickButton) {
-        clickButton.addEventListener("click", async (event) => {
-            event.preventDefault();
+    let clickInProgress = false;
 
-            if (isClicking) {
+    function formatNumber(value) {
+        try {
+            const n = BigInt(String(value));
+
+            if (n < 1000n) {
+                return n.toString();
+            }
+
+            const units = [
+                "",
+                "тыс.",
+                "млн",
+                "млрд",
+                "трлн",
+                "квадр.",
+                "квинт.",
+                "секст.",
+                "септ.",
+                "окт.",
+                "нонил.",
+                "дец."
+            ];
+
+            let number = n;
+            let unit = 0;
+
+            while (
+                number >= 1000n &&
+                unit < units.length - 1
+            ) {
+                number /= 1000n;
+                unit++;
+            }
+
+            return `${number.toString()} ${units[unit]}`;
+        } catch {
+            return String(value);
+        }
+    }
+
+    function showClicks(value) {
+        if (!clicksElement) return;
+
+        clicksElement.textContent = formatNumber(value);
+    }
+
+    async function loadUser() {
+        try {
+            const response = await fetch("/api/me", {
+                credentials: "include",
+                cache: "no-store"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                window.location.replace("/login.html");
                 return;
             }
 
-            await makeClick();
-        });
-    }
-
-    if (logoutButton) {
-        logoutButton.addEventListener("click", async (event) => {
-            event.preventDefault();
-
-            await logout();
-        });
-    }
-
-    document.addEventListener("submit", (event) => {
-        event.preventDefault();
-    });
-}
-
-/* =========================================================
-   CURRENT USER
-========================================================= */
-
-async function loadCurrentUser() {
-    try {
-        const response = await fetch("/api/me", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store"
-        });
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok || !data.success || !data.user) {
-            showLoggedOutState();
-            return;
-        }
-
-        currentUser = data.user;
-
-        updateUserInterface(currentUser);
-
-    } catch (error) {
-        console.error("Ошибка проверки аккаунта:", error);
-
-        showLoggedOutState();
-    }
-}
-
-/* =========================================================
-   CLICK
-========================================================= */
-
-async function makeClick() {
-    if (!currentUser) {
-        showToast("Сначала войдите в аккаунт");
-        return;
-    }
-
-    isClicking = true;
-
-    const clickButton = document.getElementById("clickButton");
-
-    if (clickButton) {
-        clickButton.disabled = true;
-    }
-
-    try {
-        const response = await fetch("/api/click", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({})
-        });
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok || !data.success) {
-            if (response.status === 401) {
-                currentUser = null;
-                showLoggedOutState();
-                showToast("Сессия закончилась. Войдите снова.");
-                return;
+            if (usernameElement) {
+                usernameElement.textContent =
+                    data.user.username;
             }
 
-            showToast(data.error || "Ошибка клика");
-            return;
-        }
-
-        currentUser.clicks = String(data.clicks);
-
-        updateClicks(currentUser.clicks);
-
-    } catch (error) {
-        console.error("Ошибка клика:", error);
-
-        showToast("Ошибка соединения с сервером");
-
-    } finally {
-        isClicking = false;
-
-        if (clickButton) {
-            clickButton.disabled = false;
+            showClicks(data.user.clicks);
+        } catch (error) {
+            console.error("Ошибка загрузки пользователя:", error);
         }
     }
-}
 
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-async function logout() {
-    const logoutButton = document.getElementById("logoutButton");
-
-    if (logoutButton) {
-        logoutButton.disabled = true;
-    }
-
-    try {
-        const response = await fetch("/api/logout", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({})
-        });
-
-        await response.json().catch(() => ({}));
-
-    } catch (error) {
-        console.error("Ошибка выхода:", error);
-
-    } finally {
-        currentUser = null;
+    async function makeClick() {
+        if (!clickButton) return;
 
         /*
-         * Переходим на страницу входа.
-         * В нашем проекте страница входа находится на "/".
+         * Не ставим длинный cooldown.
+         * Один запрос может идти одновременно,
+         * но следующий можно отправить сразу после ответа.
          */
-        window.location.href = "/?login=1";
-    }
-}
+        if (clickInProgress) {
+            return;
+        }
 
-/* =========================================================
-   UI
-========================================================= */
+        clickInProgress = true;
 
-function updateUserInterface(user) {
-    const usernameElements = document.querySelectorAll(
-        "#username, #playerName, .username"
-    );
+        try {
+            const response = await fetch("/api/click", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                cache: "no-store"
+            });
 
-    usernameElements.forEach((element) => {
-        element.textContent = user.username;
-    });
+            const data = await response.json();
 
-    updateClicks(user.clicks);
+            if (response.status === 401) {
+                window.location.replace("/login.html");
+                return;
+            }
 
-    const adminButton = document.getElementById("adminButton");
+            if (!response.ok || !data.success) {
+                console.error(
+                    data.message || "Ошибка клика"
+                );
+                return;
+            }
 
-    if (adminButton) {
-        if (user.username === "Killua666") {
-            adminButton.style.display = "";
-        } else {
-            adminButton.style.display = "none";
+            showClicks(data.clicks);
+
+            clickButton.classList.remove("click-animation");
+
+            /*
+             * Перезапускаем маленькую анимацию,
+             * но без задержки между кликами.
+             */
+            void clickButton.offsetWidth;
+
+            clickButton.classList.add("click-animation");
+        } catch (error) {
+            console.error("CLICK ERROR:", error);
+        } finally {
+            clickInProgress = false;
         }
     }
-}
 
-function updateClicks(clicks) {
-    const formatted = formatNumber(clicks);
+    async function logout() {
+        if (logoutButton) {
+            logoutButton.disabled = true;
+        }
 
-    const elements = document.querySelectorAll(
-        "#clicks, #clickCount, .click-count, [data-clicks]"
-    );
+        try {
+            await fetch("/api/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+        } catch (error) {
+            console.error(error);
+        }
 
-    elements.forEach((element) => {
-        element.textContent = formatted;
-    });
-}
-
-function showLoggedOutState() {
-    currentUser = null;
-
-    const usernameElements = document.querySelectorAll(
-        "#username, #playerName, .username"
-    );
-
-    usernameElements.forEach((element) => {
-        element.textContent = "Не авторизован";
-    });
-
-    updateClicks("0");
-
-    const clickButton = document.getElementById("clickButton");
+        window.location.replace("/login.html");
+    }
 
     if (clickButton) {
-        clickButton.disabled = false;
-    }
-}
+        clickButton.addEventListener("click", makeClick);
 
-/* =========================================================
-   NUMBER FORMAT
-========================================================= */
+        /*
+         * Клик мышью без искусственного cooldown.
+         */
+        clickButton.addEventListener("mousedown", () => {
+            clickButton.classList.add("pressed");
+        });
 
-function formatNumber(value) {
-    try {
-        return BigInt(String(value)).toLocaleString("ru-RU");
-    } catch {
-        return String(value);
-    }
-}
+        clickButton.addEventListener("mouseup", () => {
+            clickButton.classList.remove("pressed");
+        });
 
-/* =========================================================
-   TOAST
-========================================================= */
-
-function showToast(message) {
-    let toast = document.getElementById("toast");
-
-    if (!toast) {
-        toast = document.createElement("div");
-        toast.id = "toast";
-        toast.className = "toast";
-
-        document.body.appendChild(toast);
+        clickButton.addEventListener("mouseleave", () => {
+            clickButton.classList.remove("pressed");
+        });
     }
 
-    toast.textContent = message;
-    toast.classList.add("show");
+    if (logoutButton) {
+        logoutButton.addEventListener("click", logout);
+    }
 
-    clearTimeout(window.toastTimer);
-
-    window.toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2500);
-}
+    loadUser();
+});

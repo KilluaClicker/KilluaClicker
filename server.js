@@ -1,30 +1,19 @@
 require("dotenv").config();
 
 const express = require("express");
-const path = require("path");
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
+const path = require("path");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Killua666";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Kotkova2015";
-const SESSION_SECRET =
-    process.env.SESSION_SECRET || "Kc_9xP7mQ2vL8nR4zT6wY1";
-
 const isProduction = process.env.NODE_ENV === "production";
 
-
-// =====================================================
-// DATABASE
-// =====================================================
-
 if (!process.env.DATABASE_URL) {
-    console.error("ОШИБКА: DATABASE_URL не найден в .env");
+    console.error("ОШИБКА: DATABASE_URL не задан в .env");
     process.exit(1);
 }
 
@@ -35,20 +24,14 @@ const pool = new Pool({
     }
 });
 
-
-// =====================================================
-// EXPRESS
-// =====================================================
+pool.on("error", (error) => {
+    console.error("Ошибка PostgreSQL:", error);
+});
 
 app.set("trust proxy", 1);
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
-
-
-// =====================================================
-// SESSION
-// =====================================================
 
 app.use(
     session({
@@ -58,13 +41,13 @@ app.use(
             createTableIfMissing: true
         }),
 
-        secret: SESSION_SECRET,
+        secret:
+            process.env.SESSION_SECRET ||
+            "change-this-secret",
 
         resave: false,
 
         saveUninitialized: false,
-
-        rolling: true,
 
         cookie: {
             httpOnly: true,
@@ -75,13 +58,97 @@ app.use(
     })
 );
 
+/* =========================================================
+   НАСТРОЙКИ
+========================================================= */
 
-// =====================================================
-// DATABASE INIT
-// =====================================================
+const ADMIN_USERNAME =
+    process.env.ADMIN_USERNAME || "Killua666";
+
+const ADMIN_PASSWORD =
+    process.env.ADMIN_PASSWORD || "Kotkova2015";
+
+/*
+ * Магазин.
+ *
+ * Цена каждого товара = 2 × количество получаемых кликов.
+ */
+const STORE_ITEMS = [
+    {
+        id: "1",
+        name: "+1 клик",
+        amount: "1",
+        price: "2",
+        icon: "✦"
+    },
+
+    {
+        id: "10",
+        name: "+10 кликов",
+        amount: "10",
+        price: "20",
+        icon: "✦"
+    },
+
+    {
+        id: "100",
+        name: "+100 кликов",
+        amount: "100",
+        price: "200",
+        icon: "✦"
+    },
+
+    {
+        id: "1000",
+        name: "+1 000 кликов",
+        amount: "1000",
+        price: "2000",
+        icon: "⚡"
+    },
+
+    {
+        id: "million",
+        name: "+1 миллион",
+        amount: "1000000",
+        price: "2000000",
+        icon: "◆"
+    },
+
+    {
+        id: "billion",
+        name: "+1 миллиард",
+        amount: "1000000000",
+        price: "2000000000",
+        icon: "◆"
+    },
+
+    {
+        id: "quadrillion",
+        name: "+1 квадриллион",
+        amount: "1000000000000000",
+        price: "2000000000000000",
+        icon: "♛"
+    },
+
+    {
+        id: "sextillion",
+        name: "+1 сикстиллион",
+        amount: "1000000000000000000000",
+        price: "2000000000000000000000",
+        icon: "♛"
+    }
+];
+
+/* =========================================================
+   DATABASE
+========================================================= */
+
+async function query(text, params = []) {
+    return pool.query(text, params);
+}
 
 async function initDatabase() {
-    await pool.query(`
+    await query(`
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(32) UNIQUE NOT NULL,
@@ -89,1485 +156,1917 @@ async function initDatabase() {
             clicks NUMERIC(100,0) NOT NULL DEFAULT 0,
             banned BOOLEAN NOT NULL DEFAULT FALSE,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
+        )
     `);
 
-    await pool.query(`
+    /*
+     * На случай, если старая таблица была BIGINT.
+     * NUMERIC(100,0) позволяет хранить очень большие числа.
+     */
+    await query(`
         ALTER TABLE users
         ALTER COLUMN clicks TYPE NUMERIC(100,0)
-        USING clicks::numeric;
+        USING clicks::numeric
     `).catch(() => {});
 
-    await pool.query(`
+    await query(`
         CREATE TABLE IF NOT EXISTS clans (
             id SERIAL PRIMARY KEY,
             name VARCHAR(32) UNIQUE NOT NULL,
             tag VARCHAR(8) UNIQUE NOT NULL,
-            owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            owner_id INTEGER NOT NULL
+                REFERENCES users(id)
+                ON DELETE CASCADE,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
+        )
     `);
 
-    await pool.query(`
+    await query(`
         CREATE TABLE IF NOT EXISTS clan_members (
             id SERIAL PRIMARY KEY,
-            clan_id INTEGER NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
-            user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            clan_id INTEGER NOT NULL
+                REFERENCES clans(id)
+                ON DELETE CASCADE,
+            user_id INTEGER NOT NULL UNIQUE
+                REFERENCES users(id)
+                ON DELETE CASCADE,
             joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
+        )
     `);
+
+    /*
+     * Создаём администратора, если его ещё нет.
+     */
+    const adminResult = await query(
+        `
+        SELECT id, password
+        FROM users
+        WHERE username = $1
+        LIMIT 1
+        `,
+        [ADMIN_USERNAME]
+    );
+
+    if (adminResult.rows.length === 0) {
+        const passwordHash = await bcrypt.hash(
+            ADMIN_PASSWORD,
+            10
+        );
+
+        await query(
+            `
+            INSERT INTO users
+            (
+                username,
+                password,
+                clicks,
+                banned
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                0,
+                false
+            )
+            `,
+            [
+                ADMIN_USERNAME,
+                passwordHash
+            ]
+        );
+
+        console.log(
+            `Администратор ${ADMIN_USERNAME} создан.`
+        );
+    } else {
+        /*
+         * Если пароль администратора в .env отличается
+         * от сохранённого, обновляем его.
+         */
+        const adminUser = adminResult.rows[0];
+
+        const passwordCorrect =
+            await bcrypt.compare(
+                ADMIN_PASSWORD,
+                adminUser.password
+            );
+
+        if (!passwordCorrect) {
+            const passwordHash =
+                await bcrypt.hash(
+                    ADMIN_PASSWORD,
+                    10
+                );
+
+            await query(
+                `
+                UPDATE users
+                SET password = $1
+                WHERE username = $2
+                `,
+                [
+                    passwordHash,
+                    ADMIN_USERNAME
+                ]
+            );
+
+            console.log(
+                "Пароль администратора обновлён."
+            );
+        }
+    }
 
     console.log("База данных готова.");
 }
 
-
-// =====================================================
-// HELPERS
-// =====================================================
-
-function isLoggedIn(req) {
-    return !!req.session.userId;
-}
-
+/* =========================================================
+   CURRENT USER
+========================================================= */
 
 async function getCurrentUser(req) {
     if (!req.session.userId) {
         return null;
     }
 
-    const result = await pool.query(
+    const result = await query(
         `
-        SELECT id, username, clicks, banned, created_at
+        SELECT
+            id,
+            username,
+            clicks,
+            banned,
+            created_at
         FROM users
         WHERE id = $1
+        LIMIT 1
         `,
         [req.session.userId]
     );
 
-    if (result.rows.length === 0) {
-        return null;
-    }
-
-    return result.rows[0];
+    return result.rows[0] || null;
 }
 
-
-function isAdminUser(user) {
-    return user && user.username === ADMIN_USERNAME;
-}
-
+/* =========================================================
+   AUTH MIDDLEWARE
+========================================================= */
 
 function requireLogin(req, res, next) {
     if (!req.session.userId) {
         return res.status(401).json({
             success: false,
-            message: "Необходимо войти в аккаунт"
+            message:
+                "Сессия закончилась. Войдите снова."
         });
     }
 
     next();
 }
 
-
 async function requireAdmin(req, res, next) {
     try {
-        const user = await getCurrentUser(req);
+        if (!req.session.userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Не авторизован."
+            });
+        }
+
+        const user =
+            await getCurrentUser(req);
 
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: "Необходимо войти в аккаунт"
+                message: "Пользователь не найден."
             });
         }
 
-        if (!isAdminUser(user)) {
+        if (user.banned) {
             return res.status(403).json({
                 success: false,
-                message: "Доступ запрещён"
+                message:
+                    "Ваш аккаунт заблокирован."
             });
         }
 
-        req.currentUser = user;
+        if (
+            user.username !==
+            ADMIN_USERNAME
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: "Доступ запрещён."
+            });
+        }
 
         next();
     } catch (error) {
-        console.error(error);
+        console.error(
+            "ADMIN AUTH ERROR:",
+            error
+        );
 
         res.status(500).json({
             success: false,
-            message: "Ошибка сервера"
+            message: "Ошибка сервера."
         });
     }
 }
 
-
-// =====================================================
-// HEALTH
-// =====================================================
-
-app.get("/api/health", async (req, res) => {
-    try {
-        await pool.query("SELECT 1");
-
-        res.json({
-            success: true,
-            message: "KilluaClicker server работает",
-            database: "connected"
-        });
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка подключения к базе данных"
-        });
-    }
-});
-
-
-// =====================================================
-// REGISTER
-// =====================================================
+/* =========================================================
+   REGISTER
+========================================================= */
 
 app.post("/api/register", async (req, res) => {
     try {
-        let { username, password } = req.body;
+        const username =
+            String(
+                req.body.username || ""
+            ).trim();
 
-        username = String(username || "").trim();
-        password = String(password || "");
+        const password =
+            String(
+                req.body.password || ""
+            );
 
-        if (!username || !password) {
+        if (
+            !/^[A-Za-z0-9_]{3,32}$/.test(
+                username
+            )
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Заполни все поля"
+                message:
+                    "Логин должен содержать от 3 до 32 символов: буквы, цифры или _."
             });
         }
 
-        if (username.length < 3 || username.length > 32) {
+        if (
+            password.length < 4 ||
+            password.length > 100
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Логин должен быть от 3 до 32 символов"
+                message:
+                    "Пароль должен быть от 4 до 100 символов."
             });
         }
 
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            return res.status(400).json({
-                success: false,
-                message: "Логин может содержать только буквы, цифры и _"
-            });
-        }
-
-        if (password.length < 4) {
-            return res.status(400).json({
-                success: false,
-                message: "Пароль должен быть минимум 4 символа"
-            });
-        }
-
-        const existing = await pool.query(
-            `
-            SELECT id
-            FROM users
-            WHERE LOWER(username) = LOWER($1)
-            `,
-            [username]
-        );
+        const existing =
+            await query(
+                `
+                SELECT id
+                FROM users
+                WHERE LOWER(username) =
+                      LOWER($1)
+                LIMIT 1
+                `,
+                [username]
+            );
 
         if (existing.rows.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: "Такой логин уже существует"
+                message:
+                    "Такой пользователь уже существует."
             });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const passwordHash =
+            await bcrypt.hash(
+                password,
+                10
+            );
 
-        const result = await pool.query(
-            `
-            INSERT INTO users
-                (username, password, clicks, banned)
-            VALUES
-                ($1, $2, 0, false)
-            RETURNING id, username, clicks, banned
-            `,
-            [username, hashedPassword]
+        const result =
+            await query(
+                `
+                INSERT INTO users
+                (
+                    username,
+                    password,
+                    clicks,
+                    banned
+                )
+                VALUES
+                (
+                    $1,
+                    $2,
+                    0,
+                    false
+                )
+                RETURNING
+                    id,
+                    username,
+                    clicks,
+                    banned
+                `,
+                [
+                    username,
+                    passwordHash
+                ]
+            );
+
+        /*
+         * Создаём новую сессию после регистрации.
+         */
+        await new Promise(
+            (resolve, reject) => {
+                req.session.regenerate(
+                    (error) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    }
+                );
+            }
         );
 
-        const user = result.rows[0];
+        req.session.userId =
+            result.rows[0].id;
 
-        req.session.userId = user.id;
-
-        await new Promise((resolve, reject) => {
-            req.session.save((err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        await new Promise(
+            (resolve, reject) => {
+                req.session.save(
+                    (error) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    }
+                );
+            }
+        );
 
         res.json({
             success: true,
-            message: "Регистрация успешна",
             user: {
-                id: user.id,
-                username: user.username,
-                clicks: String(user.clicks)
+                id: result.rows[0].id,
+                username:
+                    result.rows[0].username,
+                clicks:
+                    String(
+                        result.rows[0].clicks
+                    ),
+                banned:
+                    result.rows[0].banned
             }
         });
     } catch (error) {
-        console.error("REGISTER ERROR:", error);
+        console.error(
+            "REGISTER ERROR:",
+            error
+        );
 
         res.status(500).json({
             success: false,
-            message: "Ошибка сервера при регистрации"
+            message:
+                "Ошибка сервера при регистрации."
         });
     }
 });
 
-
-// =====================================================
-// LOGIN
-// =====================================================
+/* =========================================================
+   LOGIN
+========================================================= */
 
 app.post("/api/login", async (req, res) => {
     try {
-        let { username, password } = req.body;
+        const username =
+            String(
+                req.body.username || ""
+            ).trim();
 
-        username = String(username || "").trim();
-        password = String(password || "");
+        const password =
+            String(
+                req.body.password || ""
+            );
 
-        if (!username || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Введите логин и пароль"
-            });
-        }
-
-        const result = await pool.query(
-            `
-            SELECT id, username, password, clicks, banned
-            FROM users
-            WHERE LOWER(username) = LOWER($1)
-            `,
-            [username]
-        );
+        const result =
+            await query(
+                `
+                SELECT
+                    id,
+                    username,
+                    password,
+                    clicks,
+                    banned
+                FROM users
+                WHERE LOWER(username) =
+                      LOWER($1)
+                LIMIT 1
+                `,
+                [username]
+            );
 
         if (result.rows.length === 0) {
             return res.status(401).json({
                 success: false,
-                message: "Неверный логин или пароль"
+                message:
+                    "Неверный логин или пароль."
             });
         }
 
-        const user = result.rows[0];
+        const user =
+            result.rows[0];
 
         if (user.banned) {
             return res.status(403).json({
                 success: false,
-                message: "Ваш аккаунт заблокирован"
+                message:
+                    "Ваш аккаунт заблокирован."
             });
         }
 
-        const passwordCorrect = await bcrypt.compare(
-            password,
-            user.password
-        );
+        const passwordCorrect =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
 
         if (!passwordCorrect) {
             return res.status(401).json({
                 success: false,
-                message: "Неверный логин или пароль"
+                message:
+                    "Неверный логин или пароль."
             });
         }
 
-        // Удаляем старую сессию и создаём новую.
-        // Это дополнительно защищает от проблем со старой cookie.
-        await new Promise((resolve, reject) => {
-            req.session.regenerate((err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        /*
+         * Полностью новая сессия.
+         */
+        await new Promise(
+            (resolve, reject) => {
+                req.session.regenerate(
+                    (error) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    }
+                );
+            }
+        );
 
-        req.session.userId = user.id;
+        req.session.userId =
+            user.id;
 
-        await new Promise((resolve, reject) => {
-            req.session.save((err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        await new Promise(
+            (resolve, reject) => {
+                req.session.save(
+                    (error) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    }
+                );
+            }
+        );
 
         res.json({
             success: true,
-            message: "Вход выполнен",
             user: {
                 id: user.id,
                 username: user.username,
-                clicks: String(user.clicks)
+                clicks:
+                    String(user.clicks),
+                banned: user.banned
             }
         });
     } catch (error) {
-        console.error("LOGIN ERROR:", error);
+        console.error(
+            "LOGIN ERROR:",
+            error
+        );
 
         res.status(500).json({
             success: false,
-            message: "Ошибка сервера при входе"
+            message:
+                "Ошибка сервера при входе."
         });
     }
 });
 
-
-// =====================================================
-// LOGOUT
-// =====================================================
-
-app.post("/api/logout", (req, res) => {
-    req.session.destroy((error) => {
-        if (error) {
-            console.error("LOGOUT ERROR:", error);
-
-            return res.status(500).json({
-                success: false,
-                message: "Не удалось выйти"
-            });
-        }
-
-        res.clearCookie("connect.sid", {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "lax"
-        });
-
-        res.json({
-            success: true,
-            message: "Вы вышли из аккаунта"
-        });
-    });
-});
-
-
-// =====================================================
-// CURRENT USER
-// =====================================================
-
-app.get("/api/me", async (req, res) => {
-    try {
-        const user = await getCurrentUser(req);
-
-        if (!user) {
-            if (req.session.userId) {
-                req.session.destroy(() => {});
-            }
-
-            return res.status(401).json({
-                success: false,
-                loggedIn: false,
-                message: "Вы не авторизованы"
-            });
-        }
-
-        if (user.banned) {
-            req.session.destroy(() => {});
-
-            return res.status(403).json({
-                success: false,
-                loggedIn: false,
-                message: "Ваш аккаунт заблокирован"
-            });
-        }
-
-        res.json({
-            success: true,
-            loggedIn: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                clicks: String(user.clicks),
-                banned: user.banned,
-                created_at: user.created_at
-            }
-        });
-    } catch (error) {
-        console.error("ME ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка сервера"
-        });
-    }
-});
-
-
-// =====================================================
-// CLICK
-// =====================================================
-
-app.post("/api/click", requireLogin, async (req, res) => {
-    try {
-        const user = await getCurrentUser(req);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "Сессия закончилась"
-            });
-        }
-
-        if (user.banned) {
-            return res.status(403).json({
-                success: false,
-                message: "Аккаунт заблокирован"
-            });
-        }
-
-        const result = await pool.query(
-            `
-            UPDATE users
-            SET clicks = clicks + 1
-            WHERE id = $1
-            RETURNING clicks
-            `,
-            [user.id]
-        );
-
-        res.json({
-            success: true,
-            clicks: String(result.rows[0].clicks)
-        });
-    } catch (error) {
-        console.error("CLICK ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка при клике"
-        });
-    }
-});
-
-
-// =====================================================
-// TOP
-// =====================================================
-
-app.get("/api/top", requireLogin, async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT
-                id,
-                username,
-                clicks
-            FROM users
-            WHERE banned = false
-            ORDER BY clicks DESC
-            LIMIT 100
-        `);
-
-        res.json({
-            success: true,
-            users: result.rows.map((user) => ({
-                id: user.id,
-                username: user.username,
-                clicks: String(user.clicks)
-            }))
-        });
-    } catch (error) {
-        console.error("TOP ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка загрузки топа"
-        });
-    }
-});
-
-
-// =====================================================
-// SHOP
-// =====================================================
-
-const STORE_ITEMS = [
-    {
-        id: "1",
-        name: "+1 клик",
-        amount: "1",
-        price: "0",
-        icon: "✦"
-    },
-    {
-        id: "10",
-        name: "+10 кликов",
-        amount: "10",
-        price: "5",
-        icon: "✦"
-    },
-    {
-        id: "100",
-        name: "+100 кликов",
-        amount: "100",
-        price: "40",
-        icon: "✦"
-    },
-    {
-        id: "1000",
-        name: "+1 000 кликов",
-        amount: "1000",
-        price: "350",
-        icon: "⚡"
-    },
-    {
-        id: "million",
-        name: "+1 миллион",
-        amount: "1000000",
-        price: "300000",
-        icon: "◆"
-    },
-    {
-        id: "billion",
-        name: "+1 миллиард",
-        amount: "1000000000",
-        price: "300000000",
-        icon: "◆"
-    },
-    {
-        id: "quadrillion",
-        name: "+1 квадриллион",
-        amount: "1000000000000000",
-        price: "300000000000000",
-        icon: "♛"
-    },
-    {
-        id: "sextillion",
-        name: "+1 сикстиллион",
-        amount: "1000000000000000000000",
-        price: "300000000000000000000",
-        icon: "♛"
-    }
-];
-
-
-app.get("/api/shop", requireLogin, (req, res) => {
-    res.json({
-        success: true,
-        items: STORE_ITEMS
-    });
-});
-
-
-app.post("/api/shop/buy", requireLogin, async (req, res) => {
-    try {
-        const { itemId } = req.body;
-
-        const item = STORE_ITEMS.find(
-            (storeItem) => storeItem.id === String(itemId)
-        );
-
-        if (!item) {
-            return res.status(404).json({
-                success: false,
-                message: "Товар не найден"
-            });
-        }
-
-        const price = BigInt(item.price);
-        const amount = BigInt(item.amount);
-
-        const user = await getCurrentUser(req);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "Сессия закончилась"
-            });
-        }
-
-        const currentClicks = BigInt(String(user.clicks));
-
-        if (currentClicks < price) {
-            return res.status(400).json({
-                success: false,
-                message: "Недостаточно кликов"
-            });
-        }
-
-        const newClicks = currentClicks - price + amount;
-
-        await pool.query(
-            `
-            UPDATE users
-            SET clicks = $1
-            WHERE id = $2
-            `,
-            [newClicks.toString(), user.id]
-        );
-
-        res.json({
-            success: true,
-            message: "Покупка успешна",
-            clicks: newClicks.toString()
-        });
-    } catch (error) {
-        console.error("SHOP ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка покупки"
-        });
-    }
-});
-
-
-// =====================================================
-// CLANS
-// =====================================================
-
-app.get("/api/clans/my", requireLogin, async (req, res) => {
-    try {
-        const result = await pool.query(
-            `
-            SELECT
-                c.id,
-                c.name,
-                c.tag,
-                c.owner_id,
-                c.created_at
-            FROM clans c
-            INNER JOIN clan_members cm
-                ON cm.clan_id = c.id
-            WHERE cm.user_id = $1
-            LIMIT 1
-            `,
-            [req.session.userId]
-        );
-
-        res.json({
-            success: true,
-            clan: result.rows.length > 0
-                ? result.rows[0]
-                : null
-        });
-    } catch (error) {
-        console.error("MY CLAN ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка загрузки клана"
-        });
-    }
-});
-
-
-app.post("/api/clans/create", requireLogin, async (req, res) => {
-    const client = await pool.connect();
-
-    try {
-        let { name, tag } = req.body;
-
-        name = String(name || "").trim();
-        tag = String(tag || "").trim().toUpperCase();
-
-        if (!name || !tag) {
-            return res.status(400).json({
-                success: false,
-                message: "Введите название и тег"
-            });
-        }
-
-        if (name.length < 2 || name.length > 32) {
-            return res.status(400).json({
-                success: false,
-                message: "Название клана: 2-32 символа"
-            });
-        }
-
-        if (tag.length < 2 || tag.length > 8) {
-            return res.status(400).json({
-                success: false,
-                message: "Тег клана: 2-8 символов"
-            });
-        }
-
-        await client.query("BEGIN");
-
-        const existingMember = await client.query(
-            `
-            SELECT id
-            FROM clan_members
-            WHERE user_id = $1
-            `,
-            [req.session.userId]
-        );
-
-        if (existingMember.rows.length > 0) {
-            await client.query("ROLLBACK");
-
-            return res.status(400).json({
-                success: false,
-                message: "Вы уже состоите в клане"
-            });
-        }
-
-        const clanResult = await client.query(
-            `
-            INSERT INTO clans
-                (name, tag, owner_id)
-            VALUES
-                ($1, $2, $3)
-            RETURNING id, name, tag, owner_id, created_at
-            `,
-            [name, tag, req.session.userId]
-        );
-
-        const clan = clanResult.rows[0];
-
-        await client.query(
-            `
-            INSERT INTO clan_members
-                (clan_id, user_id)
-            VALUES
-                ($1, $2)
-            `,
-            [clan.id, req.session.userId]
-        );
-
-        await client.query("COMMIT");
-
-        res.json({
-            success: true,
-            message: "Клан создан",
-            clan
-        });
-    } catch (error) {
-        await client.query("ROLLBACK");
-
-        console.error("CREATE CLAN ERROR:", error);
-
-        if (error.code === "23505") {
-            return res.status(400).json({
-                success: false,
-                message: "Название или тег уже занят"
-            });
-        }
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка создания клана"
-        });
-    } finally {
-        client.release();
-    }
-});
-
-
-app.get("/api/clans", requireLogin, async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT
-                c.id,
-                c.name,
-                c.tag,
-                c.owner_id,
-                c.created_at,
-                COUNT(cm.user_id)::INTEGER AS members
-            FROM clans c
-            LEFT JOIN clan_members cm
-                ON cm.clan_id = c.id
-            GROUP BY
-                c.id,
-                c.name,
-                c.tag,
-                c.owner_id,
-                c.created_at
-            ORDER BY members DESC, c.id ASC
-            LIMIT 100
-        `);
-
-        res.json({
-            success: true,
-            clans: result.rows
-        });
-    } catch (error) {
-        console.error("CLANS ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка загрузки кланов"
-        });
-    }
-});
-
-
-app.post("/api/clans/:id/join", requireLogin, async (req, res) => {
-    try {
-        const clanId = Number(req.params.id);
-
-        if (!Number.isInteger(clanId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Неверный ID клана"
-            });
-        }
-
-        const existingMember = await pool.query(
-            `
-            SELECT id
-            FROM clan_members
-            WHERE user_id = $1
-            `,
-            [req.session.userId]
-        );
-
-        if (existingMember.rows.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Вы уже состоите в клане"
-            });
-        }
-
-        const clan = await pool.query(
-            `
-            SELECT id
-            FROM clans
-            WHERE id = $1
-            `,
-            [clanId]
-        );
-
-        if (clan.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Клан не найден"
-            });
-        }
-
-        await pool.query(
-            `
-            INSERT INTO clan_members
-                (clan_id, user_id)
-            VALUES
-                ($1, $2)
-            `,
-            [clanId, req.session.userId]
-        );
-
-        res.json({
-            success: true,
-            message: "Вы вступили в клан"
-        });
-    } catch (error) {
-        console.error("JOIN CLAN ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка вступления в клан"
-        });
-    }
-});
-
-
-app.post("/api/clans/leave", requireLogin, async (req, res) => {
-    try {
-        const member = await pool.query(
-            `
-            SELECT clan_id
-            FROM clan_members
-            WHERE user_id = $1
-            `,
-            [req.session.userId]
-        );
-
-        if (member.rows.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Вы не состоите в клане"
-            });
-        }
-
-        const clanId = member.rows[0].clan_id;
-
-        const clan = await pool.query(
-            `
-            SELECT owner_id
-            FROM clans
-            WHERE id = $1
-            `,
-            [clanId]
-        );
-
-        await pool.query(
-            `
-            DELETE FROM clan_members
-            WHERE user_id = $1
-            `,
-            [req.session.userId]
-        );
-
-        if (
-            clan.rows.length > 0 &&
-            clan.rows[0].owner_id === req.session.userId
-        ) {
-            await pool.query(
-                `
-                DELETE FROM clans
-                WHERE id = $1
-                `,
-                [clanId]
-            );
-        }
-
-        res.json({
-            success: true,
-            message: "Вы вышли из клана"
-        });
-    } catch (error) {
-        console.error("LEAVE CLAN ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка выхода из клана"
-        });
-    }
-});
-
-
-// =====================================================
-// ADMIN
-// =====================================================
-
-app.get("/api/admin/users", requireAdmin, async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT
-                id,
-                username,
-                clicks,
-                banned,
-                created_at
-            FROM users
-            ORDER BY id ASC
-        `);
-
-        res.json({
-            success: true,
-            users: result.rows.map((user) => ({
-                id: user.id,
-                username: user.username,
-                clicks: String(user.clicks),
-                banned: user.banned,
-                created_at: user.created_at
-            }))
-        });
-    } catch (error) {
-        console.error("ADMIN USERS ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Ошибка загрузки пользователей"
-        });
-    }
-});
-
+/* =========================================================
+   LOGOUT
+========================================================= */
 
 app.post(
-    "/api/admin/user/:id/clicks",
-    requireAdmin,
+    "/api/logout",
+    (req, res) => {
+        req.session.destroy(
+            (error) => {
+                res.clearCookie(
+                    "connect.sid"
+                );
+
+                if (error) {
+                    console.error(
+                        "LOGOUT ERROR:",
+                        error
+                    );
+                }
+
+                res.json({
+                    success: true
+                });
+            }
+        );
+    }
+);
+
+/* =========================================================
+   ME
+========================================================= */
+
+app.get(
+    "/api/me",
+    requireLogin,
     async (req, res) => {
         try {
-            const id = Number(req.params.id);
-            const clicks = String(req.body.clicks ?? "");
+            const user =
+                await getCurrentUser(req);
 
-            if (!Number.isInteger(id)) {
-                return res.status(400).json({
+            if (!user || user.banned) {
+                req.session.destroy(
+                    () => {}
+                );
+
+                return res.status(401).json({
                     success: false,
-                    message: "Неверный ID"
+                    message:
+                        "Сессия недействительна."
                 });
             }
 
-            if (!/^\d+$/.test(clicks)) {
-                return res.status(400).json({
+            res.json({
+                success: true,
+                user: {
+                    id: user.id,
+                    username:
+                        user.username,
+                    clicks:
+                        String(
+                            user.clicks
+                        ),
+                    banned:
+                        user.banned,
+                    created_at:
+                        user.created_at,
+                    isAdmin:
+                        user.username ===
+                        ADMIN_USERNAME
+                }
+            });
+        } catch (error) {
+            console.error(
+                "ME ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Ошибка сервера."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   CLICK
+========================================================= */
+
+app.post(
+    "/api/click",
+    requireLogin,
+    async (req, res) => {
+        try {
+            /*
+             * Здесь НЕТ cooldown.
+             *
+             * Каждый запрос добавляет ровно 1 клик.
+             */
+            const result =
+                await query(
+                    `
+                    UPDATE users
+                    SET clicks =
+                        clicks + 1
+                    WHERE id = $1
+                      AND banned = false
+                    RETURNING
+                        id,
+                        username,
+                        clicks
+                    `,
+                    [
+                        req.session.userId
+                    ]
+                );
+
+            if (
+                result.rows.length === 0
+            ) {
+                return res.status(403).json({
                     success: false,
-                    message: "Неверное количество кликов"
+                    message:
+                        "Аккаунт заблокирован."
                 });
             }
 
-            await pool.query(
+            res.json({
+                success: true,
+                clicks:
+                    String(
+                        result.rows[0].clicks
+                    )
+            });
+        } catch (error) {
+            console.error(
+                "CLICK ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Ошибка клика."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   TOP PLAYERS
+========================================================= */
+
+app.get(
+    "/api/top",
+    async (req, res) => {
+        try {
+            const result =
+                await query(`
+                    SELECT
+                        id,
+                        username,
+                        clicks
+                    FROM users
+                    WHERE banned = false
+                    ORDER BY
+                        clicks DESC,
+                        id ASC
+                    LIMIT 100
+                `);
+
+            res.json({
+                success: true,
+
+                users:
+                    result.rows.map(
+                        (user) => ({
+                            id: user.id,
+                            username:
+                                user.username,
+                            clicks:
+                                String(
+                                    user.clicks
+                                )
+                        })
+                    )
+            });
+        } catch (error) {
+            console.error(
+                "TOP ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Не удалось загрузить топ."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   SHOP
+========================================================= */
+
+app.get(
+    "/api/shop",
+    requireLogin,
+    async (req, res) => {
+        res.json({
+            success: true,
+            items: STORE_ITEMS
+        });
+    }
+);
+
+/*
+ * Покупка товара.
+ *
+ * Например:
+ *
+ * +1       -> цена 2
+ * +10      -> цена 20
+ * +100     -> цена 200
+ * +1000    -> цена 2000
+ * +1 млн   -> цена 2 млн
+ *
+ * Огромные числа считаются через BigInt.
+ */
+app.post(
+    "/api/shop/buy",
+    requireLogin,
+    async (req, res) => {
+        const client =
+            await pool.connect();
+
+        try {
+            const itemId =
+                String(
+                    req.body.itemId || ""
+                );
+
+            const item =
+                STORE_ITEMS.find(
+                    (entry) =>
+                        entry.id ===
+                        itemId
+                );
+
+            if (!item) {
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Товар не найден."
+                });
+            }
+
+            const price =
+                BigInt(item.price);
+
+            const amount =
+                BigInt(item.amount);
+
+            await client.query(
+                "BEGIN"
+            );
+
+            /*
+             * Блокируем строку пользователя
+             * на время покупки.
+             *
+             * Это защищает от одновременных
+             * покупок и неправильного баланса.
+             */
+            const userResult =
+                await client.query(
+                    `
+                    SELECT clicks
+                    FROM users
+                    WHERE id = $1
+                      AND banned = false
+                    FOR UPDATE
+                    `,
+                    [
+                        req.session.userId
+                    ]
+                );
+
+            if (
+                userResult.rows.length ===
+                0
+            ) {
+                await client.query(
+                    "ROLLBACK"
+                );
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "Аккаунт заблокирован."
+                });
+            }
+
+            const currentClicks =
+                BigInt(
+                    String(
+                        userResult.rows[0]
+                            .clicks
+                    )
+                );
+
+            if (
+                currentClicks <
+                price
+            ) {
+                await client.query(
+                    "ROLLBACK"
+                );
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Недостаточно кликов."
+                });
+            }
+
+            /*
+             * Покупка:
+             *
+             * баланс - цена + получаемое количество
+             */
+            const newClicks =
+                currentClicks -
+                price +
+                amount;
+
+            await client.query(
                 `
                 UPDATE users
                 SET clicks = $1
                 WHERE id = $2
                 `,
-                [clicks, id]
+                [
+                    newClicks.toString(),
+                    req.session.userId
+                ]
+            );
+
+            await client.query(
+                "COMMIT"
             );
 
             res.json({
                 success: true,
-                message: "Клики изменены"
+                message:
+                    `Покупка "${item.name}" выполнена.`,
+                clicks:
+                    newClicks.toString(),
+                item: {
+                    id: item.id,
+                    name: item.name,
+                    amount: item.amount,
+                    price: item.price
+                }
             });
         } catch (error) {
-            console.error(error);
+            try {
+                await client.query(
+                    "ROLLBACK"
+                );
+            } catch {}
+
+            console.error(
+                "SHOP BUY ERROR:",
+                error
+            );
 
             res.status(500).json({
                 success: false,
-                message: "Ошибка"
+                message:
+                    "Ошибка покупки."
+            });
+        } finally {
+            client.release();
+        }
+    }
+);
+
+/* =========================================================
+   CLANS - LIST
+========================================================= */
+
+app.get(
+    "/api/clans",
+    async (req, res) => {
+        try {
+            const result =
+                await query(`
+                    SELECT
+                        c.id,
+                        c.name,
+                        c.tag,
+                        c.owner_id,
+                        u.username AS owner,
+                        COUNT(
+                            cm.user_id
+                        )::int AS members
+                    FROM clans c
+
+                    JOIN users u
+                        ON u.id =
+                           c.owner_id
+
+                    LEFT JOIN clan_members cm
+                        ON cm.clan_id =
+                           c.id
+
+                    GROUP BY
+                        c.id,
+                        u.username
+
+                    ORDER BY
+                        members DESC,
+                        c.id ASC
+
+                    LIMIT 100
+                `);
+
+            res.json({
+                success: true,
+                clans:
+                    result.rows
+            });
+        } catch (error) {
+            console.error(
+                "CLANS ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Не удалось загрузить кланы."
             });
         }
     }
 );
 
+/* =========================================================
+   MY CLAN
+========================================================= */
 
-app.post(
-    "/api/admin/user/:id/add-clicks",
-    requireAdmin,
+app.get(
+    "/api/clans/my",
+    requireLogin,
     async (req, res) => {
         try {
-            const id = Number(req.params.id);
-            const amount = String(req.body.amount ?? "");
+            const result =
+                await query(
+                    `
+                    SELECT
+                        c.id,
+                        c.name,
+                        c.tag,
+                        c.owner_id,
+                        u.username AS owner
+                    FROM clan_members cm
 
-            if (!Number.isInteger(id)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Неверный ID"
+                    JOIN clans c
+                        ON c.id =
+                           cm.clan_id
+
+                    JOIN users u
+                        ON u.id =
+                           c.owner_id
+
+                    WHERE cm.user_id = $1
+
+                    LIMIT 1
+                    `,
+                    [
+                        req.session.userId
+                    ]
+                );
+
+            if (
+                result.rows.length ===
+                0
+            ) {
+                return res.json({
+                    success: true,
+                    clan: null
                 });
             }
 
-            if (!/^\d+$/.test(amount)) {
+            const clan =
+                result.rows[0];
+
+            const members =
+                await query(
+                    `
+                    SELECT
+                        u.id,
+                        u.username,
+                        u.clicks
+                    FROM clan_members cm
+
+                    JOIN users u
+                        ON u.id =
+                           cm.user_id
+
+                    WHERE cm.clan_id = $1
+
+                    ORDER BY
+                        u.clicks DESC
+                    `,
+                    [clan.id]
+                );
+
+            res.json({
+                success: true,
+
+                clan: {
+                    id: clan.id,
+                    name: clan.name,
+                    tag: clan.tag,
+                    owner_id:
+                        clan.owner_id,
+                    owner:
+                        clan.owner,
+
+                    members:
+                        members.rows.map(
+                            (member) => ({
+                                id:
+                                    member.id,
+                                username:
+                                    member.username,
+                                clicks:
+                                    String(
+                                        member.clicks
+                                    )
+                            })
+                        )
+                }
+            });
+        } catch (error) {
+            console.error(
+                "MY CLAN ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Ошибка загрузки клана."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   CREATE CLAN
+========================================================= */
+
+app.post(
+    "/api/clans/create",
+    requireLogin,
+    async (req, res) => {
+        try {
+            const name =
+                String(
+                    req.body.name || ""
+                ).trim();
+
+            const tag =
+                String(
+                    req.body.tag || ""
+                )
+                    .trim()
+                    .toUpperCase();
+
+            if (
+                !/^[A-Za-zА-Яа-я0-9_ ]{3,32}$/.test(
+                    name
+                )
+            ) {
                 return res.status(400).json({
                     success: false,
-                    message: "Неверное количество"
+                    message:
+                        "Название клана должно быть от 3 до 32 символов."
                 });
             }
 
-            await pool.query(
+            if (
+                !/^[A-ZА-ЯЁ0-9]{2,8}$/.test(
+                    tag
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Тег клана должен быть от 2 до 8 символов."
+                });
+            }
+
+            const already =
+                await query(
+                    `
+                    SELECT id
+                    FROM clan_members
+                    WHERE user_id = $1
+                    LIMIT 1
+                    `,
+                    [
+                        req.session.userId
+                    ]
+                );
+
+            if (
+                already.rows.length >
+                0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Вы уже состоите в клане."
+                });
+            }
+
+            const clanResult =
+                await query(
+                    `
+                    INSERT INTO clans
+                    (
+                        name,
+                        tag,
+                        owner_id
+                    )
+                    VALUES
+                    (
+                        $1,
+                        $2,
+                        $3
+                    )
+                    RETURNING
+                        id,
+                        name,
+                        tag,
+                        owner_id
+                    `,
+                    [
+                        name,
+                        tag,
+                        req.session.userId
+                    ]
+                );
+
+            await query(
                 `
-                UPDATE users
-                SET clicks = clicks + $1
-                WHERE id = $2
+                INSERT INTO clan_members
+                (
+                    clan_id,
+                    user_id
+                )
+                VALUES
+                (
+                    $1,
+                    $2
+                )
                 `,
-                [amount, id]
+                [
+                    clanResult.rows[0]
+                        .id,
+                    req.session.userId
+                ]
             );
 
             res.json({
                 success: true,
-                message: "Клики добавлены"
+                clan:
+                    clanResult.rows[0]
             });
         } catch (error) {
-            console.error(error);
+            console.error(
+                "CREATE CLAN ERROR:",
+                error
+            );
+
+            if (
+                error.code ===
+                "23505"
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Такое название или тег уже занят."
+                });
+            }
 
             res.status(500).json({
                 success: false,
-                message: "Ошибка"
+                message:
+                    "Не удалось создать клан."
             });
         }
     }
 );
 
+/* =========================================================
+   JOIN CLAN
+========================================================= */
 
 app.post(
-    "/api/admin/user/:id/ban",
+    "/api/clans/:id/join",
+    requireLogin,
+    async (req, res) => {
+        try {
+            const clanId =
+                Number(
+                    req.params.id
+                );
+
+            if (
+                !Number.isInteger(
+                    clanId
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Неверный клан."
+                });
+            }
+
+            const clan =
+                await query(
+                    `
+                    SELECT id
+                    FROM clans
+                    WHERE id = $1
+                    LIMIT 1
+                    `,
+                    [clanId]
+                );
+
+            if (
+                clan.rows.length ===
+                0
+            ) {
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Клан не найден."
+                });
+            }
+
+            const current =
+                await query(
+                    `
+                    SELECT id
+                    FROM clan_members
+                    WHERE user_id = $1
+                    LIMIT 1
+                    `,
+                    [
+                        req.session.userId
+                    ]
+                );
+
+            if (
+                current.rows.length >
+                0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Вы уже состоите в клане."
+                });
+            }
+
+            await query(
+                `
+                INSERT INTO clan_members
+                (
+                    clan_id,
+                    user_id
+                )
+                VALUES
+                (
+                    $1,
+                    $2
+                )
+                `,
+                [
+                    clanId,
+                    req.session.userId
+                ]
+            );
+
+            res.json({
+                success: true,
+                message:
+                    "Вы вступили в клан."
+            });
+        } catch (error) {
+            console.error(
+                "JOIN CLAN ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Не удалось вступить в клан."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   LEAVE CLAN
+========================================================= */
+
+app.post(
+    "/api/clans/leave",
+    requireLogin,
+    async (req, res) => {
+        try {
+            const current =
+                await query(
+                    `
+                    SELECT
+                        cm.clan_id,
+                        c.owner_id
+                    FROM clan_members cm
+
+                    JOIN clans c
+                        ON c.id =
+                           cm.clan_id
+
+                    WHERE cm.user_id = $1
+
+                    LIMIT 1
+                    `,
+                    [
+                        req.session.userId
+                    ]
+                );
+
+            if (
+                current.rows.length ===
+                0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Вы не состоите в клане."
+                });
+            }
+
+            const clanId =
+                current.rows[0]
+                    .clan_id;
+
+            const ownerId =
+                current.rows[0]
+                    .owner_id;
+
+            /*
+             * Если владелец выходит —
+             * удаляем весь клан.
+             */
+            if (
+                Number(ownerId) ===
+                Number(
+                    req.session.userId
+                )
+            ) {
+                await query(
+                    `
+                    DELETE FROM clans
+                    WHERE id = $1
+                    `,
+                    [clanId]
+                );
+
+                return res.json({
+                    success: true,
+                    message:
+                        "Клан удалён."
+                });
+            }
+
+            await query(
+                `
+                DELETE FROM clan_members
+                WHERE clan_id = $1
+                  AND user_id = $2
+                `,
+                [
+                    clanId,
+                    req.session.userId
+                ]
+            );
+
+            res.json({
+                success: true,
+                message:
+                    "Вы вышли из клана."
+            });
+        } catch (error) {
+            console.error(
+                "LEAVE CLAN ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Не удалось выйти из клана."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   ADMIN - USERS
+========================================================= */
+
+app.get(
+    "/api/admin/users",
     requireAdmin,
     async (req, res) => {
         try {
-            const id = Number(req.params.id);
+            const result =
+                await query(`
+                    SELECT
+                        id,
+                        username,
+                        clicks,
+                        banned,
+                        created_at
+                    FROM users
+                    ORDER BY
+                        clicks DESC,
+                        id ASC
+                `);
 
-            if (!Number.isInteger(id)) {
-                return res.status(400).json({
+            res.json({
+                success: true,
+
+                users:
+                    result.rows.map(
+                        (user) => ({
+                            id: user.id,
+                            username:
+                                user.username,
+                            clicks:
+                                String(
+                                    user.clicks
+                                ),
+                            banned:
+                                user.banned,
+                            created_at:
+                                user.created_at
+                        })
+                    )
+            });
+        } catch (error) {
+            console.error(
+                "ADMIN USERS ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Ошибка загрузки пользователей."
+            });
+        }
+    }
+);
+
+/* =========================================================
+   ADMIN - BAN
+========================================================= */
+
+app.post(
+    "/api/admin/users/:id/ban",
+    requireAdmin,
+    async (req, res) => {
+        try {
+            const id =
+                Number(
+                    req.params.id
+                );
+
+            const userResult =
+                await query(
+                    `
+                    SELECT username
+                    FROM users
+                    WHERE id = $1
+                    LIMIT 1
+                    `,
+                    [id]
+                );
+
+            if (
+                userResult.rows.length ===
+                0
+            ) {
+                return res.status(404).json({
                     success: false,
-                    message: "Неверный ID"
+                    message:
+                        "Пользователь не найден."
                 });
             }
 
-            if (id === req.currentUser.id) {
+            if (
+                userResult.rows[0]
+                    .username ===
+                ADMIN_USERNAME
+            ) {
                 return res.status(400).json({
                     success: false,
-                    message: "Нельзя заблокировать самого себя"
+                    message:
+                        "Нельзя заблокировать администратора."
                 });
             }
 
-            const result = await pool.query(
+            await query(
                 `
                 UPDATE users
-                SET banned = NOT banned
+                SET banned = true
                 WHERE id = $1
-                RETURNING banned
                 `,
                 [id]
             );
 
-            if (result.rows.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Пользователь не найден"
-                });
-            }
-
             res.json({
                 success: true,
-                banned: result.rows[0].banned
+                message:
+                    "Пользователь заблокирован."
             });
         } catch (error) {
-            console.error(error);
-
-            res.status(500).json({
-                success: false,
-                message: "Ошибка блокировки"
-            });
-        }
-    }
-);
-
-
-app.post(
-    "/api/admin/user/:id/username",
-    requireAdmin,
-    async (req, res) => {
-        try {
-            const id = Number(req.params.id);
-            const username = String(req.body.username || "").trim();
-
-            if (!Number.isInteger(id)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Неверный ID"
-                });
-            }
-
-            if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Неверный логин"
-                });
-            }
-
-            const result = await pool.query(
-                `
-                UPDATE users
-                SET username = $1
-                WHERE id = $2
-                RETURNING id, username
-                `,
-                [username, id]
+            console.error(
+                "BAN ERROR:",
+                error
             );
 
-            if (result.rows.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Пользователь не найден"
-                });
-            }
-
-            res.json({
-                success: true,
-                user: result.rows[0]
-            });
-        } catch (error) {
-            console.error(error);
-
-            if (error.code === "23505") {
-                return res.status(400).json({
-                    success: false,
-                    message: "Такой логин уже занят"
-                });
-            }
-
             res.status(500).json({
                 success: false,
-                message: "Ошибка изменения логина"
+                message:
+                    "Ошибка блокировки."
             });
         }
     }
 );
 
+/* =========================================================
+   ADMIN - UNBAN
+========================================================= */
 
-app.delete(
-    "/api/admin/user/:id",
+app.post(
+    "/api/admin/users/:id/unban",
     requireAdmin,
     async (req, res) => {
         try {
-            const id = Number(req.params.id);
+            const id =
+                Number(
+                    req.params.id
+                );
 
-            if (!Number.isInteger(id)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Неверный ID"
-                });
-            }
-
-            if (id === req.currentUser.id) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Нельзя удалить самого себя"
-                });
-            }
-
-            const result = await pool.query(
+            await query(
                 `
-                DELETE FROM users
+                UPDATE users
+                SET banned = false
                 WHERE id = $1
-                RETURNING id
                 `,
                 [id]
             );
 
-            if (result.rows.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Пользователь не найден"
-                });
-            }
-
             res.json({
                 success: true,
-                message: "Пользователь удалён"
+                message:
+                    "Пользователь разблокирован."
             });
         } catch (error) {
-            console.error(error);
+            console.error(
+                "UNBAN ERROR:",
+                error
+            );
 
             res.status(500).json({
                 success: false,
-                message: "Ошибка удаления"
+                message:
+                    "Ошибка разблокировки."
             });
         }
     }
 );
 
+/* =========================================================
+   ADMIN - RESET CLICKS
+========================================================= */
 
-// =====================================================
-// PROTECTED PAGE CHECK
-// =====================================================
+app.post(
+    "/api/admin/users/:id/reset",
+    requireAdmin,
+    async (req, res) => {
+        try {
+            const id =
+                Number(
+                    req.params.id
+                );
 
-async function protectPage(req, res, next) {
-    try {
-        const user = await getCurrentUser(req);
+            await query(
+                `
+                UPDATE users
+                SET clicks = 0
+                WHERE id = $1
+                  AND username <> $2
+                `,
+                [
+                    id,
+                    ADMIN_USERNAME
+                ]
+            );
 
-        if (!user || user.banned) {
-            if (req.session.userId) {
-                req.session.destroy(() => {});
-            }
+            res.json({
+                success: true,
+                message:
+                    "Клики сброшены."
+            });
+        } catch (error) {
+            console.error(
+                "RESET ERROR:",
+                error
+            );
 
-            return res.redirect("/login.html");
+            res.status(500).json({
+                success: false,
+                message:
+                    "Ошибка сброса кликов."
+            });
         }
-
-        req.currentUser = user;
-
-        next();
-    } catch (error) {
-        console.error(error);
-
-        res.redirect("/login.html");
     }
-}
+);
 
-
-// =====================================================
-// PAGES
-// =====================================================
-
-// ГЛАВНАЯ СТРАНИЦА
-// Без авторизации -> login.html
-// С авторизацией -> index.html
+/* =========================================================
+   PAGE ROUTES
+========================================================= */
 
 app.get("/", async (req, res) => {
     try {
         if (!req.session.userId) {
-            return res.redirect("/login.html");
-        }
-
-        const user = await getCurrentUser(req);
-
-        if (!user || user.banned) {
-            return req.session.destroy(() => {
-                res.redirect("/login.html");
-            });
-        }
-
-        return res.sendFile(
-            path.join(__dirname, "public", "index.html")
-        );
-    } catch (error) {
-        console.error(error);
-
-        return res.redirect("/login.html");
-    }
-});
-
-
-// LOGIN
-app.get("/login.html", async (req, res) => {
-    try {
-        if (!req.session.userId) {
-            return res.sendFile(
-                path.join(__dirname, "public", "login.html")
+            return res.redirect(
+                "/login.html"
             );
         }
 
-        const user = await getCurrentUser(req);
+        const user =
+            await getCurrentUser(req);
 
         if (!user || user.banned) {
-            return req.session.destroy(() => {
-                res.sendFile(
-                    path.join(__dirname, "public", "login.html")
+            return req.session.destroy(
+                () => {
+                    res.clearCookie(
+                        "connect.sid"
+                    );
+
+                    res.redirect(
+                        "/login.html"
+                    );
+                }
+            );
+        }
+
+        return res.sendFile(
+            path.join(
+                __dirname,
+                "public",
+                "index.html"
+            )
+        );
+    } catch (error) {
+        console.error(
+            "ROOT PAGE ERROR:",
+            error
+        );
+
+        return res.redirect(
+            "/login.html"
+        );
+    }
+});
+
+/* =========================================================
+   LOGIN PAGE
+========================================================= */
+
+app.get(
+    "/login.html",
+    (req, res) => {
+        if (req.session.userId) {
+            return res.redirect("/");
+        }
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "public",
+                "login.html"
+            )
+        );
+    }
+);
+
+/* =========================================================
+   PROTECTED PAGES
+========================================================= */
+
+function protectedPage(file) {
+    return async (req, res) => {
+        try {
+            if (!req.session.userId) {
+                return res.redirect(
+                    "/login.html"
                 );
-            });
+            }
+
+            const user =
+                await getCurrentUser(req);
+
+            if (!user || user.banned) {
+                return req.session.destroy(
+                    () => {
+                        res.clearCookie(
+                            "connect.sid"
+                        );
+
+                        res.redirect(
+                            "/login.html"
+                        );
+                    }
+                );
+            }
+
+            res.sendFile(
+                path.join(
+                    __dirname,
+                    "public",
+                    file
+                )
+            );
+        } catch (error) {
+            console.error(
+                "PAGE ERROR:",
+                error
+            );
+
+            res.redirect(
+                "/login.html"
+            );
         }
+    };
+}
 
-        return res.redirect("/");
-    } catch (error) {
-        console.error(error);
+app.get(
+    "/index.html",
+    protectedPage("index.html")
+);
 
-        return res.sendFile(
-            path.join(__dirname, "public", "login.html")
+app.get(
+    "/top.html",
+    protectedPage("top.html")
+);
+
+app.get(
+    "/store.html",
+    protectedPage("store.html")
+);
+
+app.get(
+    "/clans.html",
+    protectedPage("clans.html")
+);
+
+/* =========================================================
+   ADMIN PAGE
+========================================================= */
+
+app.get(
+    "/admin.html",
+    async (req, res) => {
+        try {
+            if (!req.session.userId) {
+                return res.redirect(
+                    "/login.html"
+                );
+            }
+
+            const user =
+                await getCurrentUser(req);
+
+            if (
+                !user ||
+                user.username !==
+                    ADMIN_USERNAME
+            ) {
+                return res.redirect("/");
+            }
+
+            res.sendFile(
+                path.join(
+                    __dirname,
+                    "public",
+                    "admin.html"
+                )
+            );
+        } catch (error) {
+            console.error(
+                "ADMIN PAGE ERROR:",
+                error
+            );
+
+            res.redirect("/");
+        }
+    }
+);
+
+/* =========================================================
+   STATIC FILES
+========================================================= */
+
+app.use(
+    express.static(
+        path.join(
+            __dirname,
+            "public"
+        )
+    )
+);
+
+/* =========================================================
+   404
+========================================================= */
+
+app.use(
+    (req, res) => {
+        res.status(404).send(
+            "Страница не найдена"
         );
     }
-});
+);
 
+/* =========================================================
+   START SERVER
+========================================================= */
 
-// CLICKER
-app.get("/index.html", protectPage, (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "public", "index.html")
-    );
-});
-
-
-// TOP
-app.get("/top.html", protectPage, (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "public", "top.html")
-    );
-});
-
-
-// STORE
-app.get("/store.html", protectPage, (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "public", "store.html")
-    );
-});
-
-
-// CLANS
-app.get("/clans.html", protectPage, (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "public", "clans.html")
-    );
-});
-
-
-// ADMIN
-app.get("/admin.html", async (req, res) => {
-    try {
-        if (!req.session.userId) {
-            return res.redirect("/login.html");
-        }
-
-        const user = await getCurrentUser(req);
-
-        if (!user) {
-            return req.session.destroy(() => {
-                res.redirect("/login.html");
-            });
-        }
-
-        if (!isAdminUser(user)) {
-            return res.status(403).send(`
-                <!DOCTYPE html>
-                <html lang="ru">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Доступ запрещён</title>
-                    <style>
-                        body {
-                            margin: 0;
-                            min-height: 100vh;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            background: #0b0614;
-                            color: white;
-                            font-family: Arial, sans-serif;
-                        }
-
-                        .box {
-                            text-align: center;
-                            padding: 40px;
-                            border-radius: 20px;
-                            background: #171022;
-                            border: 1px solid #3b2855;
-                        }
-
-                        a {
-                            color: #a970ff;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="box">
-                        <h1>403</h1>
-                        <p>Доступ запрещён.</p>
-                        <a href="/">Вернуться</a>
-                    </div>
-                </body>
-                </html>
-            `);
-        }
-
-        return res.sendFile(
-            path.join(__dirname, "public", "admin.html")
-        );
-    } catch (error) {
-        console.error(error);
-
-        res.redirect("/login.html");
-    }
-});
-
-
-// =====================================================
-// STATIC FILES
-// =====================================================
-
-app.use(express.static(path.join(__dirname, "public")));
-
-
-// =====================================================
-// 404
-// =====================================================
-
-app.use((req, res) => {
-    res.status(404).send("Страница не найдена");
-});
-
-
-// =====================================================
-// START
-// =====================================================
-
-async function startServer() {
+async function start() {
     try {
         await initDatabase();
 
-        app.listen(PORT, () => {
-            console.log("");
-            console.log("========================================");
-            console.log("       KILLUACLICKER SERVER");
-            console.log("========================================");
-            console.log("");
-            console.log(`Сайт: http://localhost:${PORT}`);
-            console.log("База данных: подключена");
-            console.log(`NODE_ENV: ${process.env.NODE_ENV || "development"}`);
-            console.log("");
-        });
+        app.listen(
+            PORT,
+            () => {
+                console.log("");
+                console.log(
+                    "================================"
+                );
+                console.log(
+                    "        KILLUACLICKER"
+                );
+                console.log(
+                    "================================"
+                );
+                console.log(
+                    `Сервер: http://localhost:${PORT}`
+                );
+                console.log(
+                    "База данных: подключена"
+                );
+                console.log(
+                    "Магазин: включён"
+                );
+                console.log(
+                    "Топы: включены"
+                );
+                console.log(
+                    "Кланы: включены"
+                );
+                console.log(
+                    "Админка: включена"
+                );
+                console.log(
+                    "Быстрые клики: включены"
+                );
+                console.log(
+                    "================================"
+                );
+                console.log("");
+            }
+        );
     } catch (error) {
         console.error("");
-        console.error("НЕ УДАЛОСЬ ЗАПУСТИТЬ СЕРВЕР:");
+        console.error(
+            "НЕ УДАЛОСЬ ЗАПУСТИТЬ СЕРВЕР:"
+        );
         console.error(error);
         console.error("");
 
@@ -1575,5 +2074,4 @@ async function startServer() {
     }
 }
 
-
-startServer();
+start();
