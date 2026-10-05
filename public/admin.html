@@ -2,11 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-    <title>KilluaClicker — Админка</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KilluaClicker — Админ-панель</title>
 
     <style>
         * {
@@ -16,360 +13,306 @@
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Arial, sans-serif;
             background:
-                radial-gradient(circle at top, #24134a 0%, #0d0b18 45%, #08070d 100%);
+                radial-gradient(circle at top, #25105c 0%, #0b0718 45%, #05030b 100%);
             color: white;
         }
 
-        .admin-wrapper {
-            width: min(1400px, 94%);
-            margin: 0 auto;
-            padding: 30px 0 60px;
+        .container {
+            width: min(1200px, 94%);
+            margin: 30px auto;
         }
 
-        .topbar {
+        .header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 20px;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 25px;
-            padding: 20px 24px;
-            border: 1px solid rgba(168, 91, 255, .3);
+            padding: 22px;
             border-radius: 20px;
-            background: rgba(20, 16, 35, .9);
-            box-shadow: 0 15px 50px rgba(0,0,0,.3);
+            background: rgba(25, 16, 55, .85);
+            border: 1px solid rgba(160, 100, 255, .3);
+            box-shadow: 0 15px 50px rgba(0,0,0,.35);
         }
 
-        .logo {
-            font-size: 26px;
-            font-weight: 900;
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
         }
 
-        .logo span {
-            color: #b86cff;
+        .header p {
+            margin: 6px 0 0;
+            color: #aaa;
         }
 
-        .admin-label {
-            padding: 9px 14px;
-            border-radius: 999px;
-            background: rgba(176, 91, 255, .14);
-            border: 1px solid rgba(176, 91, 255, .35);
-            color: #d6adff;
-            font-weight: 800;
+        .back-btn {
+            border: 0;
+            border-radius: 12px;
+            padding: 12px 18px;
+            color: white;
+            background: #6d35d9;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: #8249ed;
         }
 
         .search-box {
-            margin-bottom: 22px;
+            margin-bottom: 20px;
         }
 
         #search {
             width: 100%;
-            padding: 17px 20px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,.1);
-            background: rgba(20,17,31,.9);
-            color: white;
+            padding: 16px 18px;
+            border: 1px solid #3c2868;
+            border-radius: 14px;
             outline: none;
+            background: #110b22;
+            color: white;
             font-size: 16px;
         }
 
         #search:focus {
-            border-color: #a95cff;
-            box-shadow: 0 0 25px rgba(169,92,255,.15);
+            border-color: #8c4dff;
         }
 
         #message {
-            display: none;
-            margin-bottom: 20px;
-            padding: 15px 18px;
-            border-radius: 14px;
-            background: rgba(78, 222, 151, .12);
-            border: 1px solid rgba(78, 222, 151, .3);
-            color: #8dffc5;
-            font-weight: 700;
-        }
-
-        #message.error {
-            background: rgba(255, 76, 76, .12);
-            border-color: rgba(255, 76, 76, .3);
-            color: #ff9b9b;
+            min-height: 20px;
+            margin-bottom: 15px;
+            color: #caa8ff;
+            font-weight: bold;
         }
 
         #users {
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
             gap: 18px;
         }
 
         .user-card {
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 22px;
-            padding: 22px;
-            background: rgba(20, 17, 31, .92);
-            box-shadow: 0 15px 40px rgba(0,0,0,.25);
+            padding: 20px;
+            border-radius: 18px;
+            background: rgba(18, 11, 38, .95);
+            border: 1px solid #332052;
+            box-shadow: 0 12px 35px rgba(0,0,0,.3);
         }
 
-        .user-card.admin-card {
-            border-color: rgba(190, 103, 255, .4);
-            box-shadow:
-                0 0 0 1px rgba(190,103,255,.08),
-                0 15px 50px rgba(100,40,180,.12);
+        .user-card.admin {
+            border-color: #8c4dff;
+            box-shadow: 0 0 25px rgba(140,77,255,.15);
         }
 
-        .user-header {
+        .user-top {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .user-name {
-            display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 21px;
-            font-weight: 900;
+            margin-bottom: 15px;
         }
 
-        .user-id {
-            color: #777286;
-            font-size: 13px;
+        .username {
+            font-size: 21px;
+            font-weight: bold;
         }
 
         .badges {
             display: flex;
+            gap: 6px;
             flex-wrap: wrap;
-            gap: 8px;
         }
 
         .badge {
-            padding: 7px 10px;
-            border-radius: 999px;
+            padding: 5px 9px;
+            border-radius: 8px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: bold;
         }
 
         .badge-admin {
-            color: #e4c3ff;
-            background: rgba(170, 82, 255, .16);
-            border: 1px solid rgba(170, 82, 255, .3);
+            background: #713bd1;
         }
 
-        .badge-banned {
-            color: #ffaaaa;
-            background: rgba(255, 75, 75, .12);
-            border: 1px solid rgba(255,75,75,.25);
+        .badge-ban {
+            background: #a72828;
         }
 
-        .badge-ok {
-            color: #9dffc8;
-            background: rgba(66, 220, 142, .1);
-            border: 1px solid rgba(66,220,142,.2);
-        }
-
-        .fields {
+        .stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            padding: 12px;
+            background: #0d081b;
+            border-radius: 10px;
+        }
+
+        .stat-title {
+            color: #8f86a5;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            overflow-wrap: anywhere;
         }
 
         .field {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
+            margin-bottom: 10px;
         }
 
         .field label {
-            color: #a9a2b5;
-            font-size: 12px;
-            font-weight: 800;
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 13px;
         }
 
         .field input {
             width: 100%;
-            padding: 13px 14px;
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 12px;
-            background: #0e0c16;
-            color: white;
+            padding: 11px;
+            border: 1px solid #38245b;
+            border-radius: 9px;
             outline: none;
+            background: #0b0615;
+            color: white;
         }
 
         .field input:focus {
-            border-color: #a95cff;
-        }
-
-        .give-section {
-            margin-top: 18px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255,255,255,.07);
-        }
-
-        .give-title {
-            margin-bottom: 12px;
-            color: #d4cbe0;
-            font-size: 14px;
-            font-weight: 900;
-        }
-
-        .give-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .give-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .give-row input {
-            min-width: 0;
-            flex: 1;
-            padding: 13px 14px;
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 12px;
-            background: #0e0c16;
-            color: white;
-            outline: none;
+            border-color: #8c4dff;
         }
 
         .buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 9px;
-            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
         }
 
-        .admin-btn {
+        button {
             border: 0;
-            border-radius: 12px;
-            padding: 12px 15px;
+            border-radius: 9px;
+            padding: 11px;
             color: white;
-            font-weight: 800;
             cursor: pointer;
-            transition: .15s;
+            font-weight: bold;
         }
 
-        .admin-btn:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.1);
+        .save {
+            background: #5630b8;
         }
 
-        .save-btn {
-            background: #7040c4;
+        .give {
+            background: #176b45;
         }
 
-        .give-btn {
-            background: #246b51;
+        .power {
+            background: #a56612;
         }
 
-        .admin-give-btn {
-            background: #8d4ad6;
+        .admin {
+            background: #713bd1;
         }
 
-        .admin-remove-btn {
-            background: #59336f;
+        .remove-admin {
+            background: #50306f;
         }
 
-        .login-btn {
-            background: #285c91;
+        .login-as {
+            background: #2266a8;
         }
 
-        .ban-btn {
-            background: #873b3b;
+        .ban {
+            background: #a72828;
         }
 
-        .unban-btn {
-            background: #296b4a;
+        .unban {
+            background: #277d4e;
         }
 
-        .reset-btn {
-            background: #5b5169;
+        .reset {
+            background: #704b1d;
         }
 
-        .delete-btn {
-            background: #a32f42;
+        .delete {
+            background: #7d1824;
+        }
+
+        button:hover {
+            filter: brightness(1.15);
+        }
+
+        .section-title {
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #bda9dd;
+            font-size: 13px;
+            font-weight: bold;
         }
 
         .empty {
-            padding: 40px;
             text-align: center;
-            color: #8c8597;
-            border-radius: 18px;
-            border: 1px dashed rgba(255,255,255,.1);
-        }
-
-        @media (max-width: 900px) {
-            .fields {
-                grid-template-columns: 1fr;
-            }
-
-            .give-grid {
-                grid-template-columns: 1fr;
-            }
+            padding: 40px;
+            color: #888;
         }
 
         @media (max-width: 600px) {
-            .admin-wrapper {
-                width: 92%;
-                padding-top: 15px;
-            }
-
-            .topbar {
+            .header {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
             }
 
-            .user-header {
-                flex-direction: column;
-                align-items: flex-start;
+            #users {
+                grid-template-columns: 1fr;
             }
 
-            .give-row {
-                flex-direction: column;
-            }
-
-            .admin-btn {
-                width: 100%;
+            .buttons {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 
 <body>
-    <main class="admin-wrapper">
 
-        <header class="topbar">
-            <div class="logo">
-                Killua<span>Clicker</span>
-            </div>
+<div class="container">
 
-            <div class="admin-label">
-                👑 АДМИН-ПАНЕЛЬ
-            </div>
-        </header>
-
-        <div class="search-box">
-            <input
-                id="search"
-                type="text"
-                placeholder="🔎 Поиск пользователя..."
-                autocomplete="off"
-            >
+    <div class="header">
+        <div>
+            <h1>⚙️ Админ-панель</h1>
+            <p>Управление пользователями KilluaClicker</p>
         </div>
 
-        <div id="message"></div>
+        <button class="back-btn" onclick="location.href='/'">
+            ← На сайт
+        </button>
+    </div>
 
-        <section id="users">
-            <div class="empty">
-                Загрузка пользователей...
-            </div>
-        </section>
+    <div class="search-box">
+        <input
+            id="search"
+            type="text"
+            placeholder="🔎 Поиск игрока..."
+            autocomplete="off"
+        >
+    </div>
 
-    </main>
+    <div id="message"></div>
 
-    <script src="/admin.js"></script>
+    <div id="users">
+        <div class="empty">Загрузка игроков...</div>
+    </div>
+
+</div>
+
+<script src="/admin.js"></script>
+
 </body>
 </html>

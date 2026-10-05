@@ -1,389 +1,660 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const usersList =
-        document.getElementById("usersList") ||
-        document.getElementById("adminUsers") ||
-        document.getElementById("users");
+"use strict";
 
-    const messageElement =
-        document.getElementById("message") ||
-        document.getElementById("adminMessage");
+let users = [];
 
-    function showMessage(message, type = "error") {
-        if (!messageElement) {
-            console.log(message);
-            return;
-        }
+const usersContainer = document.getElementById("users");
+const searchInput = document.getElementById("search");
+const message = document.getElementById("message");
 
-        messageElement.textContent = message;
-        messageElement.className = `admin-message ${type}`;
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function big(value) {
+    try {
+        return BigInt(String(value ?? "0"));
+    } catch {
+        return 0n;
     }
+}
 
-    function formatNumber(value) {
-        try {
-            const number = BigInt(String(value ?? "0"));
+function formatBig(value) {
+    const str = String(value ?? "0");
 
-            if (number < 1000n) {
-                return number.toString();
-            }
-
-            const units = [
-                {
-                    value: 1000000000000000000000000n,
-                    name: "септиллион"
-                },
-                {
-                    value: 1000000000000000000000n,
-                    name: "сикстиллион"
-                },
-                {
-                    value: 1000000000000000n,
-                    name: "квадриллион"
-                },
-                {
-                    value: 1000000000000n,
-                    name: "триллион"
-                },
-                {
-                    value: 1000000000n,
-                    name: "миллиард"
-                },
-                {
-                    value: 1000000n,
-                    name: "миллион"
-                },
-                {
-                    value: 1000n,
-                    name: "тысяча"
-                }
-            ];
-
-            for (const unit of units) {
-                if (number >= unit.value) {
-                    const whole = number / unit.value;
-                    const remainder = number % unit.value;
-
-                    if (remainder === 0n) {
-                        return `${whole} ${unit.name}`;
-                    }
-
-                    const decimal =
-                        Number(remainder) /
-                        Number(unit.value);
-
-                    const formatted = decimal
-                        .toFixed(2)
-                        .replace(/\.?0+$/, "");
-
-                    return `${whole}${formatted.slice(1)} ${unit.name}`;
-                }
-            }
-
-            return number.toString();
-        } catch {
-            return "0";
-        }
+    try {
+        return BigInt(str).toLocaleString("ru-RU");
+    } catch {
+        return str;
     }
+}
 
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
+function showMessage(text, error = false) {
+    message.textContent = text;
+    message.style.color = error ? "#ff6b6b" : "#caa8ff";
 
-    async function apiRequest(url, options = {}) {
-        const response = await fetch(url, {
-            credentials: "include",
-            ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
-            }
-        });
-
-        let data;
-
-        try {
-            data = await response.json();
-        } catch {
-            throw new Error(
-                `Сервер вернул неправильный ответ (${response.status}).`
-            );
+    setTimeout(() => {
+        if (message.textContent === text) {
+            message.textContent = "";
         }
+    }, 3500);
+}
 
-        if (response.status === 401) {
-            window.location.href = "/login.html";
-            return null;
+async function api(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: "same-origin",
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
         }
+    });
 
-        if (response.status === 403) {
-            throw new Error(
-                data?.message || "У вас нет доступа к админ-панели."
-            );
-        }
+    const text = await response.text();
 
-        if (!response.ok || !data || data.success !== true) {
-            throw new Error(
-                data?.message ||
-                `Ошибка сервера (${response.status}).`
-            );
-        }
+    let data;
 
-        return data;
-    }
-
-    function renderUsers(users) {
-        if (!usersList) {
-            console.error(
-                "Не найден элемент usersList/adminUsers/users."
-            );
-            return;
-        }
-
-        if (!Array.isArray(users) || users.length === 0) {
-            usersList.innerHTML = `
-                <div class="empty-state">
-                    Пользователей пока нет.
-                </div>
-            `;
-            return;
-        }
-
-        usersList.innerHTML = users
-            .map((user, index) => {
-                const username =
-                    escapeHtml(user.username);
-
-                const clicks =
-                    formatNumber(user.clicks);
-
-                const clickPower =
-                    formatNumber(
-                        user.click_power ?? 1
-                    );
-
-                const banned =
-                    Boolean(user.banned);
-
-                const status = banned
-                    ? "Заблокирован"
-                    : "Активен";
-
-                const statusClass = banned
-                    ? "banned"
-                    : "active";
-
-                return `
-                    <div class="admin-user">
-                        <div class="admin-user-number">
-                            #${index + 1}
-                        </div>
-
-                        <div class="admin-user-info">
-                            <div class="admin-user-name">
-                                ${username}
-                            </div>
-
-                            <div class="admin-user-stats">
-                                <span>
-                                    💰 ${clicks}
-                                </span>
-
-                                <span>
-                                    ⚡ +${clickPower}/клик
-                                </span>
-
-                                <span class="${statusClass}">
-                                    ${status}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="admin-user-actions">
-                            ${
-                                banned
-                                    ? `
-                                        <button
-                                            class="admin-btn unban-btn"
-                                            data-action="unban"
-                                            data-id="${user.id}"
-                                        >
-                                            Разблокировать
-                                        </button>
-                                    `
-                                    : `
-                                        <button
-                                            class="admin-btn ban-btn"
-                                            data-action="ban"
-                                            data-id="${user.id}"
-                                        >
-                                            Заблокировать
-                                        </button>
-                                    `
-                            }
-
-                            <button
-                                class="admin-btn reset-btn"
-                                data-action="reset"
-                                data-id="${user.id}"
-                            >
-                                Сбросить
-                            </button>
-                        </div>
-                    </div>
-                `;
-            })
-            .join("");
-    }
-
-    async function loadUsers() {
-        try {
-            showMessage("Загрузка...", "info");
-
-            const data = await apiRequest(
-                "/api/admin/users"
-            );
-
-            if (!data) {
-                return;
-            }
-
-            /*
-             * Текущий server.js возвращает:
-             *
-             * {
-             *   success: true,
-             *   users: [...]
-             * }
-             */
-            if (!Array.isArray(data.users)) {
-                console.error(
-                    "Неправильный ответ сервера:",
-                    data
-                );
-
-                throw new Error(
-                    "Сервер вернул неправильный ответ."
-                );
-            }
-
-            renderUsers(data.users);
-
-            showMessage(
-                `Пользователей: ${data.users.length}`,
-                "success"
-            );
-        } catch (error) {
-            console.error(
-                "Ошибка загрузки админки:",
-                error
-            );
-
-            showMessage(
-                error.message ||
-                    "Сервер вернул неправильный ответ.",
-                "error"
-            );
-        }
-    }
-
-    async function userAction(action, userId) {
-        let url;
-
-        if (action === "ban") {
-            url = `/api/admin/users/${userId}/ban`;
-        } else if (action === "unban") {
-            url = `/api/admin/users/${userId}/unban`;
-        } else if (action === "reset") {
-            url = `/api/admin/users/${userId}/reset`;
-        } else {
-            return;
-        }
-
-        if (action === "ban") {
-            const confirmed = confirm(
-                "Заблокировать этого пользователя?"
-            );
-
-            if (!confirmed) {
-                return;
-            }
-        }
-
-        if (action === "reset") {
-            const confirmed = confirm(
-                "Сбросить клики и силу клика этого пользователя?"
-            );
-
-            if (!confirmed) {
-                return;
-            }
-        }
-
-        try {
-            showMessage("Выполняется...", "info");
-
-            const data = await apiRequest(url, {
-                method: "POST",
-                body: JSON.stringify({})
-            });
-
-            if (!data) {
-                return;
-            }
-
-            showMessage(
-                data.message || "Готово.",
-                "success"
-            );
-
-            await loadUsers();
-        } catch (error) {
-            console.error(
-                "Ошибка действия:",
-                error
-            );
-
-            showMessage(
-                error.message ||
-                    "Сервер вернул неправильный ответ.",
-                "error"
-            );
-        }
-    }
-
-    if (usersList) {
-        usersList.addEventListener(
-            "click",
-            (event) => {
-                const button =
-                    event.target.closest(
-                        "[data-action]"
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                const action =
-                    button.dataset.action;
-
-                const userId =
-                    button.dataset.id;
-
-                if (!userId) {
-                    return;
-                }
-
-                userAction(
-                    action,
-                    userId
-                );
-            }
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(
+            `Сервер вернул неправильный ответ (${response.status})`
         );
     }
 
-    loadUsers();
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            location.href = "/login.html";
+            return;
+        }
+
+        throw new Error(data.error || data.message || "Ошибка сервера");
+    }
+
+    return data;
+}
+
+async function loadUsers() {
+    try {
+        const data = await api("/api/admin/users");
+
+        users = Array.isArray(data)
+            ? data
+            : Array.isArray(data.users)
+                ? data.users
+                : [];
+
+        renderUsers();
+    } catch (error) {
+        console.error(error);
+        usersContainer.innerHTML = `
+            <div class="empty">
+                ❌ ${escapeHtml(error.message)}
+            </div>
+        `;
+    }
+}
+
+function renderUsers() {
+    const search = searchInput.value.trim().toLowerCase();
+
+    const filtered = users.filter(user =>
+        String(user.username || "")
+            .toLowerCase()
+            .includes(search)
+    );
+
+    if (!filtered.length) {
+        usersContainer.innerHTML = `
+            <div class="empty">
+                Игроки не найдены.
+            </div>
+        `;
+        return;
+    }
+
+    usersContainer.innerHTML = filtered.map(user => {
+        const isMainAdmin =
+            String(user.username).toLowerCase() === "killua666";
+
+        const isAdmin = user.is_admin === true;
+
+        return `
+            <div class="user-card ${isAdmin ? "admin" : ""}" data-id="${user.id}">
+
+                <div class="user-top">
+                    <div class="username">
+                        👤 ${escapeHtml(user.username)}
+                    </div>
+
+                    <div class="badges">
+                        ${
+                            isAdmin
+                                ? `<span class="badge badge-admin">👑 ADMIN</span>`
+                                : ""
+                        }
+
+                        ${
+                            user.banned
+                                ? `<span class="badge badge-ban">🚫 BAN</span>`
+                                : ""
+                        }
+                    </div>
+                </div>
+
+                <div class="stats">
+
+                    <div class="stat">
+                        <div class="stat-title">Баланс</div>
+                        <div class="stat-value">
+                            ${formatBig(user.clicks)}
+                        </div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-title">За клик</div>
+                        <div class="stat-value">
+                            ${formatBig(user.click_power)}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="field">
+                    <label>Ник</label>
+                    <input
+                        class="nickname-input"
+                        value="${escapeHtml(user.username)}"
+                    >
+                </div>
+
+                <div class="field">
+                    <label>Установить баланс</label>
+                    <input
+                        class="balance-input"
+                        type="text"
+                        inputmode="numeric"
+                        placeholder="Например: 1000000"
+                    >
+                </div>
+
+                <div class="field">
+                    <label>Установить силу клика</label>
+                    <input
+                        class="power-input"
+                        type="text"
+                        inputmode="numeric"
+                        placeholder="Например: 100"
+                    >
+                </div>
+
+                <div class="section-title">
+                    ➕ Выдать дополнительно
+                </div>
+
+                <div class="field">
+                    <input
+                        class="give-balance-input"
+                        type="text"
+                        inputmode="numeric"
+                        placeholder="Сколько кликов выдать"
+                    >
+                </div>
+
+                <button
+                    class="give"
+                    data-action="give-balance"
+                >
+                    💰 Выдать баланс
+                </button>
+
+                <div class="field" style="margin-top:8px;">
+                    <input
+                        class="give-power-input"
+                        type="text"
+                        inputmode="numeric"
+                        placeholder="Сколько добавить к клику"
+                    >
+                </div>
+
+                <button
+                    class="power"
+                    data-action="give-power"
+                >
+                    ⚡ Выдать к клику
+                </button>
+
+                <div class="buttons">
+
+                    <button
+                        class="save"
+                        data-action="save"
+                    >
+                        💾 Сохранить
+                    </button>
+
+                    ${
+                        isAdmin
+                            ? `
+                                ${
+                                    !isMainAdmin
+                                        ? `
+                                            <button
+                                                class="remove-admin"
+                                                data-action="remove-admin"
+                                            >
+                                                👑 Забрать админку
+                                            </button>
+                                        `
+                                        : `
+                                            <button
+                                                class="admin"
+                                                disabled
+                                                style="opacity:.6;cursor:not-allowed;"
+                                            >
+                                                👑 Главный админ
+                                            </button>
+                                        `
+                                }
+                            `
+                            : `
+                                <button
+                                    class="admin"
+                                    data-action="give-admin"
+                                >
+                                    👑 Выдать админку
+                                </button>
+                            `
+                    }
+
+                    <button
+                        class="login-as"
+                        data-action="impersonate"
+                    >
+                        👤 Зайти в аккаунт
+                    </button>
+
+                    ${
+                        user.banned
+                            ? `
+                                <button
+                                    class="unban"
+                                    data-action="unban"
+                                >
+                                    ✅ Разбанить
+                                </button>
+                            `
+                            : `
+                                <button
+                                    class="ban"
+                                    data-action="ban"
+                                >
+                                    🚫 Забанить
+                                </button>
+                            `
+                    }
+
+                    <button
+                        class="reset"
+                        data-action="reset"
+                    >
+                        🔄 Сбросить
+                    </button>
+
+                    ${
+                        !isMainAdmin
+                            ? `
+                                <button
+                                    class="delete"
+                                    data-action="delete"
+                                >
+                                    🗑️ Удалить аккаунт
+                                </button>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+        `;
+    });
+}
+
+async function saveUser(card) {
+    const id = card.dataset.id;
+
+    const nickname =
+        card.querySelector(".nickname-input").value.trim();
+
+    const balance =
+        card.querySelector(".balance-input").value.trim();
+
+    const power =
+        card.querySelector(".power-input").value.trim();
+
+    const body = {};
+
+    if (nickname) {
+        body.username = nickname;
+    }
+
+    if (balance) {
+        if (!/^\d+$/.test(balance)) {
+            showMessage("Баланс должен быть целым числом.", true);
+            return;
+        }
+
+        body.clicks = balance;
+    }
+
+    if (power) {
+        if (!/^\d+$/.test(power)) {
+            showMessage("Сила клика должна быть целым числом.", true);
+            return;
+        }
+
+        body.click_power = power;
+    }
+
+    if (!Object.keys(body).length) {
+        showMessage("Нечего сохранять.", true);
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}`, {
+            method: "PUT",
+            body: JSON.stringify(body)
+        });
+
+        showMessage("✅ Пользователь сохранён.");
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function giveBalance(card) {
+    const id = card.dataset.id;
+
+    const input =
+        card.querySelector(".give-balance-input");
+
+    const amount = input.value.trim();
+
+    if (!/^\d+$/.test(amount) || amount === "0") {
+        showMessage(
+            "Введите положительное целое число.",
+            true
+        );
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/give-balance`, {
+            method: "POST",
+            body: JSON.stringify({
+                amount
+            })
+        });
+
+        input.value = "";
+
+        showMessage(
+            `💰 Выдано ${formatBig(amount)} кликов.`
+        );
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function givePower(card) {
+    const id = card.dataset.id;
+
+    const input =
+        card.querySelector(".give-power-input");
+
+    const amount = input.value.trim();
+
+    if (!/^\d+$/.test(amount) || amount === "0") {
+        showMessage(
+            "Введите положительное целое число.",
+            true
+        );
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/give-click-power`, {
+            method: "POST",
+            body: JSON.stringify({
+                amount
+            })
+        });
+
+        input.value = "";
+
+        showMessage(
+            `⚡ Добавлено ${formatBig(amount)} к силе клика.`
+        );
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function giveAdmin(card) {
+    const id = card.dataset.id;
+
+    if (!confirm("Выдать этому игроку права администратора?")) {
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/give-admin`, {
+            method: "POST"
+        });
+
+        showMessage("👑 Админка выдана.");
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function removeAdmin(card) {
+    const id = card.dataset.id;
+
+    if (!confirm("Забрать у этого игрока права администратора?")) {
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/remove-admin`, {
+            method: "POST"
+        });
+
+        showMessage("👑 Админка забрана.");
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function impersonate(card) {
+    const id = card.dataset.id;
+
+    if (!confirm("Зайти в аккаунт этого игрока?")) {
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/impersonate`, {
+            method: "POST"
+        });
+
+        location.href = "/";
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function banUser(card) {
+    const id = card.dataset.id;
+
+    if (!confirm("Забанить этого игрока?")) {
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/ban`, {
+            method: "POST"
+        });
+
+        showMessage("🚫 Игрок забанен.");
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function unbanUser(card) {
+    const id = card.dataset.id;
+
+    try {
+        await api(`/api/admin/users/${id}/unban`, {
+            method: "POST"
+        });
+
+        showMessage("✅ Игрок разбанен.");
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function resetUser(card) {
+    const id = card.dataset.id;
+
+    if (!confirm(
+        "Сбросить баланс и силу клика этого игрока?"
+    )) {
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/reset`, {
+            method: "POST"
+        });
+
+        showMessage("🔄 Данные сброшены.");
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+async function deleteUser(card) {
+    const id = card.dataset.id;
+
+    if (!confirm(
+        "⚠️ УДАЛИТЬ АККАУНТ НАВСЕГДА?\n\nЭто действие нельзя отменить."
+    )) {
+        return;
+    }
+
+    try {
+        await api(`/api/admin/users/${id}/delete`, {
+            method: "POST"
+        });
+
+        showMessage("🗑️ Аккаунт удалён.");
+
+        await loadUsers();
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+}
+
+usersContainer.addEventListener("click", async event => {
+    const button = event.target.closest("[data-action]");
+
+    if (!button) {
+        return;
+    }
+
+    const card = button.closest(".user-card");
+
+    if (!card) {
+        return;
+    }
+
+    const action = button.dataset.action;
+
+    if (action === "save") {
+        await saveUser(card);
+    }
+
+    if (action === "give-balance") {
+        await giveBalance(card);
+    }
+
+    if (action === "give-power") {
+        await givePower(card);
+    }
+
+    if (action === "give-admin") {
+        await giveAdmin(card);
+    }
+
+    if (action === "remove-admin") {
+        await removeAdmin(card);
+    }
+
+    if (action === "impersonate") {
+        await impersonate(card);
+    }
+
+    if (action === "ban") {
+        await banUser(card);
+    }
+
+    if (action === "unban") {
+        await unbanUser(card);
+    }
+
+    if (action === "reset") {
+        await resetUser(card);
+    }
+
+    if (action === "delete") {
+        await deleteUser(card);
+    }
 });
+
+searchInput.addEventListener("input", renderUsers);
+
+loadUsers();
