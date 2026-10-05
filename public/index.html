@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>KilluaClicker</title>
+
     <link rel="stylesheet" href="/style.css">
 </head>
 
@@ -11,186 +13,467 @@
 
 <div class="app">
 
+    <!-- TOPBAR -->
+
     <header class="topbar">
 
         <div class="brand">
-            <div class="brand-logo">K</div>
-            <div>
-                <div class="brand-name">KilluaClicker</div>
-                <div class="brand-subtitle">CLICK • COMPETE • WIN</div>
+
+            <div class="brand-logo">
+                K
             </div>
+
+            <div>
+                <div class="brand-name">
+                    KilluaClicker
+                </div>
+
+                <div class="brand-subtitle">
+                    CLICK • COMPETE • WIN
+                </div>
+            </div>
+
         </div>
 
+
         <nav class="nav">
-            <a href="/" class="nav-link active">Кликер</a>
-            <a href="/store.html" class="nav-link">Магазин</a>
-            <a href="/clans.html" class="nav-link">Кланы</a>
-            <a href="/top.html" class="nav-link">Топ</a>
-            <a href="/admin.html" id="adminLink" class="nav-link admin-link">
+
+            <a href="/" class="nav-link active">
+                Кликер
+            </a>
+
+            <a href="/store.html" class="nav-link">
+                Магазин
+            </a>
+
+            <a href="/clans.html" class="nav-link">
+                Кланы
+            </a>
+
+            <a href="/top.html" class="nav-link">
+                Топ
+            </a>
+
+            <a
+                href="/admin.html"
+                id="adminLink"
+                class="nav-link admin-link"
+                style="display:none;"
+            >
                 Админка
             </a>
+
         </nav>
 
+
         <div class="account">
-            <span id="username">...</span>
-            <button id="logoutBtn" class="logout-btn">Выйти</button>
+
+            <span id="username">
+                ...
+            </span>
+
+            <button
+                type="button"
+                id="logoutBtn"
+                class="logout-btn"
+            >
+                Выйти
+            </button>
+
         </div>
 
     </header>
 
 
+    <!-- MAIN -->
+
     <main class="container">
 
+
+        <!-- WELCOME -->
+
         <section class="welcome">
+
             <div>
-                <div class="small-title">KILLUACLICKER</div>
-                <h1>Кликай и поднимайся<br>в <span>топ игроков</span></h1>
+
+                <div class="small-title">
+                    KILLUACLICKER
+                </div>
+
+                <h1>
+                    Кликай и поднимайся<br>
+                    в <span>топ игроков</span>
+                </h1>
+
                 <p>
                     Каждый клик увеличивает твой баланс.
                     Соревнуйся с другими игроками и стань первым.
                 </p>
+
             </div>
+
 
             <div class="online">
+
                 <span></span>
+
                 ONLINE
+
             </div>
+
         </section>
 
+
+
+        <!-- STATS -->
 
         <section class="stats">
 
-            <div class="stat-card">
-                <div class="stat-icon purple">✦</div>
-                <div>
-                    <div class="stat-label">ТВОИ КЛИКИ</div>
-                    <div id="clicks" class="stat-value">0</div>
-                </div>
-            </div>
 
             <div class="stat-card">
-                <div class="stat-icon blue">♛</div>
-                <div>
-                    <div class="stat-label">ПОЗИЦИЯ</div>
-                    <div id="rank" class="stat-value">—</div>
+
+                <div class="stat-icon purple">
+                    ✦
                 </div>
+
+                <div>
+
+                    <div class="stat-label">
+                        ТВОИ КЛИКИ
+                    </div>
+
+                    <div
+                        id="clicks"
+                        class="stat-value"
+                    >
+                        0
+                    </div>
+
+                </div>
+
             </div>
 
+
+
             <div class="stat-card">
-                <div class="stat-icon green">●</div>
-                <div>
-                    <div class="stat-label">СТАТУС</div>
-                    <div class="stat-value status">АКТИВЕН</div>
+
+                <div class="stat-icon blue">
+                    ♛
                 </div>
+
+                <div>
+
+                    <div class="stat-label">
+                        ПОЗИЦИЯ
+                    </div>
+
+                    <div
+                        id="rank"
+                        class="stat-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
             </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon green">
+                    ●
+                </div>
+
+                <div>
+
+                    <div class="stat-label">
+                        СТАТУС
+                    </div>
+
+                    <div class="stat-value status">
+                        АКТИВЕН
+                    </div>
+
+                </div>
+
+            </div>
+
 
         </section>
 
+
+
+        <!-- CLICK AREA -->
 
         <section class="click-area">
 
+
             <div class="click-panel">
 
+
                 <div class="click-panel-top">
+
                     <div>
-                        <div class="small-title">CLICK ZONE</div>
-                        <h2>Нажимай!</h2>
+
+                        <div class="small-title">
+                            CLICK ZONE
+                        </div>
+
+                        <h2>
+                            Нажимай!
+                        </h2>
+
                     </div>
 
+
                     <div class="click-counter">
-                        <span id="miniClicks">0</span>
+
+                        <span id="miniClicks">
+                            0
+                        </span>
+
                         clicks
+
                     </div>
+
                 </div>
 
 
-                <button id="clickButton" class="click-button">
+
+                <!-- ВАЖНО: type="button" -->
+
+                <button
+                    type="button"
+                    id="clickButton"
+                    class="click-button"
+                >
+
                     <div class="click-ring ring-one"></div>
+
                     <div class="click-ring ring-two"></div>
 
+
                     <div class="click-core">
-                        <span>CLICK</span>
-                        <strong>✦</strong>
+
+                        <span>
+                            CLICK
+                        </span>
+
+                        <strong>
+                            ✦
+                        </strong>
+
                     </div>
+
                 </button>
 
 
+
                 <div class="click-hint">
+
                     Нажми на кнопку, чтобы получить +1 клик
+
                 </div>
+
 
             </div>
 
+
+
+            <!-- SIDE PANEL -->
 
             <aside class="side-panel">
 
-                <div class="side-title">БЫСТРЫЕ ССЫЛКИ</div>
 
-                <a href="/store.html" class="quick-link">
-                    <div class="quick-icon">◆</div>
-                    <div>
-                        <strong>Магазин</strong>
-                        <span>Покупай усиления</span>
+                <div class="side-title">
+                    БЫСТРЫЕ ССЫЛКИ
+                </div>
+
+
+
+                <a
+                    href="/store.html"
+                    class="quick-link"
+                >
+
+                    <div class="quick-icon">
+                        ◆
                     </div>
-                    <b>›</b>
+
+                    <div>
+
+                        <strong>
+                            Магазин
+                        </strong>
+
+                        <span>
+                            Покупай усиления
+                        </span>
+
+                    </div>
+
+                    <b>
+                        ›
+                    </b>
+
                 </a>
 
-                <a href="/clans.html" class="quick-link">
-                    <div class="quick-icon">♜</div>
-                    <div>
-                        <strong>Кланы</strong>
-                        <span>Создай свой клан</span>
+
+
+                <a
+                    href="/clans.html"
+                    class="quick-link"
+                >
+
+                    <div class="quick-icon">
+                        ♜
                     </div>
-                    <b>›</b>
+
+                    <div>
+
+                        <strong>
+                            Кланы
+                        </strong>
+
+                        <span>
+                            Создай свой клан
+                        </span>
+
+                    </div>
+
+                    <b>
+                        ›
+                    </b>
+
                 </a>
 
-                <a href="/top.html" class="quick-link">
-                    <div class="quick-icon">♛</div>
-                    <div>
-                        <strong>Топ игроков</strong>
-                        <span>Посмотри рейтинг</span>
+
+
+                <a
+                    href="/top.html"
+                    class="quick-link"
+                >
+
+                    <div class="quick-icon">
+                        ♛
                     </div>
-                    <b>›</b>
+
+                    <div>
+
+                        <strong>
+                            Топ игроков
+                        </strong>
+
+                        <span>
+                            Посмотри рейтинг
+                        </span>
+
+                    </div>
+
+                    <b>
+                        ›
+                    </b>
+
                 </a>
+
 
             </aside>
 
+
         </section>
 
+
+
+        <!-- BOTTOM -->
 
         <section class="bottom-grid">
 
-            <div class="info-card">
-                <div class="info-icon">⚡</div>
-                <div>
-                    <h3>Быстрые клики</h3>
-                    <p>Кликай максимально быстро и увеличивай свой результат.</p>
-                </div>
-            </div>
 
             <div class="info-card">
-                <div class="info-icon">🏆</div>
-                <div>
-                    <h3>Соревнование</h3>
-                    <p>Следи за рейтингом и занимай первое место.</p>
+
+                <div class="info-icon">
+                    ⚡
                 </div>
+
+                <div>
+
+                    <h3>
+                        Быстрые клики
+                    </h3>
+
+                    <p>
+                        Кликай максимально быстро
+                        и увеличивай свой результат.
+                    </p>
+
+                </div>
+
             </div>
 
+
+
             <div class="info-card">
-                <div class="info-icon">◆</div>
-                <div>
-                    <h3>Магазин</h3>
-                    <p>Используй клики для покупки больших пакетов.</p>
+
+                <div class="info-icon">
+                    🏆
                 </div>
+
+                <div>
+
+                    <h3>
+                        Соревнование
+                    </h3>
+
+                    <p>
+                        Следи за рейтингом
+                        и занимай первое место.
+                    </p>
+
+                </div>
+
             </div>
+
+
+
+            <div class="info-card">
+
+                <div class="info-icon">
+                    ◆
+                </div>
+
+                <div>
+
+                    <h3>
+                        Магазин
+                    </h3>
+
+                    <p>
+                        Используй клики для покупки
+                        больших пакетов.
+                    </p>
+
+                </div>
+
+            </div>
+
 
         </section>
+
 
     </main>
 
 </div>
 
-<div id="toast" class="toast"></div>
+
+<!-- TOAST -->
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
 
 <script src="/app.js"></script>
 
