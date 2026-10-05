@@ -1,11 +1,29 @@
-```js
 document.addEventListener("DOMContentLoaded", () => {
 
-    const loginForm =
-        document.getElementById("loginForm");
+    const loginForm = document.getElementById("loginForm");
+
+    const loginUsername =
+        document.getElementById("loginUsername");
+
+    const loginPassword =
+        document.getElementById("loginPassword");
+
+    const loginButton =
+        document.getElementById("loginButton");
+
 
     const registerForm =
         document.getElementById("registerForm");
+
+    const registerUsername =
+        document.getElementById("registerUsername");
+
+    const registerPassword =
+        document.getElementById("registerPassword");
+
+    const registerButton =
+        document.getElementById("registerButton");
+
 
     const showRegister =
         document.getElementById("showRegister");
@@ -19,85 +37,107 @@ document.addEventListener("DOMContentLoaded", () => {
     const message =
         document.getElementById("message");
 
-    // ==========================================
-    // MESSAGE
-    // ==========================================
 
-    function showMessage(text, success = false) {
+    // =================================================
+    // MESSAGE
+    // =================================================
+
+    function showMessage(text, type = "error") {
         message.textContent = text;
 
-        message.style.display = "block";
+        message.className = "auth-message";
 
-        if (success) {
+        if (type === "success") {
             message.classList.add("success");
-        } else {
-            message.classList.remove("success");
+        }
+
+        if (type === "error") {
+            message.classList.add("error");
+        }
+
+        if (type === "info") {
+            message.classList.add("info");
         }
     }
 
-    // ==========================================
-    // SHOW REGISTER
-    // ==========================================
+
+    function clearMessage() {
+        message.textContent = "";
+        message.className = "auth-message";
+    }
+
+
+    // =================================================
+    // REGISTER BOX
+    // =================================================
 
     showRegister.addEventListener("click", () => {
+        clearMessage();
+
         registerBox.style.display = "block";
+
         showRegister.style.display = "none";
 
-        message.textContent = "";
-        message.style.display = "none";
+        setTimeout(() => {
+            registerUsername.focus();
+        }, 50);
     });
 
-    // ==========================================
-    // HIDE REGISTER
-    // ==========================================
 
     hideRegister.addEventListener("click", () => {
+        clearMessage();
+
         registerBox.style.display = "none";
+
         showRegister.style.display = "block";
 
-        message.textContent = "";
-        message.style.display = "none";
+        registerForm.reset();
+
+        loginUsername.focus();
     });
 
-    // ==========================================
+
+    // =================================================
     // LOGIN
-    // ==========================================
+    // =================================================
 
     loginForm.addEventListener("submit", async (event) => {
+
         event.preventDefault();
 
+        clearMessage();
+
         const username =
-            document.getElementById("loginUsername")
-                .value
-                .trim();
+            loginUsername.value.trim();
 
         const password =
-            document.getElementById("loginPassword")
-                .value;
+            loginPassword.value;
+
 
         if (!username || !password) {
             showMessage(
-                "Введите логин и пароль."
+                "Введите логин и пароль",
+                "error"
             );
 
             return;
         }
 
-        const button =
-            document.getElementById("loginButton");
 
-        button.disabled = true;
-        button.textContent = "Вход...";
+        loginButton.disabled = true;
+
+        loginButton.textContent = "Вход...";
+
 
         try {
+
             const response = await fetch(
                 "/api/login",
                 {
                     method: "POST",
 
                     headers: {
-                        "Content-Type":
-                            "application/json"
+                        "Content-Type": "application/json"
                     },
 
                     credentials: "include",
@@ -109,44 +149,61 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             );
 
-            const data =
-                await response.json();
+
+            const data = await response.json();
+
 
             if (!response.ok || !data.success) {
+
                 showMessage(
                     data.message ||
-                    "Не удалось войти."
+                    "Не удалось войти",
+                    "error"
                 );
-
-                button.disabled = false;
-                button.textContent = "Войти";
 
                 return;
             }
 
+
             showMessage(
                 "Вход выполнен! Переходим...",
-                true
+                "success"
             );
 
-            // СРАЗУ В КЛИКЕР
-            window.location.replace("/");
+
+            /*
+             * ВАЖНО:
+             * replace, а не href.
+             * Поэтому страница входа не останется
+             * в истории браузера.
+             */
+
+            setTimeout(() => {
+                window.location.replace("/");
+            }, 200);
+
 
         } catch (error) {
+
             console.error(error);
 
             showMessage(
-                "Ошибка соединения с сервером."
+                "Ошибка соединения с сервером",
+                "error"
             );
 
-            button.disabled = false;
-            button.textContent = "Войти";
+        } finally {
+
+            loginButton.disabled = false;
+
+            loginButton.textContent = "Войти";
         }
     });
 
-    // ==========================================
+
+    // =================================================
     // REGISTER
-    // ==========================================
+    // =================================================
 
     registerForm.addEventListener(
         "submit",
@@ -154,96 +211,130 @@ document.addEventListener("DOMContentLoaded", () => {
 
             event.preventDefault();
 
+            clearMessage();
+
             const username =
-                document.getElementById(
-                    "registerUsername"
-                )
-                    .value
-                    .trim();
+                registerUsername.value.trim();
 
             const password =
-                document.getElementById(
-                    "registerPassword"
-                )
-                    .value;
+                registerPassword.value;
+
 
             if (!username || !password) {
+
                 showMessage(
-                    "Введите логин и пароль."
+                    "Заполните все поля",
+                    "error"
                 );
 
                 return;
             }
 
-            const button =
-                document.getElementById(
-                    "registerButton"
+
+            if (username.length < 3) {
+
+                showMessage(
+                    "Логин должен быть минимум 3 символа",
+                    "error"
                 );
 
-            button.disabled = true;
-            button.textContent =
+                return;
+            }
+
+
+            if (password.length < 4) {
+
+                showMessage(
+                    "Пароль должен быть минимум 4 символа",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            registerButton.disabled = true;
+
+            registerButton.textContent =
                 "Регистрация...";
 
+
             try {
-                const response =
-                    await fetch(
-                        "/api/register",
-                        {
-                            method: "POST",
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
+                const response = await fetch(
+                    "/api/register",
+                    {
+                        method: "POST",
 
-                            credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
 
-                            body: JSON.stringify({
-                                username,
-                                password
-                            })
-                        }
-                    );
+                        credentials: "include",
 
-                const data =
-                    await response.json();
+                        body: JSON.stringify({
+                            username,
+                            password
+                        })
+                    }
+                );
 
-                if (
-                    !response.ok ||
-                    !data.success
-                ) {
+
+                const data = await response.json();
+
+
+                if (!response.ok || !data.success) {
+
                     showMessage(
                         data.message ||
-                        "Не удалось зарегистрироваться."
+                        "Не удалось зарегистрироваться",
+                        "error"
                     );
-
-                    button.disabled = false;
-                    button.textContent =
-                        "Зарегистрироваться";
 
                     return;
                 }
 
+
                 showMessage(
                     "Аккаунт создан! Переходим...",
-                    true
+                    "success"
                 );
 
-                // СРАЗУ В КЛИКЕР
-                window.location.replace("/");
+
+                /*
+                 * После регистрации сервер уже
+                 * создаёт сессию.
+                 */
+
+                setTimeout(() => {
+                    window.location.replace("/");
+                }, 200);
+
 
             } catch (error) {
+
                 console.error(error);
 
                 showMessage(
-                    "Ошибка соединения с сервером."
+                    "Ошибка соединения с сервером",
+                    "error"
                 );
 
-                button.disabled = false;
-                button.textContent =
+            } finally {
+
+                registerButton.disabled = false;
+
+                registerButton.textContent =
                     "Зарегистрироваться";
             }
         }
     );
+
+
+    // =================================================
+    // START
+    // =================================================
+
+    loginUsername.focus();
+
 });
-```
