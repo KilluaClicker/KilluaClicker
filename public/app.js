@@ -1,613 +1,540 @@
-```js
-const $ = (id) =>
-    document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 
-// ============================================
-// ELEMENTS
-// ============================================
+/* ELEMENTS */
 
-const authScreen =
-    $("authScreen");
+const authScreen = $("authScreen");
+const gameScreen = $("gameScreen");
 
-const gameScreen =
-    $("gameScreen");
+const loginTab = $("loginTab");
+const registerTab = $("registerTab");
 
-const loginTab =
-    $("loginTab");
+const loginForm = $("loginForm");
+const registerForm = $("registerForm");
 
-const registerTab =
-    $("registerTab");
+const loginButton = $("loginButton");
+const registerButton = $("registerButton");
 
-const loginForm =
-    $("loginForm");
+const logoutButton = $("logoutButton");
 
-const registerForm =
-    $("registerForm");
+const clickButton = $("clickButton");
 
-const loginButton =
-    $("loginButton");
+const score = $("score");
+const profileClicks = $("profileClicks");
 
-const registerButton =
-    $("registerButton");
+const playerName = $("playerName");
 
-const logoutButton =
-    $("logoutButton");
+const leaderboard = $("leaderboard");
 
-const clickButton =
-    $("clickButton");
+const authMessage = $("authMessage");
 
-const score =
-    $("score");
-
-const profileClicks =
-    $("profileClicks");
-
-const playerName =
-    $("playerName");
-
-const leaderboard =
-    $("leaderboard");
-
-const authMessage =
-    $("authMessage");
-
-const adminLink =
-    $("adminLink");
+const adminLink = $("adminLink");
 
 
-// ============================================
-// API
-// ============================================
+/* API */
 
-async function api(
-    url,
-    options = {}
-) {
+async function api(url, options = {}) {
 
-    const response =
-        await fetch(
-            url,
-            {
-                ...options,
+  const response = await fetch(url, {
 
-                credentials: "include",
+    ...options,
 
-                headers: {
-                    "Content-Type":
-                        "application/json",
+    credentials: "include",
 
-                    ...(options.headers || {})
-                }
-            }
-        );
+    headers: {
 
-    const data =
-        await response
-            .json()
-            .catch(() => ({}));
+      "Content-Type":
+        "application/json",
 
-    if (!response.ok) {
-
-        throw new Error(
-            data.error ||
-            "Ошибка сервера"
-        );
+      ...(options.headers || {})
 
     }
 
-    return data;
-
-}
+  });
 
 
-// ============================================
-// FORMAT
-// ============================================
+  const data =
+    await response.json()
+      .catch(() => ({}));
 
-function formatNumber(number) {
 
-    return Number(
-        number || 0
-    ).toLocaleString(
-        "ru-RU"
+  if (!response.ok) {
+
+    throw new Error(
+      data.error ||
+      "Ошибка сервера"
     );
 
+  }
+
+
+  return data;
+
 }
 
 
-// ============================================
-// TABS
-// ============================================
+/* FORMAT */
 
-loginTab.addEventListener(
-    "click",
-    () => {
+function formatNumber(value) {
 
-        loginTab.classList.add(
-            "active"
-        );
+  try {
 
-        registerTab.classList.remove(
-            "active"
-        );
+    return BigInt(value || 0)
+      .toLocaleString("ru-RU");
 
-        loginForm.classList.remove(
-            "hidden"
-        );
+  } catch {
 
-        registerForm.classList.add(
-            "hidden"
-        );
+    return "0";
 
-        authMessage.textContent = "";
+  }
 
-    }
-);
+}
 
 
-registerTab.addEventListener(
-    "click",
-    () => {
+/* TABS */
 
-        registerTab.classList.add(
-            "active"
-        );
+if (loginTab) {
 
-        loginTab.classList.remove(
-            "active"
-        );
+  loginTab.onclick = () => {
 
-        registerForm.classList.remove(
-            "hidden"
-        );
+    loginTab.classList.add("active");
 
-        loginForm.classList.add(
-            "hidden"
-        );
+    registerTab.classList.remove("active");
 
-        authMessage.textContent = "";
+    loginForm.classList.remove("hidden");
 
-    }
-);
+    registerForm.classList.add("hidden");
+
+    authMessage.textContent = "";
+
+  };
+
+}
 
 
-// ============================================
-// SHOW GAME
-// ============================================
+if (registerTab) {
+
+  registerTab.onclick = () => {
+
+    registerTab.classList.add("active");
+
+    loginTab.classList.remove("active");
+
+    registerForm.classList.remove("hidden");
+
+    loginForm.classList.add("hidden");
+
+    authMessage.textContent = "";
+
+  };
+
+}
+
+
+/* SHOW GAME */
 
 function showGame(user) {
 
-    authScreen.classList.add(
-        "hidden"
-    );
+  authScreen.classList.add("hidden");
 
-    gameScreen.classList.remove(
-        "hidden"
-    );
+  gameScreen.classList.remove("hidden");
 
-    playerName.textContent =
-        user.username;
 
-    score.textContent =
-        formatNumber(
-            user.clicks
-        );
+  playerName.textContent =
+    user.username;
 
-    profileClicks.textContent =
-        formatNumber(
-            user.clicks
-        );
 
-    if (
-        user.username ===
-        "Killua666"
-    ) {
+  score.textContent =
+    formatNumber(user.clicks);
 
-        adminLink.classList.remove(
-            "hidden"
-        );
 
-    } else {
+  profileClicks.textContent =
+    formatNumber(user.clicks);
 
-        adminLink.classList.add(
-            "hidden"
-        );
 
-    }
+  if (user.username === "Killua666") {
 
-    loadLeaderboard();
+    adminLink.classList.remove("hidden");
+
+  } else {
+
+    adminLink.classList.add("hidden");
+
+  }
+
+
+  loadLeaderboard();
 
 }
 
 
-// ============================================
-// LOGIN
-// ============================================
+/* LOGIN */
 
-loginButton.addEventListener(
-    "click",
-    async () => {
+if (loginButton) {
 
-        try {
+  loginButton.onclick = async () => {
 
-            loginButton.disabled =
-                true;
+    authMessage.textContent = "";
 
-            loginButton.textContent =
-                "Входим...";
+    loginButton.disabled = true;
 
-            const data =
-                await api(
-                    "/api/login",
-                    {
-                        method: "POST",
+    loginButton.textContent =
+      "Входим...";
 
-                        body:
-                            JSON.stringify({
-                                username:
-                                    $("loginUsername")
-                                        .value,
-
-                                password:
-                                    $("loginPassword")
-                                        .value
-                            })
-                    }
-                );
-
-            showGame(
-                data.user
-            );
-
-        } catch (error) {
-
-            authMessage.textContent =
-                error.message;
-
-        } finally {
-
-            loginButton.disabled =
-                false;
-
-            loginButton.innerHTML =
-                "<span>⚡</span> Войти";
-
-        }
-
-    }
-);
-
-
-// ============================================
-// REGISTER
-// ============================================
-
-registerButton.addEventListener(
-    "click",
-    async () => {
-
-        try {
-
-            registerButton.disabled =
-                true;
-
-            registerButton.textContent =
-                "Создаём...";
-
-            const data =
-                await api(
-                    "/api/register",
-                    {
-                        method: "POST",
-
-                        body:
-                            JSON.stringify({
-                                username:
-                                    $("registerUsername")
-                                        .value,
-
-                                password:
-                                    $("registerPassword")
-                                        .value
-                            })
-                    }
-                );
-
-            showGame(
-                data.user
-            );
-
-        } catch (error) {
-
-            authMessage.textContent =
-                error.message;
-
-        } finally {
-
-            registerButton.disabled =
-                false;
-
-            registerButton.innerHTML =
-                "<span>🚀</span> Создать аккаунт";
-
-        }
-
-    }
-);
-
-
-// ============================================
-// CLICK — БЫСТРЫЕ КЛИКИ
-// ============================================
-
-clickButton.addEventListener(
-    "click",
-    async (event) => {
-
-        try {
-
-            const data =
-                await api(
-                    "/api/click",
-                    {
-                        method: "POST"
-                    }
-                );
-
-            score.textContent =
-                formatNumber(
-                    data.clicks
-                );
-
-            profileClicks.textContent =
-                formatNumber(
-                    data.clicks
-                );
-
-            createClickPop(
-                event.clientX,
-                event.clientY
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Ошибка клика:",
-                error
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================
-// CLICK POP
-// ============================================
-
-function createClickPop(
-    x,
-    y
-) {
-
-    const pop =
-        document.createElement(
-            "div"
-        );
-
-    pop.className =
-        "click-pop";
-
-    pop.textContent =
-        "+1 ⚡";
-
-    pop.style.left =
-        `${x - 15}px`;
-
-    pop.style.top =
-        `${y - 10}px`;
-
-    document.body.appendChild(
-        pop
-    );
-
-    setTimeout(
-        () => pop.remove(),
-        800
-    );
-
-}
-
-
-// ============================================
-// LEADERBOARD
-// ============================================
-
-async function loadLeaderboard() {
 
     try {
 
-        const players =
-            await api(
-                "/api/top"
-            );
+      const data = await api(
+        "/api/login",
+        {
+          method: "POST",
 
-        leaderboard.innerHTML =
-            "";
+          body: JSON.stringify({
 
-        if (!players.length) {
+            username:
+              $("loginUsername").value,
 
-            leaderboard.innerHTML =
-                `
-                <div class="loading">
-                    Пока игроков нет
-                </div>
-                `;
+            password:
+              $("loginPassword").value
 
-            return;
+          })
 
         }
+      );
 
-        players.forEach(
-            (player, index) => {
 
-                const row =
-                    document.createElement(
-                        "div"
-                    );
+      showGame(data.user);
 
-                row.className =
-                    "leader-row";
-
-                row.innerHTML = `
-
-                    <div class="rank ${
-                        index < 3
-                            ? "top"
-                            : ""
-                    }">
-                        ${
-                            index === 0
-                                ? "🥇"
-                                : index === 1
-                                ? "🥈"
-                                : index === 2
-                                ? "🥉"
-                                : "#" +
-                                  (index + 1)
-                        }
-                    </div>
-
-                    <div class="leader-avatar">
-                        ⚡
-                    </div>
-
-                    <div class="leader-name">
-                        ${escapeHtml(
-                            player.username
-                        )}
-                    </div>
-
-                    <div class="leader-score">
-                        ${formatNumber(
-                            player.clicks
-                        )}
-                    </div>
-
-                `;
-
-                leaderboard.appendChild(
-                    row
-                );
-
-            }
-        );
 
     } catch (error) {
 
-        console.error(
-            "Ошибка загрузки лидерборда:",
-            error
-        );
+      authMessage.textContent =
+        error.message;
+
+
+    } finally {
+
+      loginButton.disabled = false;
+
+      loginButton.textContent =
+        "⚡ Войти";
 
     }
+
+  };
 
 }
 
 
-// ============================================
-// LOGOUT
-// ============================================
+/* REGISTER */
 
-logoutButton.addEventListener(
-    "click",
-    async () => {
+if (registerButton) {
 
-        try {
+  registerButton.onclick = async () => {
 
-            await api(
-                "/api/logout",
-                {
-                    method: "POST"
-                }
-            );
+    authMessage.textContent = "";
 
-        } catch (error) {
+    registerButton.disabled = true;
 
-            console.error(
-                "Ошибка выхода:",
-                error
-            );
+    registerButton.textContent =
+      "Создаём...";
 
-        }
-
-        location.reload();
-
-    }
-);
-
-
-// ============================================
-// ESCAPE HTML
-// ============================================
-
-function escapeHtml(value) {
-
-    return String(value)
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-}
-
-
-// ============================================
-// LOAD SESSION
-// ============================================
-
-async function loadUser() {
 
     try {
 
-        const data =
-            await api(
-                "/api/me"
-            );
+      const data = await api(
+        "/api/register",
+        {
+          method: "POST",
 
-        showGame(
-            data.user
-        );
+          body: JSON.stringify({
 
-    } catch {
+            username:
+              $("registerUsername").value,
 
-        authScreen.classList.remove(
-            "hidden"
-        );
+            password:
+              $("registerPassword").value
 
-        gameScreen.classList.add(
-            "hidden"
-        );
+          })
+
+        }
+      );
+
+
+      showGame(data.user);
+
+
+    } catch (error) {
+
+      authMessage.textContent =
+        error.message;
+
+
+    } finally {
+
+      registerButton.disabled = false;
+
+      registerButton.textContent =
+        "🚀 Создать аккаунт";
 
     }
+
+  };
+
+}
+
+
+/* CLICK */
+
+if (clickButton) {
+
+  clickButton.onclick = async (event) => {
+
+    try {
+
+      const data = await api(
+        "/api/click",
+        {
+          method: "POST"
+        }
+      );
+
+
+      score.textContent =
+        formatNumber(data.clicks);
+
+
+      profileClicks.textContent =
+        formatNumber(data.clicks);
+
+
+      createClickPop(
+        event.clientX,
+        event.clientY
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Ошибка клика:",
+        error
+      );
+
+    }
+
+  };
+
+}
+
+
+/* CLICK ANIMATION */
+
+function createClickPop(x, y) {
+
+  const pop =
+    document.createElement("div");
+
+
+  pop.className =
+    "click-pop";
+
+
+  pop.textContent =
+    "+1 ⚡";
+
+
+  pop.style.left =
+    `${x - 15}px`;
+
+
+  pop.style.top =
+    `${y - 10}px`;
+
+
+  document.body.appendChild(pop);
+
+
+  setTimeout(
+    () => pop.remove(),
+    800
+  );
+
+}
+
+
+/* LEADERBOARD */
+
+async function loadLeaderboard() {
+
+  try {
+
+    const players =
+      await api("/api/top");
+
+
+    leaderboard.innerHTML = "";
+
+
+    if (!players.length) {
+
+      leaderboard.innerHTML =
+        `<div class="loading">
+          Пока игроков нет
+        </div>`;
+
+      return;
+
+    }
+
+
+    players.forEach(
+      (player, index) => {
+
+        const row =
+          document.createElement("div");
+
+
+        row.className =
+          "leader-row";
+
+
+        let rank;
+
+
+        if (index === 0) {
+
+          rank = "🥇";
+
+        } else if (index === 1) {
+
+          rank = "🥈";
+
+        } else if (index === 2) {
+
+          rank = "🥉";
+
+        } else {
+
+          rank =
+            "#" + (index + 1);
+
+        }
+
+
+        row.innerHTML = `
+
+          <div class="rank ${
+            index < 3 ? "top" : ""
+          }">
+            ${rank}
+          </div>
+
+          <div class="leader-avatar">
+            ⚡
+          </div>
+
+          <div class="leader-name">
+            ${escapeHtml(player.username)}
+          </div>
+
+          <div class="leader-score">
+            ${formatNumber(player.clicks)}
+          </div>
+
+        `;
+
+
+        leaderboard.appendChild(row);
+
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Ошибка топа:",
+      error
+    );
+
+  }
+
+}
+
+
+/* LOGOUT */
+
+if (logoutButton) {
+
+  logoutButton.onclick = async () => {
+
+    try {
+
+      await api(
+        "/api/logout",
+        {
+          method: "POST"
+        }
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+
+    location.reload();
+
+  };
+
+}
+
+
+/* ESCAPE */
+
+function escapeHtml(value) {
+
+  return String(value)
+
+    .replaceAll("&", "&amp;")
+
+    .replaceAll("<", "&lt;")
+
+    .replaceAll(">", "&gt;")
+
+    .replaceAll('"', "&quot;")
+
+    .replaceAll("'", "&#039;");
+
+}
+
+
+/* SESSION */
+
+async function loadUser() {
+
+  try {
+
+    const data =
+      await api("/api/me");
+
+
+    showGame(data.user);
+
+
+  } catch {
+
+    authScreen.classList.remove(
+      "hidden"
+    );
+
+    gameScreen.classList.add(
+      "hidden"
+    );
+
+  }
 
 }
 
@@ -615,25 +542,22 @@ async function loadUser() {
 loadUser();
 
 
-// ============================================
-// ENTER KEY
-// ============================================
+/* ENTER */
 
 document.addEventListener(
-    "keydown",
-    (event) => {
+  "keydown",
+  (event) => {
 
-        if (
-            event.key === "Enter" &&
-            !gameScreen.classList.contains(
-                "hidden"
-            )
-        ) {
+    if (
+      event.key === "Enter" &&
+      !gameScreen.classList.contains(
+        "hidden"
+      )
+    ) {
 
-            clickButton.click();
-
-        }
+      clickButton.click();
 
     }
+
+  }
 );
-```

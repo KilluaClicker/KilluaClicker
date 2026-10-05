@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>KilluaClicker</title>
-
   <link rel="stylesheet" href="/style.css">
 </head>
 
@@ -15,36 +12,22 @@
 <header class="topbar">
 
   <div class="logo">
-    <div class="logo-light">⚡</div>
-    <span>KilluaClicker</span>
+    ⚡ KilluaClicker
   </div>
 
   <nav class="nav-buttons">
 
-    <a
-      href="/"
-      class="nav-button active">
+    <button id="homeButton" class="nav-button active">
       ⚡ Кликер
-    </a>
+    </button>
 
-    <a
-      href="/#shopSection"
-      class="nav-button">
-      🛒 Магазин
-    </a>
+    <button id="topButton" class="nav-button">
+      🏆 Топ
+    </button>
 
-    <a
-      href="/clans.html"
-      class="nav-button">
-      🏰 Кланы
-    </a>
-
-    <a
-      href="/admin.html"
-      id="adminLink"
-      class="nav-button hidden">
+    <button id="adminLink" class="nav-button hidden">
       🛡️ Админка
-    </a>
+    </button>
 
   </nav>
 
@@ -53,7 +36,7 @@
 
 <main>
 
-  <!-- AUTH -->
+  <!-- АВТОРИЗАЦИЯ -->
 
   <section id="authScreen" class="auth-screen">
 
@@ -69,27 +52,20 @@
         Кликер нового поколения
       </p>
 
-
       <div class="auth-tabs">
 
-        <button
-          type="button"
-          id="loginTab"
-          class="auth-tab active">
+        <button id="loginTab" class="auth-tab active">
           Войти
         </button>
 
-        <button
-          type="button"
-          id="registerTab"
-          class="auth-tab">
+        <button id="registerTab" class="auth-tab">
           Регистрация
         </button>
 
       </div>
 
 
-      <!-- LOGIN -->
+      <!-- ВХОД -->
 
       <div id="loginForm">
 
@@ -104,23 +80,16 @@
           type="password"
           placeholder="Пароль">
 
-        <button
-          type="button"
-          id="loginButton"
-          class="main-button">
-
+        <button id="loginButton" class="main-button">
           ⚡ Войти
-
         </button>
 
       </div>
 
 
-      <!-- REGISTER -->
+      <!-- РЕГИСТРАЦИЯ -->
 
-      <div
-        id="registerForm"
-        class="hidden">
+      <div id="registerForm" class="hidden">
 
         <input
           id="registerUsername"
@@ -133,34 +102,26 @@
           type="password"
           placeholder="Придумай пароль">
 
-        <button
-          type="button"
-          id="registerButton"
-          class="main-button">
-
+        <button id="registerButton" class="main-button">
           🚀 Создать аккаунт
-
         </button>
 
       </div>
 
 
-      <div
-        id="authMessage"
-        class="auth-message">
-      </div>
+      <div id="authMessage" class="auth-message"></div>
 
     </div>
 
   </section>
 
 
-  <!-- GAME -->
+  <!-- ИГРА -->
 
-  <section
-    id="gameScreen"
-    class="game-screen hidden">
+  <section id="gameScreen" class="game-screen hidden">
 
+
+    <!-- ПРОФИЛЬ ВВЕРХУ -->
 
     <div class="player-card">
 
@@ -176,9 +137,7 @@
             Игрок
           </div>
 
-          <div
-            id="playerName"
-            class="player-name">
+          <div id="playerName" class="player-name">
             —
           </div>
 
@@ -187,17 +146,14 @@
       </div>
 
 
-      <button
-        type="button"
-        id="logoutButton"
-        class="logout-button">
+      <button id="logoutButton" class="logout-button">
         Выйти
       </button>
 
     </div>
 
 
-    <!-- SCORE -->
+    <!-- КЛИКИ -->
 
     <div class="score-card">
 
@@ -205,27 +161,22 @@
         Твои клики
       </div>
 
-      <div
-        id="score"
-        class="score">
+      <div id="score" class="score">
         0
       </div>
 
       <div class="score-description">
-        Нажимай и набирай больше
+        Нажимай на кнопку и набирай очки
       </div>
 
     </div>
 
 
-    <!-- CLICK -->
+    <!-- КНОПКА КЛИКА -->
 
     <div class="click-area">
 
-      <button
-        type="button"
-        id="clickButton"
-        class="click-button">
+      <button id="clickButton" class="click-button">
 
         <span class="click-icon">
           ⚡
@@ -238,7 +189,7 @@
     </div>
 
 
-    <!-- PROFILE -->
+    <!-- ПРОФИЛЬ -->
 
     <div class="profile-card">
 
@@ -261,51 +212,9 @@
     </div>
 
 
-    <!-- SHOP -->
+    <!-- ТОП -->
 
-    <section
-      id="shopSection"
-      class="content-section">
-
-      <div class="section-header">
-
-        <div>
-
-          <div class="section-title">
-            🛒 Магазин
-          </div>
-
-          <div class="section-subtitle">
-            Покупай клики за клики
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div
-        id="shopMessage"
-        class="shop-message">
-      </div>
-
-
-      <div
-        id="shopGrid"
-        class="shop-grid">
-
-        <div class="loading">
-          Загрузка магазина...
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- LEADERBOARD -->
-
-    <section class="content-section">
+    <section id="topSection" class="content-section">
 
       <div class="section-header">
 
@@ -316,7 +225,7 @@
           </div>
 
           <div class="section-subtitle">
-            Лучшие кликеры KilluaClicker
+            Лучшие игроки KilluaClicker
           </div>
 
         </div>
@@ -324,9 +233,7 @@
       </div>
 
 
-      <div
-        id="leaderboard"
-        class="leaderboard">
+      <div id="leaderboard" class="leaderboard">
 
         <div class="loading">
           Загрузка игроков...
@@ -337,44 +244,71 @@
     </section>
 
 
-    <!-- CLANS -->
-
-    <section class="clan-promo">
-
-      <div class="clan-promo-icon">
-        🏰
-      </div>
-
-      <div class="clan-promo-content">
-
-        <h2>
-          Кланы
-        </h2>
-
-        <p>
-          Создавай клан, собирай игроков
-          и поднимайся в топе.
-        </p>
-
-      </div>
-
-      <a
-        href="/clans.html"
-        class="main-button">
-
-        Открыть кланы
-
-      </a>
-
-    </section>
-
-
   </section>
 
 </main>
 
 
 <script src="/app.js"></script>
+
+
+<!-- НАВИГАЦИЯ НЕ ЗАВИСИТ ОТ app.js -->
+
+<script>
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const homeButton = document.getElementById("homeButton");
+
+    const topButton = document.getElementById("topButton");
+
+    const adminButton = document.getElementById("adminLink");
+
+
+    if (homeButton) {
+
+      homeButton.onclick = function () {
+
+        window.location.href = "/";
+
+      };
+
+    }
+
+
+    if (topButton) {
+
+      topButton.onclick = function () {
+
+        const section =
+          document.getElementById("topSection");
+
+        if (section) {
+
+          section.scrollIntoView({
+            behavior: "smooth"
+          });
+
+        }
+
+      };
+
+    }
+
+
+    if (adminButton) {
+
+      adminButton.onclick = function () {
+
+        window.location.href = "/admin.html";
+
+      };
+
+    }
+
+  });
+
+</script>
 
 </body>
 </html>
