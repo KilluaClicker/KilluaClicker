@@ -1,433 +1,196 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>KilluaClicker — Магазин</title>
-
-    <link rel="stylesheet" href="/style.css">
-</head>
-
-<body>
-
-<div class="background"></div>
-
-<header class="topbar">
-
-    <div class="logo">
-        <span>⚡</span>
-        KilluaClicker
-    </div>
-
-    <nav>
-
-        <button onclick="location.href='/'">
-            ⚡ Кликер
-        </button>
-
-        <button onclick="document.getElementById('store').scrollIntoView({behavior:'smooth'})">
-            🛒 Магазин
-        </button>
-
-        <button onclick="location.href='/'">
-            🏆 Топ
-        </button>
-
-        <button id="adminButton" class="hidden" onclick="location.href='/admin.html'">
-            🛡️ Админка
-        </button>
-
-    </nav>
-
-</header>
-
-
-<main>
-
-    <section class="store-hero">
-
-        <div class="store-badge">
-            KILLUACLICKER STORE
-        </div>
-
-        <h1>
-            Магазин кликов
-        </h1>
-
-        <p>
-            Покупай дополнительные клики за свои клики
-        </p>
-
-        <div class="store-balance">
-
-            <span>Твой баланс</span>
-
-            <strong id="balance">
-                0
-            </strong>
-
-            <small>
-                кликов
-            </small>
-
-        </div>
-
-    </section>
-
-
-    <section id="store" class="store-section">
-
-        <div class="store-grid">
-
-            <div class="shop-card">
-
-                <div class="shop-icon">
-                    +1
-                </div>
-
-                <h2>
-                    1 клик
-                </h2>
-
-                <p>
-                    +1 клик
-                </p>
-
-                <div class="shop-price">
-                    БЕСПЛАТНО
-                </div>
-
-                <button onclick="buy('1')">
-                    Получить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card">
-
-                <div class="shop-icon">
-                    +10
-                </div>
-
-                <h2>
-                    10 кликов
-                </h2>
-
-                <p>
-                    +10 к кликам
-                </p>
-
-                <div class="shop-price">
-                    5 кликов
-                </div>
-
-                <button onclick="buy('10')">
-                    Купить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card">
-
-                <div class="shop-icon">
-                    +100
-                </div>
-
-                <h2>
-                    100 кликов
-                </h2>
-
-                <p>
-                    +100 к кликам
-                </p>
-
-                <div class="shop-price">
-                    40 кликов
-                </div>
-
-                <button onclick="buy('100')">
-                    Купить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card">
-
-                <div class="shop-icon">
-                    +1K
-                </div>
-
-                <h2>
-                    1 000 кликов
-                </h2>
-
-                <p>
-                    +1 000 к кликам
-                </p>
-
-                <div class="shop-price">
-                    350 кликов
-                </div>
-
-                <button onclick="buy('1000')">
-                    Купить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card">
-
-                <div class="shop-icon">
-                    +1M
-                </div>
-
-                <h2>
-                    1 миллион
-                </h2>
-
-                <p>
-                    +1 000 000 кликов
-                </p>
-
-                <div class="shop-price">
-                    300 000 кликов
-                </div>
-
-                <button onclick="buy('million')">
-                    Купить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card">
-
-                <div class="shop-icon">
-                    +1B
-                </div>
-
-                <h2>
-                    1 миллиард
-                </h2>
-
-                <p>
-                    +1 000 000 000 кликов
-                </p>
-
-                <div class="shop-price">
-                    300 000 000 кликов
-                </div>
-
-                <button onclick="buy('billion')">
-                    Купить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card rare">
-
-                <div class="shop-icon">
-                    +1Q
-                </div>
-
-                <h2>
-                    1 квадриллион
-                </h2>
-
-                <p>
-                    +1 000 000 000 000 000
-                </p>
-
-                <div class="shop-price">
-                    300 000 000 000 000
-                </div>
-
-                <button onclick="buy('quadrillion')">
-                    Купить
-                </button>
-
-            </div>
-
-
-            <div class="shop-card legendary">
-
-                <div class="shop-icon">
-                    +1S
-                </div>
-
-                <h2>
-                    1 сикстиллион
-                </h2>
-
-                <p>
-                    +1 000 000 000 000 000 000 000
-                </p>
-
-                <div class="shop-price">
-                    300 000 000 000 000 000 000
-                </div>
-
-                <button onclick="buy('sextillion')">
-                    Купить
-                </button>
-
-            </div>
-
-        </div>
-
-    </section>
-
-</main>
-
-
-<div id="message" class="shop-message"></div>
-
-
-<script>
-
-async function api(url, options = {}) {
-
-    const response = await fetch(url, {
-
-        ...options,
-
-        credentials: "include",
-
-        headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-        }
-
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-
-        throw new Error(
-            data.error || "Ошибка сервера"
-        );
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KilluaClicker — Store</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    return data;
-}
-
-
-function formatNumber(value) {
-
-    try {
-
-        const number = BigInt(String(value || "0"));
-
-        return number.toLocaleString("ru-RU");
-
-    } catch {
-
-        return "0";
-
+    :root {
+      --bg: #07070b;
+      --panel: rgba(17, 17, 25, 0.78);
+      --panel2: rgba(22, 20, 34, 0.85);
+      --border: rgba(255,255,255,0.08);
+      --purple: #8b5cf6;
+      --purple2: #a855f7;
+      --blue: #6366f1;
+      --text: #f7f5ff;
+      --muted: #9994ad;
+      --green: #39e58c;
     }
 
-}
-
-
-function showMessage(text, error = false) {
-
-    const message = document.getElementById("message");
-
-    message.textContent = text;
-
-    message.className =
-        "shop-message " +
-        (error ? "error" : "success");
-
-    setTimeout(() => {
-
-        message.className = "shop-message";
-
-    }, 3000);
-
-}
-
-
-async function loadUser() {
-
-    try {
-
-        const data = await api("/api/me");
-
-        if (!data.user) {
-
-            location.href = "/";
-
-            return;
-
-        }
-
-        document.getElementById("balance").textContent =
-            formatNumber(data.user.clicks);
-
-        if (data.user.username === "Killua666") {
-
-            document
-                .getElementById("adminButton")
-                .classList.remove("hidden");
-
-        }
-
-    } catch (error) {
-
-        location.href = "/";
-
+    body {
+      font-family: Inter, Arial, sans-serif;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 75% 5%, rgba(139,92,246,.20), transparent 28%),
+        radial-gradient(circle at 15% 80%, rgba(99,102,241,.13), transparent 30%),
+        #07070b;
+      overflow-x: hidden;
     }
 
-}
-
-
-async function buy(id) {
-
-    try {
-
-        const data = await api("/api/shop/buy", {
-
-            method: "POST",
-
-            body: JSON.stringify({
-                item: id
-            })
-
-        });
-
-        document.getElementById("balance").textContent =
-            formatNumber(data.clicks);
-
-        showMessage(
-            "Покупка успешна! +" +
-            formatNumber(data.added) +
-            " кликов"
-        );
-
-    } catch (error) {
-
-        showMessage(
-            error.message,
-            true
-        );
-
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black, transparent);
     }
 
-}
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
 
+    /* SIDEBAR */
 
-loadUser();
+    .sidebar {
+      width: 245px;
+      min-height: 100vh;
+      padding: 25px 16px;
+      background: rgba(8,8,13,.82);
+      border-right: 1px solid var(--border);
+      backdrop-filter: blur(25px);
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 20;
+    }
 
-</script>
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px 30px;
+    }
 
-</body>
-</html>
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      box-shadow:
+        0 0 30px rgba(139,92,246,.45),
+        inset 0 0 15px rgba(255,255,255,.12);
+    }
+
+    .logo-text {
+      font-weight: 900;
+      font-size: 17px;
+      letter-spacing: -.5px;
+    }
+
+    .logo-text span {
+      color: #a78bfa;
+    }
+
+    .nav-title {
+      color: #625d73;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 0 13px 10px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #918ca3;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .nav a:hover {
+      color: white;
+      background: rgba(139,92,246,.08);
+      transform: translateX(2px);
+    }
+
+    .nav a.active {
+      color: white;
+      background:
+        linear-gradient(90deg, rgba(139,92,246,.22), rgba(139,92,246,.06));
+      box-shadow:
+        inset 2px 0 0 #9b6cff,
+        0 0 25px rgba(139,92,246,.06);
+    }
+
+    .nav-icon {
+      width: 25px;
+      text-align: center;
+      font-size: 17px;
+    }
+
+    .sidebar-bottom {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 20px;
+    }
+
+    .version {
+      color: #504b5d;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    /* MAIN */
+
+    .main {
+      width: calc(100% - 245px);
+      margin-left: 245px;
+      padding: 32px 40px 60px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 38px;
+    }
+
+    .breadcrumb {
+      color: #777185;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .breadcrumb span {
+      color: #a78bfa;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px 8px 8px;
+      border: 1px solid var(--
+```
