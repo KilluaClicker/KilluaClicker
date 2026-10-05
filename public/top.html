@@ -1,57 +1,235 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KilluaClicker — Топы</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>KilluaClicker — Топ игроков</title>
+
     <link rel="stylesheet" href="/style.css">
+
+    <style>
+        .top-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 35px 20px 60px;
+        }
+
+        .top-heading {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .top-heading h1 {
+            margin: 0;
+            font-size: 34px;
+        }
+
+        .top-heading p {
+            color: #9994b8;
+            margin-top: 8px;
+        }
+
+        .podium {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+            gap: 18px;
+            align-items: end;
+            margin-bottom: 30px;
+        }
+
+        .podium-card {
+            position: relative;
+            text-align: center;
+            background: linear-gradient(
+                145deg,
+                #111022,
+                #17152d
+            );
+            border: 1px solid rgba(139,92,246,.2);
+            border-radius: 22px;
+            padding: 25px 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,.2);
+        }
+
+        .podium-card.first {
+            padding-top: 35px;
+            padding-bottom: 35px;
+            transform: translateY(-8px);
+        }
+
+        .podium-place {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .podium-avatar {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 12px;
+            border-radius: 18px;
+            background: linear-gradient(
+                135deg,
+                #8b5cf6,
+                #a855f7
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 25px;
+            font-weight: 900;
+        }
+
+        .podium-name {
+            font-weight: 800;
+            font-size: 18px;
+            word-break: break-word;
+        }
+
+        .podium-clicks {
+            margin-top: 8px;
+            color: #c4b5fd;
+            font-weight: 700;
+        }
+
+        .podium-power {
+            margin-top: 5px;
+            color: #9994b8;
+            font-size: 13px;
+        }
+
+        .top-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .top-row {
+            display: grid;
+            grid-template-columns:
+                60px 1fr auto;
+            align-items: center;
+            gap: 15px;
+            background: #111022;
+            border: 1px solid rgba(139,92,246,.15);
+            border-radius: 16px;
+            padding: 15px 18px;
+        }
+
+        .top-number {
+            color: #8b5cf6;
+            font-weight: 900;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .top-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .top-avatar {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: #17152d;
+            border: 1px solid rgba(139,92,246,.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c4b5fd;
+            font-weight: 900;
+        }
+
+        .top-username {
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .top-power {
+            color: #9994b8;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .top-score {
+            text-align: right;
+            color: #c4b5fd;
+            font-weight: 800;
+        }
+
+        .top-message {
+            text-align: center;
+            color: #9994b8;
+            padding: 25px;
+        }
+
+        @media (max-width: 700px) {
+            .podium {
+                grid-template-columns: 1fr;
+            }
+
+            .podium-card.first {
+                transform: none;
+            }
+
+            .top-row {
+                grid-template-columns:
+                    40px 1fr;
+            }
+
+            .top-score {
+                grid-column: 2;
+                text-align: left;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
 <header class="topbar">
     <div class="brand">
-        <div class="brand-icon">K</div>
-        <div>
-            <div class="brand-title">KilluaClicker</div>
-            <div class="brand-subtitle">CLICK • COMPETE • WIN</div>
-        </div>
+        <span class="brand-icon">⚡</span>
+        <span>KilluaClicker</span>
     </div>
 
-<nav class="nav">
-    <a href="/">Кликер</a>
-    <a href="/store.html">Магазин</a>
-    <a href="/clans.html">Кланы</a>
-    <a href="/top.html" class="active">Топы</a>
-</nav>
-
+    <nav class="nav">
+        <a href="/">Кликер</a>
+        <a href="/store.html">Магазин</a>
+        <a href="/clans.html">Кланы</a>
+        <a href="/top.html">Топы</a>
+    </nav>
 </header>
 
-<main class="container">
-<section class="hero">
-    <div>
-        <div class="eyebrow">LEADERBOARD</div>
-        <h1>Топ игроков</h1>
-        <p>Самые быстрые и самые кликающие игроки KilluaClicker.</p>
-    </div>
-</section>
+<main class="top-page">
 
-<section class="panel">
-    <div class="panel-header">
-        <div>
-            <h2>🏆 Рейтинг</h2>
-            <p>Топ игроков по количеству кликов</p>
-        </div>
+    <div class="top-heading">
+        <h1>🏆 Топ игроков</h1>
+        <p>Лучшие игроки KilluaClicker</p>
     </div>
 
-    <div id="topList" class="top-list">
-        <div class="loading">Загрузка...</div>
+    <div id="podium" class="podium"></div>
+
+    <div id="topList" class="top-list"></div>
+
+    <div
+        id="topMessage"
+        class="top-message"
+    >
+        Загрузка топа...
     </div>
-</section>
 
 </main>
-
-<div id="toast" class="toast"></div>
 
 <script src="/top.js"></script>
 
