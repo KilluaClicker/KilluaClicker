@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KilluaClicker — Вход</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<div class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            K
+        </div>
+
+        <h1>KilluaClicker</h1>
+        <p class="auth-subtitle">Войди в свой аккаунт</p>
+
+        <div id="message" class="auth-message"></div>
+
+        <form id="loginForm">
+
+            <div class="auth-field">
+                <label for="loginUsername">Логин</label>
+
+                <input
+                    id="loginUsername"
+                    type="text"
+                    placeholder="Введите логин"
+                    autocomplete="username"
+                    maxlength="32"
+                    required
+                >
+            </div>
+
+            <div class="auth-field">
+                <label for="loginPassword">Пароль</label>
+
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Введите пароль"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <button
+                id="loginButton"
+                type="submit"
+                class="auth-button"
+            >
+                Войти
+            </button>
+
+        </form>
+
+        <div class="auth-divider">
+            <span>или</span>
+        </div>
+
+        <button
+            id="showRegister"
+            type="button"
+            class="auth-secondary-button"
+        >
+            Создать аккаунт
+        </button>
+
+        <div id="registerBox" class="register-box">
+
+            <h2>Регистрация</h2>
+
+            <form id="registerForm">
+
+                <div class="auth-field">
+                    <label for="registerUsername">Логин</label>
+
+                    <input
+                        id="registerUsername"
+                        type="text"
+                        placeholder="Придумайте логин"
+                        autocomplete="username"
+                        maxlength="32"
+                        required
+                    >
+                </div>
+
+                <div class="auth-field">
+                    <label for="registerPassword">Пароль</label>
+
+                    <input
+                        id="registerPassword"
+                        type="password"
+                        placeholder="Придумайте пароль"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    id="registerButton"
+                    class="auth-button"
+                >
+                    Зарегистрироваться
+                </button>
+
+            </form>
+
+            <button
+                id="hideRegister"
+                type="button"
+                class="auth-secondary-button"
+            >
+                Назад ко входу
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/login.js"></script>
+
+</body>
+</html>
