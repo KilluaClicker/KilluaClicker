@@ -1,314 +1,198 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KilluaClicker</title>
-  <link rel="stylesheet" href="/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KilluaClicker</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
-<header class="topbar">
+<div class="app">
 
-  <div class="logo">
-    ⚡ KilluaClicker
-  </div>
+    <header class="topbar">
 
-  <nav class="nav-buttons">
-
-    <button id="homeButton" class="nav-button active">
-      ⚡ Кликер
-    </button>
-
-    <button id="topButton" class="nav-button">
-      🏆 Топ
-    </button>
-
-    <button id="adminLink" class="nav-button hidden">
-      🛡️ Админка
-    </button>
-
-  </nav>
-
-</header>
-
-
-<main>
-
-  <!-- АВТОРИЗАЦИЯ -->
-
-  <section id="authScreen" class="auth-screen">
-
-    <div class="auth-card">
-
-      <div class="auth-logo">
-        ⚡
-      </div>
-
-      <h1>KilluaClicker</h1>
-
-      <p class="auth-subtitle">
-        Кликер нового поколения
-      </p>
-
-      <div class="auth-tabs">
-
-        <button id="loginTab" class="auth-tab active">
-          Войти
-        </button>
-
-        <button id="registerTab" class="auth-tab">
-          Регистрация
-        </button>
-
-      </div>
-
-
-      <!-- ВХОД -->
-
-      <div id="loginForm">
-
-        <input
-          id="loginUsername"
-          type="text"
-          placeholder="Логин"
-          maxlength="32">
-
-        <input
-          id="loginPassword"
-          type="password"
-          placeholder="Пароль">
-
-        <button id="loginButton" class="main-button">
-          ⚡ Войти
-        </button>
-
-      </div>
-
-
-      <!-- РЕГИСТРАЦИЯ -->
-
-      <div id="registerForm" class="hidden">
-
-        <input
-          id="registerUsername"
-          type="text"
-          placeholder="Придумай логин"
-          maxlength="32">
-
-        <input
-          id="registerPassword"
-          type="password"
-          placeholder="Придумай пароль">
-
-        <button id="registerButton" class="main-button">
-          🚀 Создать аккаунт
-        </button>
-
-      </div>
-
-
-      <div id="authMessage" class="auth-message"></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- ИГРА -->
-
-  <section id="gameScreen" class="game-screen hidden">
-
-
-    <!-- ПРОФИЛЬ ВВЕРХУ -->
-
-    <div class="player-card">
-
-      <div class="player-info">
-
-        <div class="player-avatar">
-          ⚡
+        <div class="brand">
+            <div class="brand-logo">K</div>
+            <div>
+                <div class="brand-name">KilluaClicker</div>
+                <div class="brand-subtitle">CLICK • COMPETE • WIN</div>
+            </div>
         </div>
 
-        <div>
+        <nav class="nav">
+            <a href="/" class="nav-link active">Кликер</a>
+            <a href="/store.html" class="nav-link">Магазин</a>
+            <a href="/clans.html" class="nav-link">Кланы</a>
+            <a href="/top.html" class="nav-link">Топ</a>
+            <a href="/admin.html" id="adminLink" class="nav-link admin-link">
+                Админка
+            </a>
+        </nav>
 
-          <div class="player-label">
-            Игрок
-          </div>
-
-          <div id="playerName" class="player-name">
-            —
-          </div>
-
+        <div class="account">
+            <span id="username">...</span>
+            <button id="logoutBtn" class="logout-btn">Выйти</button>
         </div>
 
-      </div>
+    </header>
 
 
-      <button id="logoutButton" class="logout-button">
-        Выйти
-      </button>
+    <main class="container">
 
-    </div>
+        <section class="welcome">
+            <div>
+                <div class="small-title">KILLUACLICKER</div>
+                <h1>Кликай и поднимайся<br>в <span>топ игроков</span></h1>
+                <p>
+                    Каждый клик увеличивает твой баланс.
+                    Соревнуйся с другими игроками и стань первым.
+                </p>
+            </div>
 
-
-    <!-- КЛИКИ -->
-
-    <div class="score-card">
-
-      <div class="score-label">
-        Твои клики
-      </div>
-
-      <div id="score" class="score">
-        0
-      </div>
-
-      <div class="score-description">
-        Нажимай на кнопку и набирай очки
-      </div>
-
-    </div>
+            <div class="online">
+                <span></span>
+                ONLINE
+            </div>
+        </section>
 
 
-    <!-- КНОПКА КЛИКА -->
+        <section class="stats">
 
-    <div class="click-area">
+            <div class="stat-card">
+                <div class="stat-icon purple">✦</div>
+                <div>
+                    <div class="stat-label">ТВОИ КЛИКИ</div>
+                    <div id="clicks" class="stat-value">0</div>
+                </div>
+            </div>
 
-      <button id="clickButton" class="click-button">
+            <div class="stat-card">
+                <div class="stat-icon blue">♛</div>
+                <div>
+                    <div class="stat-label">ПОЗИЦИЯ</div>
+                    <div id="rank" class="stat-value">—</div>
+                </div>
+            </div>
 
-        <span class="click-icon">
-          ⚡
-        </span>
+            <div class="stat-card">
+                <div class="stat-icon green">●</div>
+                <div>
+                    <div class="stat-label">СТАТУС</div>
+                    <div class="stat-value status">АКТИВЕН</div>
+                </div>
+            </div>
 
-        КЛИК
-
-      </button>
-
-    </div>
-
-
-    <!-- ПРОФИЛЬ -->
-
-    <div class="profile-card">
-
-      <div class="profile-title">
-        👤 Профиль
-      </div>
-
-      <div class="profile-stat">
-
-        <span>
-          Всего кликов
-        </span>
-
-        <strong id="profileClicks">
-          0
-        </strong>
-
-      </div>
-
-    </div>
+        </section>
 
 
-    <!-- ТОП -->
+        <section class="click-area">
 
-    <section id="topSection" class="content-section">
+            <div class="click-panel">
 
-      <div class="section-header">
+                <div class="click-panel-top">
+                    <div>
+                        <div class="small-title">CLICK ZONE</div>
+                        <h2>Нажимай!</h2>
+                    </div>
 
-        <div>
-
-          <div class="section-title">
-            🏆 Топ игроков
-          </div>
-
-          <div class="section-subtitle">
-            Лучшие игроки KilluaClicker
-          </div>
-
-        </div>
-
-      </div>
+                    <div class="click-counter">
+                        <span id="miniClicks">0</span>
+                        clicks
+                    </div>
+                </div>
 
 
-      <div id="leaderboard" class="leaderboard">
+                <button id="clickButton" class="click-button">
+                    <div class="click-ring ring-one"></div>
+                    <div class="click-ring ring-two"></div>
 
-        <div class="loading">
-          Загрузка игроков...
-        </div>
-
-      </div>
-
-    </section>
+                    <div class="click-core">
+                        <span>CLICK</span>
+                        <strong>✦</strong>
+                    </div>
+                </button>
 
 
-  </section>
+                <div class="click-hint">
+                    Нажми на кнопку, чтобы получить +1 клик
+                </div>
 
-</main>
+            </div>
 
+
+            <aside class="side-panel">
+
+                <div class="side-title">БЫСТРЫЕ ССЫЛКИ</div>
+
+                <a href="/store.html" class="quick-link">
+                    <div class="quick-icon">◆</div>
+                    <div>
+                        <strong>Магазин</strong>
+                        <span>Покупай усиления</span>
+                    </div>
+                    <b>›</b>
+                </a>
+
+                <a href="/clans.html" class="quick-link">
+                    <div class="quick-icon">♜</div>
+                    <div>
+                        <strong>Кланы</strong>
+                        <span>Создай свой клан</span>
+                    </div>
+                    <b>›</b>
+                </a>
+
+                <a href="/top.html" class="quick-link">
+                    <div class="quick-icon">♛</div>
+                    <div>
+                        <strong>Топ игроков</strong>
+                        <span>Посмотри рейтинг</span>
+                    </div>
+                    <b>›</b>
+                </a>
+
+            </aside>
+
+        </section>
+
+
+        <section class="bottom-grid">
+
+            <div class="info-card">
+                <div class="info-icon">⚡</div>
+                <div>
+                    <h3>Быстрые клики</h3>
+                    <p>Кликай максимально быстро и увеличивай свой результат.</p>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">🏆</div>
+                <div>
+                    <h3>Соревнование</h3>
+                    <p>Следи за рейтингом и занимай первое место.</p>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">◆</div>
+                <div>
+                    <h3>Магазин</h3>
+                    <p>Используй клики для покупки больших пакетов.</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div id="toast" class="toast"></div>
 
 <script src="/app.js"></script>
-
-
-<!-- НАВИГАЦИЯ НЕ ЗАВИСИТ ОТ app.js -->
-
-<script>
-
-  document.addEventListener("DOMContentLoaded", function () {
-
-    const homeButton = document.getElementById("homeButton");
-
-    const topButton = document.getElementById("topButton");
-
-    const adminButton = document.getElementById("adminLink");
-
-
-    if (homeButton) {
-
-      homeButton.onclick = function () {
-
-        window.location.href = "/";
-
-      };
-
-    }
-
-
-    if (topButton) {
-
-      topButton.onclick = function () {
-
-        const section =
-          document.getElementById("topSection");
-
-        if (section) {
-
-          section.scrollIntoView({
-            behavior: "smooth"
-          });
-
-        }
-
-      };
-
-    }
-
-
-    if (adminButton) {
-
-      adminButton.onclick = function () {
-
-        window.location.href = "/admin.html";
-
-      };
-
-    }
-
-  });
-
-</script>
 
 </body>
 </html>
