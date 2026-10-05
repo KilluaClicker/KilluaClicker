@@ -1,423 +1,270 @@
-"use strict";
-
-
-const usernameEl =
-    document.getElementById("username");
-
-const clicksEl =
-    document.getElementById("clicks");
-
-const miniClicksEl =
-    document.getElementById("miniClicks");
-
-const rankEl =
-    document.getElementById("rank");
-
-const clickButton =
-    document.getElementById("clickButton");
-
-const logoutBtn =
-    document.getElementById("logoutBtn");
-
-const adminLink =
-    document.getElementById("adminLink");
-
-const toastEl =
-    document.getElementById("toast");
-
+document.addEventListener("DOMContentLoaded", () => {
+    initApp();
+});
 
 let currentUser = null;
-let clicking = false;
-let toastTimer = null;
+let isClicking = false;
 
+/* =========================================================
+   INIT
+========================================================= */
 
-function formatNumber(value) {
+async function initApp() {
+    setupButtons();
+    await loadCurrentUser();
+}
 
-    try {
+/* =========================================================
+   BUTTONS
+========================================================= */
 
-        return BigInt(value).toLocaleString("ru-RU");
+function setupButtons() {
+    const clickButton = document.getElementById("clickButton");
+    const logoutButton = document.getElementById("logoutButton");
 
-    } catch {
+    if (clickButton) {
+        clickButton.addEventListener("click", async (event) => {
+            event.preventDefault();
 
-        return String(value);
+            if (isClicking) {
+                return;
+            }
 
+            await makeClick();
+        });
     }
 
-}
+    if (logoutButton) {
+        logoutButton.addEventListener("click", async (event) => {
+            event.preventDefault();
 
-
-function updateClicks(value) {
-
-    const formatted =
-        formatNumber(value);
-
-    clicksEl.textContent =
-        formatted;
-
-    miniClicksEl.textContent =
-        formatted;
-
-}
-
-
-function showToast(message) {
-
-    if (!toastEl) {
-        return;
+            await logout();
+        });
     }
 
-    toastEl.textContent =
-        message;
-
-    toastEl.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-
-        toastEl.classList.remove("show");
-
-    }, 2200);
-
+    document.addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
 }
 
+/* =========================================================
+   CURRENT USER
+========================================================= */
 
-async function loadUser() {
-
+async function loadCurrentUser() {
     try {
+        const response = await fetch("/api/me", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
+        });
 
-        const response =
-            await fetch("/api/me", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store"
-            });
+        const data = await response.json().catch(() => ({}));
 
-
-        if (!response.ok) {
-
-            usernameEl.textContent =
-                "Не авторизован";
-
+        if (!response.ok || !data.success || !data.user) {
+            showLoggedOutState();
             return;
-
         }
 
+        currentUser = data.user;
 
-        const data =
-            await response.json();
-
-
-        if (!data.success || !data.user) {
-
-            usernameEl.textContent =
-                "Не авторизован";
-
-            return;
-
-        }
-
-
-        currentUser =
-            data.user;
-
-
-        usernameEl.textContent =
-            currentUser.username;
-
-
-        updateClicks(
-            currentUser.clicks
-        );
-
-
-        if (
-            currentUser.username ===
-            "Killua666"
-        ) {
-
-            adminLink.style.display =
-                "flex";
-
-        }
-
-
-        await loadRank();
+        updateUserInterface(currentUser);
 
     } catch (error) {
+        console.error("Ошибка проверки аккаунта:", error);
 
-        console.error(error);
-
-        usernameEl.textContent =
-            "Ошибка соединения";
-
+        showLoggedOutState();
     }
-
 }
 
-
-async function loadRank() {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch("/api/top", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store"
-            });
-
-
-        if (!response.ok) {
-            return;
-        }
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !data.success ||
-            !Array.isArray(data.users)
-        ) {
-
-            return;
-
-        }
-
-
-        const index =
-            data.users.findIndex(
-                user =>
-                    user.username ===
-                    currentUser.username
-            );
-
-
-        rankEl.textContent =
-            index >= 0
-                ? "#" + (index + 1)
-                : "—";
-
-
-    } catch (error) {
-
-        console.error(error);
-
-    }
-
-}
-
+/* =========================================================
+   CLICK
+========================================================= */
 
 async function makeClick() {
-
-    if (clicking) {
+    if (!currentUser) {
+        showToast("Сначала войдите в аккаунт");
         return;
     }
 
+    isClicking = true;
 
-    clicking = true;
+    const clickButton = document.getElementById("clickButton");
 
-
-    clickButton.classList.add(
-        "pressed"
-    );
-
+    if (clickButton) {
+        clickButton.disabled = true;
+    }
 
     try {
+        const response = await fetch("/api/click", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        });
 
-        const response =
-            await fetch("/api/click", {
-                method: "POST",
+        const data = await response.json().catch(() => ({}));
 
-                credentials: "include",
+        if (!response.ok || !data.success) {
+            if (response.status === 401) {
+                currentUser = null;
+                showLoggedOutState();
+                showToast("Сессия закончилась. Войдите снова.");
+                return;
+            }
 
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                cache: "no-store",
-
-                body: JSON.stringify({})
-            });
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.status === 401
-        ) {
-
-            showToast(
-                "Сессия закончилась. Войдите снова."
-            );
-
+            showToast(data.error || "Ошибка клика");
             return;
-
         }
 
+        currentUser.clicks = String(data.clicks);
 
-        if (
-            !response.ok ||
-            !data.success
-        ) {
-
-            throw new Error(
-                data.message ||
-                "Ошибка клика"
-            );
-
-        }
-
-
-        if (
-            data.clicks !== undefined
-        ) {
-
-            currentUser.clicks =
-                data.clicks;
-
-            updateClicks(
-                data.clicks
-            );
-
-        }
-
+        updateClicks(currentUser.clicks);
 
     } catch (error) {
+        console.error("Ошибка клика:", error);
 
-        console.error(error);
-
-        showToast(
-            error.message ||
-            "Ошибка клика"
-        );
+        showToast("Ошибка соединения с сервером");
 
     } finally {
+        isClicking = false;
 
-        setTimeout(() => {
-
-            clickButton.classList.remove(
-                "pressed"
-            );
-
-            clicking = false;
-
-        }, 40);
-
+        if (clickButton) {
+            clickButton.disabled = false;
+        }
     }
-
 }
 
+/* =========================================================
+   LOGOUT
+========================================================= */
 
-clickButton.addEventListener(
-    "click",
-    function(event) {
+async function logout() {
+    const logoutButton = document.getElementById("logoutButton");
 
-        event.preventDefault();
-        event.stopPropagation();
-
-        makeClick();
-
+    if (logoutButton) {
+        logoutButton.disabled = true;
     }
-);
 
+    try {
+        const response = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        });
 
-document.addEventListener(
-    "submit",
-    function(event) {
+        await response.json().catch(() => ({}));
 
-        event.preventDefault();
+    } catch (error) {
+        console.error("Ошибка выхода:", error);
 
-    }
-);
-
-
-document.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (
-            event.code !== "Space"
-        ) {
-            return;
-        }
-
-
-        const active =
-            document.activeElement;
-
-
-        if (
-            active &&
-            (
-                active.tagName === "INPUT" ||
-                active.tagName === "TEXTAREA"
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-        makeClick();
-
-    }
-);
-
-
-logoutBtn.addEventListener(
-    "click",
-    async function(event) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        logoutBtn.disabled = true;
-
-        logoutBtn.textContent =
-            "Выход...";
-
-
-        try {
-
-            await fetch(
-                "/api/logout",
-                {
-                    method: "POST",
-                    credentials: "include"
-                }
-            );
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
-
+    } finally {
+        currentUser = null;
 
         /*
-         * Здесь переход происходит только
-         * после нажатия пользователем "Выйти".
+         * Переходим на страницу входа.
+         * В нашем проекте страница входа находится на "/".
          */
-
-        window.location.href = "/";
-
+        window.location.href = "/?login=1";
     }
-);
+}
 
+/* =========================================================
+   UI
+========================================================= */
 
-loadUser();
+function updateUserInterface(user) {
+    const usernameElements = document.querySelectorAll(
+        "#username, #playerName, .username"
+    );
+
+    usernameElements.forEach((element) => {
+        element.textContent = user.username;
+    });
+
+    updateClicks(user.clicks);
+
+    const adminButton = document.getElementById("adminButton");
+
+    if (adminButton) {
+        if (user.username === "Killua666") {
+            adminButton.style.display = "";
+        } else {
+            adminButton.style.display = "none";
+        }
+    }
+}
+
+function updateClicks(clicks) {
+    const formatted = formatNumber(clicks);
+
+    const elements = document.querySelectorAll(
+        "#clicks, #clickCount, .click-count, [data-clicks]"
+    );
+
+    elements.forEach((element) => {
+        element.textContent = formatted;
+    });
+}
+
+function showLoggedOutState() {
+    currentUser = null;
+
+    const usernameElements = document.querySelectorAll(
+        "#username, #playerName, .username"
+    );
+
+    usernameElements.forEach((element) => {
+        element.textContent = "Не авторизован";
+    });
+
+    updateClicks("0");
+
+    const clickButton = document.getElementById("clickButton");
+
+    if (clickButton) {
+        clickButton.disabled = false;
+    }
+}
+
+/* =========================================================
+   NUMBER FORMAT
+========================================================= */
+
+function formatNumber(value) {
+    try {
+        return BigInt(String(value)).toLocaleString("ru-RU");
+    } catch {
+        return String(value);
+    }
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(message) {
+    let toast = document.getElementById("toast");
+
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast";
+        toast.className = "toast";
+
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2500);
+}
