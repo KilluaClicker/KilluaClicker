@@ -1,547 +1,389 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const clickButton =
-        document.getElementById("clickButton");
+    const clickButton = document.getElementById("clickButton");
+    const clicksElement = document.getElementById("clicks");
+    const clickPowerElement = document.getElementById("clickPower");
 
-    const clicksElement =
-        document.getElementById("clicks");
+    const rebirthCountElement =
+        document.getElementById("rebirthCount");
 
-    const usernameElement =
-        document.getElementById("username");
+    const rebirthMultiplierElement =
+        document.getElementById("rebirthMultiplier");
 
-    const logoutButton =
-        document.getElementById("logoutButton");
+    const rebirthPriceElement =
+        document.getElementById("rebirthPrice");
 
-    let clickPower = 1n;
-    let clickInProgress = false;
-    let currentImpersonating = false;
+    const rebirthButton =
+        document.getElementById("rebirthButton");
+
+    const rebirthMessage =
+        document.getElementById("rebirthMessage");
+
+    let currentClicks = 0n;
+    let currentClickPower = 1n;
+
+    let currentRebirths = 0;
+    let currentMultiplier = "1";
+    let nextRebirth = null;
+
+    let clickBusy = false;
+    let rebirthBusy = false;
 
     function formatNumber(value) {
         try {
-            const number =
-                BigInt(String(value ?? "0"));
+            const n = BigInt(String(value));
 
-            if (number < 1000n) {
-                return number.toString();
+            if (n < 1000n) {
+                return n.toString();
             }
 
             const units = [
-                {
-                    value: 1000000000000000000000000n,
-                    name: "септиллион"
-                },
-                {
-                    value: 1000000000000000000000n,
-                    name: "сикстиллион"
-                },
-                {
-                    value: 1000000000000000n,
-                    name: "квадриллион"
-                },
-                {
-                    value: 1000000000000n,
-                    name: "триллион"
-                },
-                {
-                    value: 1000000000n,
-                    name: "миллиард"
-                },
-                {
-                    value: 1000000n,
-                    name: "миллион"
-                },
-                {
-                    value: 1000n,
-                    name: "тысяча"
-                }
+                "",
+                "тыс.",
+                "млн",
+                "млрд",
+                "трлн",
+                "квадр.",
+                "квинт.",
+                "секст.",
+                "септ.",
+                "окт.",
+                "нонил.",
+                "дец."
             ];
 
-            for (const unit of units) {
-                if (number >= unit.value) {
-                    const whole =
-                        number / unit.value;
+            let number = n;
+            let unitIndex = 0;
 
-                    const remainder =
-                        number % unit.value;
-
-                    if (remainder === 0n) {
-                        return `${whole} ${unit.name}`;
-                    }
-
-                    const decimal =
-                        Number(remainder) /
-                        Number(unit.value);
-
-                    const formatted =
-                        decimal
-                            .toFixed(2)
-                            .replace(/\.?0+$/, "");
-
-                    return `${whole}${formatted.slice(1)} ${unit.name}`;
-                }
+            while (number >= 1000n && unitIndex < units.length - 1) {
+                number /= 1000n;
+                unitIndex++;
             }
 
-            return number.toString();
-
+            return `${number.toString()} ${units[unitIndex]}`;
         } catch {
-            return "0";
+            return String(value);
         }
     }
 
-    function updateClickPower() {
-        let powerElement =
-            document.getElementById(
-                "clickPower"
-            );
+    function updateClicks(value) {
+        currentClicks = BigInt(String(value));
 
-        if (!powerElement) {
-            const stats =
-                document.querySelector(
-                    ".stats"
-                );
-
-            if (stats) {
-                const powerCard =
-                    document.createElement(
-                        "div"
-                    );
-
-                powerCard.className =
-                    "stat-card";
-
-                powerCard.innerHTML = `
-                    <div class="stat-label">
-                        За клик
-                    </div>
-
-                    <div
-                        class="stat-value"
-                        id="clickPower"
-                    >
-                        +1
-                    </div>
-                `;
-
-                stats.appendChild(
-                    powerCard
-                );
-
-                powerElement =
-                    document.getElementById(
-                        "clickPower"
-                    );
-            }
+        if (clicksElement) {
+            clicksElement.textContent =
+                formatNumber(currentClicks);
         }
 
-        if (powerElement) {
-            powerElement.textContent =
-                "+" +
-                formatNumber(clickPower);
+        updateRebirthButton();
+    }
+
+    function updateClickPower(value) {
+        currentClickPower = BigInt(String(value));
+
+        if (clickPowerElement) {
+            clickPowerElement.textContent =
+                formatNumber(currentClickPower);
         }
     }
 
-    /*
-     * =====================================================
-     * АДМИН-ПАНЕЛЬ
-     * =====================================================
-     */
-
-    function updateAdminInterface(
-        user,
-        impersonating = false
-    ) {
-        let adminButton =
-            document.getElementById(
-                "adminPanelButton"
-            );
-
-        let returnButton =
-            document.getElementById(
-                "returnAdminButton"
-            );
-
-        const isAdmin =
-            user &&
-            (
-                user.is_admin === true ||
-                user.is_admin === "true" ||
-                user.is_admin === 1 ||
-                user.is_admin === "1"
-            );
-
-        if (
-            isAdmin &&
-            !impersonating
-        ) {
-            if (!adminButton) {
-                adminButton =
-                    document.createElement(
-                        "button"
-                    );
-
-                adminButton.id =
-                    "adminPanelButton";
-
-                adminButton.type =
-                    "button";
-
-                adminButton.textContent =
-                    "⚙️ Админ-панель";
-
-                adminButton.style.cssText = `
-                    display: block;
-                    width: 100%;
-                    margin-top: 12px;
-                    padding: 13px 18px;
-                    border: 0;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #6d35d9, #9b59ff);
-                    color: white;
-                    font-size: 15px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    box-shadow: 0 8px 25px rgba(120, 60, 220, .25);
-                `;
-
-                adminButton.addEventListener(
-                    "click",
-                    () => {
-                        window.location.href =
-                            "/admin.html";
-                    }
-                );
-
-                if (logoutButton) {
-                    logoutButton.parentElement
-                        ?.appendChild(
-                            adminButton
-                        );
-                } else {
-                    document.body.appendChild(
-                        adminButton
-                    );
-                }
-            }
-
-            adminButton.style.display =
-                "block";
-
-        } else {
-            if (adminButton) {
-                adminButton.style.display =
-                    "none";
-            }
-        }
-
-        /*
-         * =================================================
-         * ВОЗВРАТ ИЗ ЧУЖОГО АККАУНТА
-         * =================================================
-         */
-
-        if (impersonating) {
-            if (!returnButton) {
-                returnButton =
-                    document.createElement(
-                        "button"
-                    );
-
-                returnButton.id =
-                    "returnAdminButton";
-
-                returnButton.type =
-                    "button";
-
-                returnButton.textContent =
-                    "↩️ Вернуться в админку";
-
-                returnButton.style.cssText = `
-                    position: fixed;
-                    top: 15px;
-                    right: 15px;
-                    z-index: 99999;
-                    padding: 13px 18px;
-                    border: 0;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #713bd1, #9b59ff);
-                    color: white;
-                    font-size: 14px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    box-shadow: 0 8px 25px rgba(0,0,0,.35);
-                `;
-
-                returnButton.addEventListener(
-                    "click",
-                    async () => {
-                        try {
-                            const response =
-                                await fetch(
-                                    "/api/admin/stop-impersonation",
-                                    {
-                                        method: "POST",
-                                        credentials:
-                                            "include",
-                                        headers: {
-                                            "Content-Type":
-                                                "application/json"
-                                        }
-                                    }
-                                );
-
-                            const data =
-                                await response.json();
-
-                            if (
-                                !response.ok ||
-                                !data.success
-                            ) {
-                                alert(
-                                    data.message ||
-                                    "Не удалось вернуться в админку."
-                                );
-
-                                return;
-                            }
-
-                            window.location.href =
-                                "/admin.html";
-
-                        } catch (error) {
-                            console.error(
-                                error
-                            );
-
-                            alert(
-                                "Ошибка возврата в админку."
-                            );
-                        }
-                    }
-                );
-
-                document.body.appendChild(
-                    returnButton
-                );
-            }
-
-            returnButton.style.display =
-                "block";
-
-        } else {
-            if (returnButton) {
-                returnButton.style.display =
-                    "none";
-            }
-        }
-    }
-
-    /*
-     * =====================================================
-     * UPDATE USER
-     * =====================================================
-     */
-
-    function updateUser(
-        user,
-        impersonating = currentImpersonating
-    ) {
+    function updateGameData(user) {
         if (!user) {
             return;
         }
 
-        currentImpersonating =
-            impersonating === true;
-
-        /*
-         * НИК ИГРОКА
-         */
-
-        if (usernameElement) {
-            usernameElement.textContent =
-                user.username || "";
+        if (user.clicks !== undefined) {
+            updateClicks(user.clicks);
         }
 
-        /*
-         * БАЛАНС
-         */
-
-        if (clicksElement) {
-            clicksElement.textContent =
-                formatNumber(
-                    user.clicks ?? 0
-                );
+        if (user.click_power !== undefined) {
+            updateClickPower(user.click_power);
         }
 
-        /*
-         * СИЛА КЛИКА
-         */
+        if (user.rebirths !== undefined) {
+            currentRebirths = Number(user.rebirths);
 
-        try {
-            clickPower =
-                BigInt(
-                    String(
-                        user.click_power ?? "1"
-                    )
-                );
-
-        } catch {
-            clickPower = 1n;
+            if (rebirthCountElement) {
+                rebirthCountElement.textContent =
+                    currentRebirths;
+            }
         }
 
-        updateClickPower();
+        if (user.rebirth_multiplier !== undefined) {
+            currentMultiplier =
+                String(user.rebirth_multiplier);
 
-        updateAdminInterface(
-            user,
-            currentImpersonating
-        );
+            if (rebirthMultiplierElement) {
+                rebirthMultiplierElement.textContent =
+                    `x${currentMultiplier}`;
+            }
+        }
+
+        updateRebirthButton();
     }
 
-    /*
-     * =====================================================
-     * ЗАГРУЗКА ПОЛЬЗОВАТЕЛЯ
-     * =====================================================
-     */
-
-    async function loadUser() {
+    async function loadGame() {
         try {
             const response =
-                await fetch(
-                    "/api/me",
-                    {
-                        credentials:
-                            "include",
-                        cache: "no-store"
-                    }
-                );
+                await fetch("/api/me", {
+                    credentials: "include"
+                });
 
-            const data =
-                await response.json();
-
-            if (
-                !response.ok ||
-                !data.success
-            ) {
-                window.location.href =
-                    "/login.html";
-
+            if (!response.ok) {
                 return;
             }
 
-            if (
-                !data.loggedIn ||
-                !data.user
-            ) {
-                window.location.href =
-                    "/login.html";
+            const data = await response.json();
 
-                return;
+            if (data.user) {
+                updateGameData(data.user);
             }
 
-            updateUser(
-                data.user,
-                data.impersonating === true
-            );
-
+            await loadRebirths();
         } catch (error) {
             console.error(
-                "Ошибка загрузки пользователя:",
+                "Ошибка загрузки игры:",
                 error
             );
         }
     }
 
-    /*
-     * =====================================================
-     * КЛИК
-     * =====================================================
-     */
+    async function loadRebirths() {
+        try {
+            const response =
+                await fetch("/api/rebirths", {
+                    credentials: "include"
+                });
 
-    async function makeClick() {
-        if (
-            !clickButton ||
-            clickInProgress
-        ) {
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            currentRebirths =
+                Number(data.current_rebirths || 0);
+
+            currentMultiplier =
+                String(
+                    data.current_multiplier || "1"
+                );
+
+            /*
+             * Сервер может возвращать:
+             * data.next
+             * или
+             * data.next_rebirth
+             */
+            nextRebirth =
+                data.next_rebirth ||
+                data.next ||
+                null;
+
+            if (rebirthCountElement) {
+                rebirthCountElement.textContent =
+                    currentRebirths;
+            }
+
+            if (rebirthMultiplierElement) {
+                rebirthMultiplierElement.textContent =
+                    `x${currentMultiplier}`;
+            }
+
+            if (rebirthPriceElement) {
+                if (nextRebirth) {
+                    rebirthPriceElement.textContent =
+                        formatNumber(
+                            nextRebirth.price
+                        );
+                } else {
+                    rebirthPriceElement.textContent =
+                        "MAX";
+                }
+            }
+
+            updateRebirthButton();
+        } catch (error) {
+            console.error(
+                "Ошибка загрузки перерождений:",
+                error
+            );
+        }
+    }
+
+    function updateRebirthButton() {
+        if (!rebirthButton) {
             return;
         }
 
-        clickInProgress = true;
+        if (!nextRebirth) {
+            rebirthButton.disabled = true;
 
-        clickButton.classList.add(
-            "pressed"
-        );
+            if (rebirthMessage) {
+                rebirthMessage.textContent =
+                    "Вы достигли максимального перерождения!";
+            }
 
-        clickButton.classList.add(
-            "click-animation"
-        );
+            return;
+        }
+
+        let price;
+
+        try {
+            price = BigInt(
+                String(nextRebirth.price)
+            );
+        } catch {
+            rebirthButton.disabled = true;
+            return;
+        }
+
+        const canRebirth =
+            currentClicks >= price &&
+            !rebirthBusy;
+
+        rebirthButton.disabled =
+            !canRebirth;
+
+        if (rebirthMessage) {
+            if (currentClicks >= price) {
+                rebirthMessage.textContent =
+                    "Вы можете сделать перерождение!";
+            } else {
+                const remaining =
+                    price - currentClicks;
+
+                rebirthMessage.textContent =
+                    `Нужно ещё ${formatNumber(
+                        remaining
+                    )} кликов`;
+            }
+        }
+    }
+
+    async function makeClick() {
+        if (clickBusy) {
+            return;
+        }
+
+        clickBusy = true;
 
         try {
             const response =
-                await fetch(
-                    "/api/click",
-                    {
-                        method: "POST",
-                        credentials:
-                            "include",
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        }
+                await fetch("/api/click", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
                     }
-                );
+                });
 
             const data =
                 await response.json();
 
-            if (
-                response.status === 401
-            ) {
-                window.location.href =
-                    "/login.html";
-
-                return;
-            }
-
-            if (
-                !response.ok ||
-                !data.success
-            ) {
+            if (!response.ok) {
                 console.error(
                     data.message ||
-                    "Ошибка клика."
+                    "Ошибка клика"
                 );
 
                 return;
             }
 
-            /*
-             * Сохраняем состояние админки
-             * после клика.
-             */
-
-            updateUser(
-                data.user,
-                currentImpersonating
-            );
-
+            if (data.user) {
+                updateGameData(data.user);
+            } else if (
+                data.clicks !== undefined
+            ) {
+                updateClicks(data.clicks);
+            }
         } catch (error) {
             console.error(
                 "Ошибка клика:",
                 error
             );
-
         } finally {
-            setTimeout(() => {
-                clickButton.classList.remove(
-                    "pressed"
-                );
+            clickBusy = false;
+        }
+    }
 
-                clickButton.classList.remove(
-                    "click-animation"
-                );
+    async function makeRebirth() {
+        if (rebirthBusy) {
+            return;
+        }
 
-                clickInProgress =
-                    false;
+        if (!nextRebirth) {
+            return;
+        }
 
-            }, 30);
+        let price;
+
+        try {
+            price = BigInt(
+                String(nextRebirth.price)
+            );
+        } catch {
+            return;
+        }
+
+        if (currentClicks < price) {
+            if (rebirthMessage) {
+                rebirthMessage.textContent =
+                    "Недостаточно кликов!";
+            }
+
+            return;
+        }
+
+        rebirthBusy = true;
+        updateRebirthButton();
+
+        try {
+            const response =
+                await fetch("/api/rebirth", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    }
+                });
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                if (rebirthMessage) {
+                    rebirthMessage.textContent =
+                        data.message ||
+                        "Не удалось сделать перерождение";
+                }
+
+                return;
+            }
+
+            if (data.user) {
+                updateGameData(data.user);
+            }
+
+            if (rebirthMessage) {
+                rebirthMessage.textContent =
+                    "Перерождение успешно!";
+            }
+
+            await loadRebirths();
+        } catch (error) {
+            console.error(
+                "Ошибка перерождения:",
+                error
+            );
+
+            if (rebirthMessage) {
+                rebirthMessage.textContent =
+                    "Ошибка соединения с сервером";
+            }
+        } finally {
+            rebirthBusy = false;
+            updateRebirthButton();
         }
     }
 
@@ -552,43 +394,12 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
-    /*
-     * =====================================================
-     * LOGOUT
-     * =====================================================
-     */
-
-    if (logoutButton) {
-        logoutButton.addEventListener(
+    if (rebirthButton) {
+        rebirthButton.addEventListener(
             "click",
-            async () => {
-                try {
-                    await fetch(
-                        "/api/logout",
-                        {
-                            method: "POST",
-                            credentials:
-                                "include"
-                        }
-                    );
-
-                } catch (error) {
-                    console.error(
-                        error
-                    );
-                }
-
-                window.location.href =
-                    "/login.html";
-            }
+            makeRebirth
         );
     }
 
-    /*
-     * =====================================================
-     * START
-     * =====================================================
-     */
-
-    loadUser();
+    loadGame();
 });
