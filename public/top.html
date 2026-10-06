@@ -12,11 +12,77 @@
     <link rel="stylesheet" href="/style.css">
 
     <style>
+        /* =========================
+           СТРАНИЦА ТОПА
+        ========================= */
+
         .top-page {
             max-width: 1100px;
             margin: 0 auto;
             padding: 35px 20px 60px;
         }
+
+        /* =========================
+           НАВИГАЦИЯ
+        ========================= */
+
+        .topbar .nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .topbar .nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            color: #aaa3c7;
+            text-decoration: none;
+            background: rgba(17, 16, 34, 0.85);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            transition:
+                background .2s ease,
+                border-color .2s ease,
+                color .2s ease,
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .topbar .nav a:hover {
+            color: #ffffff;
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.6);
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 25px rgba(139, 92, 246, 0.2);
+        }
+
+        .topbar .nav a:active {
+            transform: translateY(0);
+        }
+
+        .topbar .nav a.active {
+            color: #ffffff;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(139, 92, 246, 0.35),
+                    rgba(168, 85, 247, 0.2)
+                );
+            border-color: rgba(139, 92, 246, 0.75);
+            box-shadow:
+                0 0 20px rgba(139, 92, 246, 0.2),
+                inset 0 0 15px rgba(139, 92, 246, 0.08);
+        }
+
+        /* =========================
+           ЗАГОЛОВОК
+        ========================= */
 
         .top-heading {
             text-align: center;
@@ -32,6 +98,10 @@
             color: #9994b8;
             margin-top: 8px;
         }
+
+        /* =========================
+           ПЬЕДЕСТАЛ
+        ========================= */
 
         .podium {
             display: grid;
@@ -53,7 +123,8 @@
             border: 1px solid rgba(139,92,246,.2);
             border-radius: 22px;
             padding: 25px 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,.2);
+            box-shadow:
+                0 15px 40px rgba(0,0,0,.2);
         }
 
         .podium-card.first {
@@ -102,6 +173,10 @@
             color: #9994b8;
             font-size: 13px;
         }
+
+        /* =========================
+           СПИСОК ТОПА
+        ========================= */
 
         .top-list {
             display: grid;
@@ -173,7 +248,22 @@
             padding: 25px;
         }
 
+        /* =========================
+           МОБИЛЬНАЯ ВЕРСИЯ
+        ========================= */
+
         @media (max-width: 700px) {
+            .topbar .nav {
+                justify-content: center;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .topbar .nav a {
+                padding: 9px 12px;
+                font-size: 13px;
+            }
+
             .podium {
                 grid-template-columns: 1fr;
             }
@@ -207,7 +297,7 @@
         <a href="/">Кликер</a>
         <a href="/store.html">Магазин</a>
         <a href="/clans.html">Кланы</a>
-        <a href="/top.html">Топы</a>
+        <a href="/top.html" class="active">Топы</a>
     </nav>
 </header>
 
