@@ -1,496 +1,379 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const shopGrid =
-        document.getElementById("shopGrid");
+"use strict";
 
-    const shopMessage =
-        document.getElementById("shopMessage");
+const shopGrid = document.getElementById("shopGrid");
+const shopMessage = document.getElementById("shopMessage");
 
-    let shopItems = [];
+let shopItems = [];
 
-    function formatNumber(value) {
-        try {
-            const n =
-                BigInt(String(value));
+function formatNumber(value) {
+    try {
+        const n = BigInt(String(value));
 
-            if (n < 1000n) {
-                return n.toString();
-            }
-
-            const units = [
-                "",
-                "тыс.",
-                "млн",
-                "млрд",
-                "трлн",
-                "квадр.",
-                "квинт.",
-                "секст.",
-                "септ.",
-                "окт.",
-                "нонил.",
-                "дец."
-            ];
-
-            let number = n;
-            let unit = 0;
-
-            while (
-                number >= 1000n &&
-                unit < units.length - 1
-            ) {
-                number /= 1000n;
-                unit++;
-            }
-
-            return `${number.toString()} ${units[unit]}`;
-
-        } catch {
-            return String(value);
-        }
-    }
-
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-    }
-
-    function showMessage(text, type = "") {
-        if (!shopMessage) {
-            return;
+        if (n < 1000n) {
+            return n.toString();
         }
 
-        shopMessage.textContent = text;
-        shopMessage.className = "shop-message";
+        const units = [
+            { value: 1000000000000000000000n, name: "секст." },
+            { value: 1000000000000000n, name: "квадр." },
+            { value: 1000000000n, name: "млрд" },
+            { value: 1000000n, name: "млн" },
+            { value: 1000n, name: "тыс." }
+        ];
 
-        if (type) {
-            shopMessage.classList.add(type);
-        }
-    }
+        for (const unit of units) {
+            if (n >= unit.value) {
+                const whole = n / unit.value;
+                const remainder = n % unit.value;
 
-    async function loadShop() {
-        try {
-            const response = await fetch(
-                "/api/shop",
-                {
-                    credentials: "include",
-                    cache: "no-store"
+                if (remainder === 0n) {
+                    return `${whole} ${unit.name}`;
                 }
-            );
 
-            const data = await response.json();
+                const decimal =
+                    Number(remainder * 100n / unit.value) / 100;
 
-            if (response.status === 401) {
-                window.location.replace(
-                    "/login.html"
-                );
-                return;
+                return `${Number(whole) + decimal} ${unit.name}`;
             }
-
-            if (!response.ok || !data.success) {
-                showMessage(
-                    data.message ||
-                    "Не удалось загрузить магазин.",
-                    "error"
-                );
-                return;
-            }
-
-            shopItems =
-                Array.isArray(data.items)
-                    ? data.items
-                    : [];
-
-            renderShop(shopItems);
-
-        } catch (error) {
-            console.error(
-                "SHOP ERROR:",
-                error
-            );
-
-            showMessage(
-                "Ошибка соединения с сервером.",
-                "error"
-            );
         }
+
+        return n.toString();
+
+    } catch {
+        return String(value);
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function showMessage(text, error = false) {
+    if (!shopMessage) {
+        return;
     }
 
-    function renderShop(items) {
-        if (!shopGrid) {
-            return;
+    shopMessage.textContent = text;
+    shopMessage.style.color = error
+        ? "#ff6b6b"
+        : "#aaa";
+}
+
+async function loadShop() {
+    try {
+        const response = await fetch(
+            "/api/shop",
+            {
+                credentials: "same-origin",
+                cache: "no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Не удалось загрузить магазин."
+            );
         }
 
-        shopGrid.innerHTML = "";
+        shopItems = Array.isArray(data.items)
+            ? data.items
+            : [];
 
-        if (
-            !Array.isArray(items) ||
-            items.length === 0
-        ) {
-            shopGrid.innerHTML = `
-                <div class="empty-state">
-                    Магазин пока пуст.
-                </div>
-            `;
-            return;
-        }
+        renderShop();
 
-        items.forEach(item => {
-            const card =
-                document.createElement("div");
+    } catch (error) {
+        console.error(
+            "SHOP LOAD ERROR:",
+            error
+        );
 
-            card.className =
-                "shop-card";
+        showMessage(
+            error.message,
+            true
+        );
+    }
+}
 
-            card.innerHTML = `
+function renderShop() {
+    if (!shopGrid) {
+        return;
+    }
+
+    if (shopItems.length === 0) {
+        shopGrid.innerHTML = `
+            <div style="
+                text-align:center;
+                color:#777;
+                padding:30px;
+            ">
+                Магазин пуст.
+            </div>
+        `;
+
+        return;
+    }
+
+    shopGrid.innerHTML = shopItems.map(item => {
+        return `
+            <div class="shop-card">
+
                 <div class="shop-icon">
-                    ${escapeHtml(
-                        item.icon || "✦"
-                    )}
+                    ${escapeHtml(item.icon || "✦")}
                 </div>
 
-                <div class="shop-info">
+                <div class="shop-name">
+                    ${escapeHtml(item.name)}
+                </div>
 
-                    <div class="shop-name">
-                        ${escapeHtml(
-                            item.name
-                        )}
-                    </div>
+                <div class="shop-price">
+                    ${formatNumber(item.price)} кликов
+                </div>
 
-                    <div class="shop-amount">
-                        Получишь:
-                        <strong>
-                            +${formatNumber(
-                                item.amount
-                            )}
-                        </strong>
-                        к клику
-                    </div>
+                <div style="
+                    display:flex;
+                    gap:8px;
+                    width:100%;
+                    margin-top:12px;
+                ">
 
-                    <div class="shop-price">
-                        Цена:
-                        <strong>
-                            ${formatNumber(
-                                item.price
-                            )}
-                        </strong>
-                        кликов
-                    </div>
-
-                    <div
-                        class="shop-buttons"
+                    <button
+                        class="shop-buy"
+                        data-item-id="${escapeHtml(item.id)}"
                         style="
-                            display:flex;
-                            gap:8px;
-                            flex-wrap:wrap;
-                            margin-top:12px;
+                            flex:1;
+                            min-width:120px;
                         "
                     >
+                        Купить
+                    </button>
 
-                        <button
-                            class="shop-buy"
-                            data-item-id="${escapeHtml(
-                                item.id
-                            )}"
-                            style="
-                                flex:1;
-                                min-width:120px;
-                            "
-                        >
-                            Купить
-                        </button>
-
-                        <button
-                            class="shop-buy-max"
-                            data-item-id="${escapeHtml(
-                                item.id
-                            )}"
-                            style="
-                                flex:1;
-                                min-width:120px;
-                            "
-                        >
-                            🛒 Купить всё
-                        </button>
-
-                    </div>
+                    <button
+                        class="shop-buy"
+                        data-buy-max="true"
+                        data-item-id="${escapeHtml(item.id)}"
+                        style="
+                            flex:1;
+                            min-width:120px;
+                        "
+                    >
+                        Купить всё
+                    </button>
 
                 </div>
-            `;
 
-            shopGrid.appendChild(card);
+            </div>
+        `;
+    }).join("");
+
+    attachShopEvents();
+}
+
+function attachShopEvents() {
+
+    document
+        .querySelectorAll(
+            ".shop-buy:not([data-buy-max])"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                async () => {
+
+                    const itemId =
+                        button.dataset.itemId;
+
+                    await buyItem(
+                        itemId,
+                        button
+                    );
+                }
+            );
         });
 
-        document
-            .querySelectorAll(".shop-buy")
-            .forEach(button => {
-                button.addEventListener(
-                    "click",
-                    () => {
-                        buyItem(
-                            button.dataset.itemId,
-                            button
-                        );
-                    }
-                );
-            });
+    document
+        .querySelectorAll(
+            ".shop-buy[data-buy-max]"
+        )
+        .forEach(button => {
 
-        document
-            .querySelectorAll(".shop-buy-max")
-            .forEach(button => {
-                button.addEventListener(
-                    "click",
-                    () => {
-                        buyMaxItem(
-                            button.dataset.itemId,
-                            button
-                        );
-                    }
-                );
-            });
-    }
+            button.addEventListener(
+                "click",
+                async () => {
 
-    async function buyItem(
-        itemId,
-        button
-    ) {
-        if (!button) {
-            return;
-        }
+                    const itemId =
+                        button.dataset.itemId;
 
-        button.disabled = true;
-        button.textContent =
-            "Покупка...";
-
-        showMessage("");
-
-        try {
-            const response =
-                await fetch(
-                    "/api/shop/buy",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-                        credentials: "include",
-                        body: JSON.stringify({
-                            itemId
-                        })
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            if (response.status === 401) {
-                window.location.replace(
-                    "/login.html"
-                );
-                return;
-            }
-
-            if (!response.ok || !data.success) {
-                showMessage(
-                    data.message ||
-                    "Покупка не удалась.",
-                    "error"
-                );
-                return;
-            }
-
-            showMessage(
-                "✅ Покупка успешно совершена!",
-                "success"
-            );
-
-            updateBalanceFromResponse(data);
-
-        } catch (error) {
-            console.error(
-                "BUY ERROR:",
-                error
-            );
-
-            showMessage(
-                "Ошибка соединения с сервером.",
-                "error"
-            );
-
-        } finally {
-            button.disabled = false;
-            button.textContent = "Купить";
-        }
-    }
-
-    /*
-     * =====================================================
-     * КУПИТЬ НА ВСЕ ДЕНЬГИ
-     * =====================================================
-     */
-
-    async function buyMaxItem(
-        itemId,
-        button
-    ) {
-        if (!button) {
-            return;
-        }
-
-        const item =
-            shopItems.find(
-                x =>
-                    String(x.id) ===
-                    String(itemId)
-            );
-
-        if (!item) {
-            showMessage(
-                "Товар не найден.",
-                "error"
-            );
-            return;
-        }
-
-        /*
-         * БЕЗ confirm
-         *
-         * Нажал «Купить всё» —
-         * сразу покупаем максимально
-         * возможное количество.
-         */
-
-        button.disabled = true;
-        button.textContent =
-            "Покупка...";
-
-        showMessage("");
-
-        try {
-            const response =
-                await fetch(
-                    "/api/shop/buy-max",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-                        credentials: "include",
-                        body: JSON.stringify({
-                            itemId
-                        })
-                    }
-                );
-
-            const data =
-                await response.json();
-
-            if (response.status === 401) {
-                window.location.replace(
-                    "/login.html"
-                );
-                return;
-            }
-
-            if (!response.ok || !data.success) {
-                showMessage(
-                    data.message ||
-                    "Не удалось купить товар.",
-                    "error"
-                );
-                return;
-            }
-
-            const quantity =
-                data.quantity ?? "0";
-
-            const spent =
-                data.spent ?? "0";
-
-            const powerGain =
-                data.power_gain ?? "0";
-
-            showMessage(
-                `🛒 Куплено: ${formatNumber(quantity)} шт. | Потрачено: ${formatNumber(spent)} | +${formatNumber(powerGain)} к клику`,
-                "success"
-            );
-
-            updateBalanceFromResponse(data);
-
-            /*
-             * Обновляем силу клика
-             */
-
-            const powerElement =
-                document.getElementById(
-                    "clickPower"
-                );
-
-            if (
-                powerElement &&
-                data.user &&
-                data.user.click_power !==
-                    undefined
-            ) {
-                powerElement.textContent =
-                    "+" +
-                    formatNumber(
-                        data.user.click_power
+                    await buyMaxItem(
+                        itemId,
+                        button
                     );
-            }
-
-        } catch (error) {
-            console.error(
-                "BUY MAX ERROR:",
-                error
+                }
             );
+        });
+}
+
+async function buyItem(itemId, button) {
+
+    if (button.disabled) {
+        return;
+    }
+
+    button.disabled = true;
+
+    const oldText =
+        button.textContent;
+
+    button.textContent =
+        "Покупка...";
+
+    try {
+
+        const response = await fetch(
+            "/api/shop/buy",
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                body: JSON.stringify({
+                    itemId
+                })
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Не удалось купить предмет."
+            );
+        }
+
+        showMessage(
+            `Куплено: ${data.item?.name || "улучшение"}`
+        );
+
+        if (
+            typeof window.loadUser ===
+            "function"
+        ) {
+            await window.loadUser();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "SHOP BUY ERROR:",
+            error
+        );
+
+        showMessage(
+            error.message,
+            true
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = oldText;
+    }
+}
+
+async function buyMaxItem(itemId, button) {
+
+    if (button.disabled) {
+        return;
+    }
+
+    button.disabled = true;
+
+    const oldText =
+        button.textContent;
+
+    button.textContent =
+        "Покупка...";
+
+    try {
+
+        const response = await fetch(
+            "/api/shop/buy-max",
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                body: JSON.stringify({
+                    itemId
+                })
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Не удалось купить всё."
+            );
+        }
+
+        const quantity =
+            data.quantity ?? 0;
+
+        if (quantity > 0) {
 
             showMessage(
-                "Ошибка соединения с сервером.",
-                "error"
+                `Куплено всё: ${quantity} шт.`
             );
 
-        } finally {
-            button.disabled = false;
-            button.textContent =
-                "🛒 Купить всё";
-        }
-    }
+        } else {
 
-    function updateBalanceFromResponse(data) {
-        const clicksElement =
-            document.getElementById(
-                "clicks"
+            showMessage(
+                "Недостаточно кликов.",
+                true
             );
-
-        if (
-            clicksElement &&
-            data.user &&
-            data.user.clicks !== undefined
-        ) {
-            clicksElement.textContent =
-                formatNumber(
-                    data.user.clicks
-                );
-
-            return;
         }
 
         if (
-            clicksElement &&
-            data.clicks !== undefined
+            typeof window.loadUser ===
+            "function"
         ) {
-            clicksElement.textContent =
-                formatNumber(
-                    data.clicks
-                );
+            await window.loadUser();
         }
-    }
 
-    loadShop();
-});
+    } catch (error) {
+
+        console.error(
+            "SHOP BUY MAX ERROR:",
+            error
+        );
+
+        showMessage(
+            error.message,
+            true
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = oldText;
+    }
+}
+
+loadShop();
