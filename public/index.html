@@ -1,24 +1,263 @@
-<!DOCTYPE html>
+from pathlib import Path
+
+index = r'''<!DOCTYPE html>
 <html lang="ru">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>KilluaClicker</title>
 
-    <link rel="stylesheet" href="/style.css">
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <style>
+        /* ============================================
+           REBIRTH
+        ============================================ */
+
+        .rebirth-card {
+            margin-top: 24px;
+            padding: 28px;
+            text-align: center;
+        }
+
+        .rebirth-title {
+            margin: 6px 0 8px;
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .rebirth-description {
+            margin: 0 auto 20px;
+            max-width: 700px;
+            opacity: .8;
+        }
+
+        .rebirth-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .rebirth-stat {
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .rebirth-stat-label {
+            font-size: 12px;
+            opacity: .65;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .rebirth-stat-value {
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .rebirth-button {
+            width: 100%;
+            max-width: 520px;
+            min-height: 64px;
+            border: 0;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 19px;
+            font-weight: 900;
+            color: white;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            box-shadow: 0 12px 35px rgba(124,58,237,.28);
+            transition: transform .15s ease, opacity .15s ease;
+        }
+
+        .rebirth-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .rebirth-button:disabled {
+            cursor: not-allowed;
+            opacity: .45;
+        }
+
+        .rebirth-message {
+            min-height: 24px;
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .rebirth-success {
+            color: #86efac;
+        }
+
+        .rebirth-error {
+            color: #fca5a5;
+        }
+
+        @media (max-width: 700px) {
+            .rebirth-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .rebirth-card {
+                padding: 20px;
+            }
+        }
+    </style>
+
 </head>
 
 <body>
 
-<div class="app">
+<div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<!-- =====================================
+     AUTH
+===================================== -->
+
+<div
+    id="authScreen"
+    class="screen"
+>
+
+    <div class="auth-card">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                ⚡
+            </div>
+
+            <div>
+                <div class="logo-title">
+                    KilluaClicker
+                </div>
+
+                <div class="logo-subtitle">
+                    ULTIMATE CLICKER
+                </div>
+            </div>
+
+        </div>
+
+        <div class="auth-tabs">
+
+            <button
+                id="loginTab"
+                class="auth-tab active"
+            >
+                Вход
+            </button>
+
+            <button
+                id="registerTab"
+                class="auth-tab"
+            >
+                Регистрация
+            </button>
+
+        </div>
+
+        <div id="loginForm">
+
+            <input
+                id="loginUsername"
+                class="input"
+                placeholder="Никнейм"
+                maxlength="20"
+            >
+
+            <input
+                id="loginPassword"
+                class="input"
+                type="password"
+                placeholder="Пароль"
+            >
+
+            <button
+                id="loginButton"
+                class="primary-button"
+            >
+                <span>⚡</span>
+                Войти
+            </button>
+
+        </div>
+
+        <div
+            id="registerForm"
+            class="hidden"
+        >
+
+            <input
+                id="registerUsername"
+                class="input"
+                placeholder="Придумай ник"
+                maxlength="20"
+            >
+
+            <input
+                id="registerPassword"
+                class="input"
+                type="password"
+                placeholder="Придумай пароль"
+            >
+
+            <button
+                id="registerButton"
+                class="primary-button"
+            >
+                <span>🚀</span>
+                Создать аккаунт
+            </button>
+
+        </div>
+
+        <div
+            id="authMessage"
+            class="message"
+        ></div>
+
+        <div class="auth-footer">
+            KilluaClicker © 2026
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================
+     GAME
+===================================== -->
+
+<div
+    id="gameScreen"
+    class="hidden"
+>
 
     <header class="topbar">
 
         <div class="brand">
 
-            <div class="brand-logo">
-                K
+            <div class="brand-icon">
+                ⚡
             </div>
 
             <div>
@@ -26,58 +265,26 @@
                     KilluaClicker
                 </div>
 
-                <div class="brand-subtitle">
-                    CLICK • COMPETE • WIN
+                <div class="brand-status">
+                    ONLINE
                 </div>
             </div>
 
         </div>
 
-
-        <nav class="nav">
-
-            <a href="/" class="nav-link active">
-                Кликер
-            </a>
-
-            <a href="/store.html" class="nav-link">
-                Магазин
-            </a>
-
-            <a href="/clans.html" class="nav-link">
-                Кланы
-            </a>
-
-            <a href="/chat.html" class="nav-link">
-                💬 Чат
-            </a>
-
-            <a href="/top.html" class="nav-link">
-                Топ
-            </a>
+        <div class="top-actions">
 
             <a
-                href="/admin.html"
                 id="adminLink"
-                class="nav-link admin-link"
-                style="display:none;"
+                href="/admin.html"
+                class="admin-link hidden"
             >
-                Админка
+                ⚙ Админка
             </a>
 
-        </nav>
-
-
-        <div class="account">
-
-            <span id="username">
-                ...
-            </span>
-
             <button
-                type="button"
-                id="logoutBtn"
-                class="logout-btn"
+                id="logoutButton"
+                class="logout-button"
             >
                 Выйти
             </button>
@@ -87,76 +294,230 @@
     </header>
 
 
-    <main class="container">
+    <main class="game-container">
 
-        <section class="welcome">
+        <section class="profile-card glass">
 
-            <div>
+            <div class="profile-avatar">
+                ⚡
+            </div>
 
-                <div class="small-title">
-                    KILLUACLICKER
+            <div class="profile-info">
+
+                <div class="small-label">
+                    ИГРОК
                 </div>
 
-                <h1>
-                    Кликай и поднимайся<br>
-                    в <span>топ игроков</span>
-                </h1>
+                <div
+                    id="playerName"
+                    class="player-name"
+                >
+                    ...
+                </div>
 
-                <p>
-                    Каждый клик увеличивает твой баланс.
-                    Соревнуйся с другими игроками и стань первым.
-                </p>
+                <div class="online-dot">
+                    <span></span>
+                    В сети
+                </div>
 
             </div>
 
+            <div class="profile-stat">
 
-            <div class="online">
+                <div class="small-label">
+                    ТВОЙ СЧЁТ
+                </div>
 
-                <span></span>
-
-                ONLINE
+                <div
+                    id="profileClicks"
+                    class="profile-clicks"
+                >
+                    0
+                </div>
 
             </div>
 
         </section>
 
 
-        <section class="stats">
+        <section class="hero-grid">
 
-            <div class="stat-card">
 
-                <div class="stat-icon purple">
-                    ✦
+            <!-- CLICK AREA -->
+
+            <div class="click-card glass">
+
+                <div class="section-tag">
+                    ⚡ POWER CORE
                 </div>
 
-                <div>
+                <h1>
+                    Нажимай
+                    <span>и набирай очки</span>
+                </h1>
 
-                    <div class="stat-label">
-                        ТВОИ КЛИКИ
+                <p class="description">
+                    Каждый клик приносит тебе
+                    энергию.
+                </p>
+
+                <div class="score">
+
+                    <div class="score-label">
+                        ТВОЯ ЭНЕРГИЯ
                     </div>
 
-                    <div id="clicks" class="stat-value">
+                    <div
+                        id="score"
+                        class="score-number"
+                    >
                         0
                     </div>
 
                 </div>
 
+
+                <div class="click-zone">
+
+                    <button
+                        id="clickButton"
+                        class="click-button"
+                    >
+
+                        <div class="click-ring ring-one"></div>
+                        <div class="click-ring ring-two"></div>
+
+                        <div class="click-core">
+
+                            <div class="bolt">
+                                ⚡
+                            </div>
+
+                            <div class="click-text">
+                                CLICK
+                            </div>
+
+                            <div
+                                id="clickPlus"
+                                class="click-plus"
+                            >
+                                +1
+                            </div>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+                <div class="click-hint">
+                    Нажми на ядро энергии
+                </div>
+
             </div>
 
 
-            <div class="stat-card">
+            <!-- LEADERBOARD -->
 
-                <div class="stat-icon blue">
-                    ♛
-                </div>
+            <div class="leaderboard-card glass">
 
-                <div>
+                <div class="leader-header">
 
-                    <div class="stat-label">
-                        ПОЗИЦИЯ
+                    <div>
+
+                        <div class="section-tag">
+                            🏆 RANKING
+                        </div>
+
+                        <h2>
+                            Лидеры
+                        </h2>
+
                     </div>
 
-                    <div id="rank" class="stat-value">
+                    <div class="trophy">
+                        🏆
+                    </div>
+
+                </div>
+
+                <div
+                    id="leaderboard"
+                    class="leaderboard"
+                >
+                    <div class="loading">
+                        Загрузка...
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             REBIRTH
+        ===================================== -->
+
+        <section
+            id="rebirthCard"
+            class="rebirth-card glass"
+        >
+
+            <div class="section-tag">
+                🔥 REBIRTH
+            </div>
+
+            <h2 class="rebirth-title">
+                Перерождение
+            </h2>
+
+            <p class="rebirth-description">
+                Сбрось клики до 0 и получи постоянный множитель к каждому следующему клику.
+            </p>
+
+            <div class="rebirth-stats">
+
+                <div class="rebirth-stat">
+
+                    <div class="rebirth-stat-label">
+                        Перерождений
+                    </div>
+
+                    <div
+                        id="rebirthCount"
+                        class="rebirth-stat-value"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+                <div class="rebirth-stat">
+
+                    <div class="rebirth-stat-label">
+                        Текущий множитель
+                    </div>
+
+                    <div
+                        id="rebirthMultiplier"
+                        class="rebirth-stat-value"
+                    >
+                        ×1
+                    </div>
+
+                </div>
+
+                <div class="rebirth-stat">
+
+                    <div class="rebirth-stat-label">
+                        Следующая цена
+                    </div>
+
+                    <div
+                        id="rebirthPrice"
+                        class="rebirth-stat-value"
+                    >
                         —
                     </div>
 
@@ -164,268 +525,74 @@
 
             </div>
 
+            <button
+                id="rebirthButton"
+                class="rebirth-button"
+                disabled
+            >
+                🔥 Переродиться
+            </button>
 
-            <div class="stat-card">
-
-                <div class="stat-icon green">
-                    ●
-                </div>
-
-                <div>
-
-                    <div class="stat-label">
-                        СТАТУС
-                    </div>
-
-                    <div class="stat-value status">
-                        АКТИВЕН
-                    </div>
-
-                </div>
-
-            </div>
+            <div
+                id="rebirthMessage"
+                class="rebirth-message"
+            ></div>
 
         </section>
 
 
-        <section class="click-area">
+        <section class="features">
 
-            <div class="click-panel">
+            <div class="feature glass">
 
-                <div class="click-panel-top">
-
-                    <div>
-
-                        <div class="small-title">
-                            CLICK ZONE
-                        </div>
-
-                        <h2>
-                            Нажимай!
-                        </h2>
-
-                    </div>
-
-
-                    <div class="click-counter">
-
-                        <span id="miniClicks">
-                            0
-                        </span>
-
-                        clicks
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    type="button"
-                    id="clickButton"
-                    class="click-button"
-                >
-
-                    <div class="click-ring ring-one"></div>
-
-                    <div class="click-ring ring-two"></div>
-
-                    <div class="click-core">
-
-                        <span>
-                            CLICK
-                        </span>
-
-                        <strong>
-                            ✦
-                        </strong>
-
-                    </div>
-
-                </button>
-
-
-                <div class="click-hint">
-                    Нажми на кнопку, чтобы получить +1 клик
-                </div>
-
-            </div>
-
-
-            <aside class="side-panel">
-
-                <div class="side-title">
-                    БЫСТРЫЕ ССЫЛКИ
-                </div>
-
-
-                <a href="/store.html" class="quick-link">
-
-                    <div class="quick-icon">
-                        ◆
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Магазин
-                        </strong>
-
-                        <span>
-                            Покупай усиления
-                        </span>
-
-                    </div>
-
-                    <b>
-                        ›
-                    </b>
-
-                </a>
-
-
-                <a href="/clans.html" class="quick-link">
-
-                    <div class="quick-icon">
-                        ♜
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Кланы
-                        </strong>
-
-                        <span>
-                            Создай свой клан
-                        </span>
-
-                    </div>
-
-                    <b>
-                        ›
-                    </b>
-
-                </a>
-
-
-                <a href="/chat.html" class="quick-link">
-
-                    <div class="quick-icon">
-                        💬
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Общий чат
-                        </strong>
-
-                        <span>
-                            Общайся с игроками
-                        </span>
-
-                    </div>
-
-                    <b>
-                        ›
-                    </b>
-
-                </a>
-
-
-                <a href="/top.html" class="quick-link">
-
-                    <div class="quick-icon">
-                        ♛
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Топ игроков
-                        </strong>
-
-                        <span>
-                            Посмотри рейтинг
-                        </span>
-
-                    </div>
-
-                    <b>
-                        ›
-                    </b>
-
-                </a>
-
-            </aside>
-
-        </section>
-
-
-        <section class="bottom-grid">
-
-            <div class="info-card">
-
-                <div class="info-icon">
+                <div class="feature-icon">
                     ⚡
                 </div>
 
                 <div>
-
-                    <h3>
+                    <strong>
                         Быстрые клики
-                    </h3>
+                    </strong>
 
                     <p>
-                        Кликай максимально быстро
-                        и увеличивай свой результат.
+                        Нажимай сколько угодно
                     </p>
-
                 </div>
 
             </div>
 
+            <div class="feature glass">
 
-            <div class="info-card">
-
-                <div class="info-icon">
+                <div class="feature-icon">
                     🏆
                 </div>
 
                 <div>
-
-                    <h3>
-                        Соревнование
-                    </h3>
+                    <strong>
+                        Таблица лидеров
+                    </strong>
 
                     <p>
-                        Следи за рейтингом
-                        и занимай первое место.
+                        Стань номером один
                     </p>
-
                 </div>
 
             </div>
 
+            <div class="feature glass">
 
-            <div class="info-card">
-
-                <div class="info-icon">
-                    ◆
+                <div class="feature-icon">
+                    🔒
                 </div>
 
                 <div>
-
-                    <h3>
-                        Магазин
-                    </h3>
+                    <strong>
+                        Сохранение
+                    </strong>
 
                     <p>
-                        Используй клики для покупки
-                        больших пакетов.
+                        Прогресс хранится в БД
                     </p>
-
                 </div>
 
             </div>
@@ -434,13 +601,950 @@
 
     </main>
 
+
+    <footer>
+
+        <span>
+            ⚡ KilluaClicker
+        </span>
+
+        <span>
+            Made for clickers
+        </span>
+
+    </footer>
+
 </div>
 
-
-<div id="toast" class="toast"></div>
-
-
-<script src="/app.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
+'''
+
+app = r'''const $ = (id) =>
+    document.getElementById(id);
+
+
+// ============================================
+// ELEMENTS
+// ============================================
+
+const authScreen =
+    $("authScreen");
+
+const gameScreen =
+    $("gameScreen");
+
+const loginTab =
+    $("loginTab");
+
+const registerTab =
+    $("registerTab");
+
+const loginForm =
+    $("loginForm");
+
+const registerForm =
+    $("registerForm");
+
+const loginButton =
+    $("loginButton");
+
+const registerButton =
+    $("registerButton");
+
+const logoutButton =
+    $("logoutButton");
+
+const clickButton =
+    $("clickButton");
+
+const score =
+    $("score");
+
+const profileClicks =
+    $("profileClicks");
+
+const playerName =
+    $("playerName");
+
+const leaderboard =
+    $("leaderboard");
+
+const authMessage =
+    $("authMessage");
+
+const adminLink =
+    $("adminLink");
+
+const clickPlus =
+    $("clickPlus");
+
+const rebirthButton =
+    $("rebirthButton");
+
+const rebirthCount =
+    $("rebirthCount");
+
+const rebirthMultiplier =
+    $("rebirthMultiplier");
+
+const rebirthPrice =
+    $("rebirthPrice");
+
+const rebirthMessage =
+    $("rebirthMessage");
+
+
+// ============================================
+// STATE
+// ============================================
+
+let currentClicks = 0n;
+let currentClickPower = 1n;
+let currentRebirths = 0;
+let currentMultiplier = "1";
+let nextRebirth = null;
+
+let clickBusy = false;
+let rebirthBusy = false;
+
+
+// ============================================
+// API
+// ============================================
+
+async function api(
+    url,
+    options = {}
+) {
+
+    const response =
+        await fetch(
+            url,
+            {
+                ...options,
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    ...(options.headers || {})
+                }
+            }
+        );
+
+    const data =
+        await response
+            .json()
+            .catch(() => ({}));
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            data.message ||
+            "Ошибка сервера"
+        );
+
+    }
+
+    return data;
+
+}
+
+
+// ============================================
+// BIG NUMBER HELPERS
+// ============================================
+
+function toBigInt(value) {
+
+    try {
+
+        return BigInt(
+            String(value ?? "0")
+                .split(".")[0]
+        );
+
+    } catch {
+
+        return 0n;
+
+    }
+
+}
+
+
+function formatNumber(value) {
+
+    const number =
+        toBigInt(value);
+
+    return number
+        .toLocaleString("ru-RU");
+
+}
+
+
+function formatMultiplier(value) {
+
+    const text =
+        String(value ?? "1");
+
+    if (
+        text.endsWith(".0")
+    ) {
+
+        return `×${text.slice(0, -2)}`;
+
+    }
+
+    return `×${text}`;
+
+}
+
+
+// ============================================
+// TABS
+// ============================================
+
+loginTab.addEventListener(
+    "click",
+    () => {
+
+        loginTab.classList.add(
+            "active"
+        );
+
+        registerTab.classList.remove(
+            "active"
+        );
+
+        loginForm.classList.remove(
+            "hidden"
+        );
+
+        registerForm.classList.add(
+            "hidden"
+        );
+
+        authMessage.textContent = "";
+
+    }
+);
+
+
+registerTab.addEventListener(
+    "click",
+    () => {
+
+        registerTab.classList.add(
+            "active"
+        );
+
+        loginTab.classList.remove(
+            "active"
+        );
+
+        registerForm.classList.remove(
+            "hidden"
+        );
+
+        loginForm.classList.add(
+            "hidden"
+        );
+
+        authMessage.textContent = "";
+
+    }
+);
+
+
+// ============================================
+// UPDATE GAME DATA
+// ============================================
+
+function updateGameData(user) {
+
+    currentClicks =
+        toBigInt(user.clicks);
+
+    currentClickPower =
+        toBigInt(user.click_power);
+
+    currentRebirths =
+        Number(user.rebirths || 0);
+
+    currentMultiplier =
+        String(
+            user.rebirth_multiplier || "1"
+        );
+
+    score.textContent =
+        formatNumber(
+            currentClicks
+        );
+
+    profileClicks.textContent =
+        formatNumber(
+            currentClicks
+        );
+
+    clickPlus.textContent =
+        `+${formatNumber(currentClickPower)}`;
+
+    rebirthCount.textContent =
+        String(currentRebirths);
+
+    rebirthMultiplier.textContent =
+        formatMultiplier(
+            currentMultiplier
+        );
+
+}
+
+
+// ============================================
+// SHOW GAME
+// ============================================
+
+function showGame(user) {
+
+    authScreen.classList.add(
+        "hidden"
+    );
+
+    gameScreen.classList.remove(
+        "hidden"
+    );
+
+    playerName.textContent =
+        user.username;
+
+    updateGameData(user);
+
+    if (
+        user.is_admin === true ||
+        user.username === "Killua666"
+    ) {
+
+        adminLink.classList.remove(
+            "hidden"
+        );
+
+    } else {
+
+        adminLink.classList.add(
+            "hidden"
+        );
+
+    }
+
+    loadRebirths();
+    loadLeaderboard();
+
+}
+
+
+// ============================================
+// LOGIN
+// ============================================
+
+loginButton.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            loginButton.disabled =
+                true;
+
+            loginButton.textContent =
+                "Входим...";
+
+            const data =
+                await api(
+                    "/api/login",
+                    {
+                        method: "POST",
+
+                        body:
+                            JSON.stringify({
+                                username:
+                                    $("loginUsername")
+                                        .value,
+
+                                password:
+                                    $("loginPassword")
+                                        .value
+                            })
+                    }
+                );
+
+            showGame(
+                data.user
+            );
+
+        } catch (error) {
+
+            authMessage.textContent =
+                error.message;
+
+        } finally {
+
+            loginButton.disabled =
+                false;
+
+            loginButton.innerHTML =
+                "<span>⚡</span> Войти";
+
+        }
+
+    }
+);
+
+
+// ============================================
+// REGISTER
+// ============================================
+
+registerButton.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            registerButton.disabled =
+                true;
+
+            registerButton.textContent =
+                "Создаём...";
+
+            const data =
+                await api(
+                    "/api/register",
+                    {
+                        method: "POST",
+
+                        body:
+                            JSON.stringify({
+                                username:
+                                    $("registerUsername")
+                                        .value,
+
+                                password:
+                                    $("registerPassword")
+                                        .value
+                            })
+                    }
+                );
+
+            showGame(
+                data.user
+            );
+
+        } catch (error) {
+
+            authMessage.textContent =
+                error.message;
+
+        } finally {
+
+            registerButton.disabled =
+                false;
+
+            registerButton.innerHTML =
+                "<span>🚀</span> Создать аккаунт";
+
+        }
+
+    }
+);
+
+
+// ============================================
+// CLICK
+// ============================================
+
+clickButton.addEventListener(
+    "click",
+    async (event) => {
+
+        if (clickBusy) {
+            return;
+        }
+
+        clickBusy = true;
+
+        try {
+
+            const data =
+                await api(
+                    "/api/click",
+                    {
+                        method: "POST"
+                    }
+                );
+
+            updateGameData(data);
+
+            createClickPop(
+                event.clientX,
+                event.clientY
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            clickBusy = false;
+
+        }
+
+    }
+);
+
+
+// ============================================
+// CLICK POP
+// ============================================
+
+function createClickPop(
+    x,
+    y
+) {
+
+    const pop =
+        document.createElement(
+            "div"
+        );
+
+    pop.className =
+        "click-pop";
+
+    pop.textContent =
+        `+${formatNumber(currentClickPower)} ⚡`;
+
+    pop.style.left =
+        `${x - 15}px`;
+
+    pop.style.top =
+        `${y - 10}px`;
+
+    document.body.appendChild(
+        pop
+    );
+
+    setTimeout(
+        () => pop.remove(),
+        800
+    );
+
+}
+
+
+// ============================================
+// REBIRTH
+// ============================================
+
+async function loadRebirths() {
+
+    try {
+
+        const data =
+            await api(
+                "/api/rebirths"
+            );
+
+        currentRebirths =
+            Number(
+                data.current_rebirths || 0
+            );
+
+        currentMultiplier =
+            String(
+                data.current_multiplier || "1"
+            );
+
+        nextRebirth =
+            data.next_rebirth || null;
+
+        rebirthCount.textContent =
+            String(currentRebirths);
+
+        rebirthMultiplier.textContent =
+            formatMultiplier(
+                currentMultiplier
+            );
+
+        if (!nextRebirth) {
+
+            rebirthPrice.textContent =
+                "МАКСИМУМ";
+
+            rebirthButton.disabled =
+                true;
+
+            rebirthButton.textContent =
+                "🔥 Все перерождения получены";
+
+            return;
+
+        }
+
+        rebirthPrice.textContent =
+            formatNumber(
+                nextRebirth.price
+            );
+
+        updateRebirthButton();
+
+    } catch (error) {
+
+        console.error(
+            "Ошибка загрузки ребиртов:",
+            error
+        );
+
+        rebirthMessage.textContent =
+            "Не удалось загрузить информацию о перерождении.";
+
+        rebirthMessage.className =
+            "rebirth-message rebirth-error";
+
+    }
+
+}
+
+
+function updateRebirthButton() {
+
+    if (!nextRebirth) {
+
+        rebirthButton.disabled =
+            true;
+
+        return;
+
+    }
+
+    const price =
+        toBigInt(
+            nextRebirth.price
+        );
+
+    const canRebirth =
+        currentClicks >= price;
+
+    rebirthButton.disabled =
+        !canRebirth ||
+        rebirthBusy;
+
+    if (rebirthBusy) {
+
+        rebirthButton.textContent =
+            "🔥 Перерождаемся...";
+
+    } else {
+
+        rebirthButton.textContent =
+            `🔥 Перерождение ${nextRebirth.level} — ${formatNumber(nextRebirth.price)} кликов`;
+
+    }
+
+}
+
+
+rebirthButton.addEventListener(
+    "click",
+    async () => {
+
+        if (
+            rebirthBusy ||
+            !nextRebirth
+        ) {
+
+            return;
+
+        }
+
+        const price =
+            toBigInt(
+                nextRebirth.price
+            );
+
+        if (
+            currentClicks < price
+        ) {
+
+            rebirthMessage.textContent =
+                `Нужно ещё ${formatNumber(price - currentClicks)} кликов.`;
+
+            rebirthMessage.className =
+                "rebirth-message rebirth-error";
+
+            return;
+
+        }
+
+        const confirmed =
+            confirm(
+                `Перерождение ${nextRebirth.level}?\n\n` +
+                `Цена: ${formatNumber(nextRebirth.price)} кликов\n` +
+                `После перерождения клики станут 0.\n` +
+                `Множитель станет ${formatMultiplier(nextRebirth.multiplier)}.`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        rebirthBusy =
+            true;
+
+        rebirthMessage.textContent =
+            "";
+
+        updateRebirthButton();
+
+        try {
+
+            const data =
+                await api(
+                    "/api/rebirth",
+                    {
+                        method: "POST"
+                    }
+                );
+
+            updateGameData(
+                data.user
+            );
+
+            rebirthMessage.textContent =
+                `🔥 Перерождение ${data.user.rebirths} успешно! Клики сброшены до 0. Новый множитель: ${formatMultiplier(data.user.rebirth_multiplier)}.`;
+
+            rebirthMessage.className =
+                "rebirth-message rebirth-success";
+
+            await loadRebirths();
+
+        } catch (error) {
+
+            rebirthMessage.textContent =
+                error.message;
+
+            rebirthMessage.className =
+                "rebirth-message rebirth-error";
+
+        } finally {
+
+            rebirthBusy =
+                false;
+
+            updateRebirthButton();
+
+        }
+
+    }
+);
+
+
+// ============================================
+// LEADERBOARD
+// ============================================
+
+async function loadLeaderboard() {
+
+    try {
+
+        const players =
+            await api(
+                "/api/top"
+            );
+
+        leaderboard.innerHTML =
+            "";
+
+        if (!players.length) {
+
+            leaderboard.innerHTML =
+                `
+                <div class="loading">
+                    Пока игроков нет
+                </div>
+                `;
+
+            return;
+
+        }
+
+        players.forEach(
+            (player, index) => {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+                row.className =
+                    "leader-row";
+
+                row.innerHTML = `
+
+                    <div class="rank ${
+                        index < 3
+                            ? "top"
+                            : ""
+                    }">
+                        ${
+                            index === 0
+                                ? "🥇"
+                                : index === 1
+                                ? "🥈"
+                                : index === 2
+                                ? "🥉"
+                                : "#" +
+                                  (index + 1)
+                        }
+                    </div>
+
+                    <div class="leader-avatar">
+                        ⚡
+                    </div>
+
+                    <div class="leader-name">
+                        ${escapeHtml(
+                            player.username
+                        )}
+                    </div>
+
+                    <div class="leader-score">
+                        ${formatNumber(
+                            player.clicks
+                        )}
+                    </div>
+
+                `;
+
+                leaderboard.appendChild(
+                    row
+                );
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+
+// ============================================
+// LOGOUT
+// ============================================
+
+logoutButton.addEventListener(
+    "click",
+    async () => {
+
+        await api(
+            "/api/logout",
+            {
+                method: "POST"
+            }
+        );
+
+        location.reload();
+
+    }
+);
+
+
+// ============================================
+// ESCAPE HTML
+// ============================================
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+// ============================================
+// LOAD SESSION
+// ============================================
+
+async function loadUser() {
+
+    try {
+
+        const data =
+            await api(
+                "/api/me"
+            );
+
+        showGame(
+            data.user
+        );
+
+    } catch {
+
+        authScreen.classList.remove(
+            "hidden"
+        );
+
+        gameScreen.classList.add(
+            "hidden"
+        );
+
+    }
+
+}
+
+loadUser();
+
+
+// ============================================
+// ENTER KEY
+// ============================================
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (
+            event.key === "Enter" &&
+            !gameScreen.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            clickButton.click();
+
+        }
+
+    }
+);
+'''
+
+out_dir = Path("/mnt/data")
+(out_dir / "index.html").write_text(index, encoding="utf-8")
+(out_dir / "app.js").write_text(app, encoding="utf-8")
+
+print("Готово. Созданы полные файлы:")
+print("/mnt/data/index.html")
+print("/mnt/data/app.js")
