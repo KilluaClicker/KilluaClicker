@@ -1,15 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const clickButton = document.getElementById("clickButton");
-    const clicksElement = document.getElementById("clicks");
-    const usernameElement = document.getElementById("username");
-    const logoutButton = document.getElementById("logoutButton");
+    const clickButton =
+        document.getElementById("clickButton");
+
+    const clicksElement =
+        document.getElementById("clicks");
+
+    const usernameElement =
+        document.getElementById("username");
+
+    const logoutButton =
+        document.getElementById("logoutButton");
 
     let clickPower = 1n;
     let clickInProgress = false;
+    let currentImpersonating = false;
 
     function formatNumber(value) {
         try {
-            const number = BigInt(String(value));
+            const number =
+                BigInt(String(value ?? "0"));
 
             if (number < 1000n) {
                 return number.toString();
@@ -48,25 +57,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
             for (const unit of units) {
                 if (number >= unit.value) {
-                    const whole = number / unit.value;
-                    const remainder = number % unit.value;
+                    const whole =
+                        number / unit.value;
+
+                    const remainder =
+                        number % unit.value;
 
                     if (remainder === 0n) {
                         return `${whole} ${unit.name}`;
                     }
 
                     const decimal =
-                        Number(remainder) / Number(unit.value);
+                        Number(remainder) /
+                        Number(unit.value);
 
-                    const formatted = decimal
-                        .toFixed(2)
-                        .replace(/\.?0+$/, "");
+                    const formatted =
+                        decimal
+                            .toFixed(2)
+                            .replace(/\.?0+$/, "");
 
                     return `${whole}${formatted.slice(1)} ${unit.name}`;
                 }
             }
 
             return number.toString();
+
         } catch {
             return "0";
         }
@@ -74,33 +89,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateClickPower() {
         let powerElement =
-            document.getElementById("clickPower");
+            document.getElementById(
+                "clickPower"
+            );
 
         if (!powerElement) {
             const stats =
-                document.querySelector(".stats");
+                document.querySelector(
+                    ".stats"
+                );
 
             if (stats) {
                 const powerCard =
-                    document.createElement("div");
+                    document.createElement(
+                        "div"
+                    );
 
-                powerCard.className = "stat-card";
+                powerCard.className =
+                    "stat-card";
 
                 powerCard.innerHTML = `
-                    <div class="stat-label">За клик</div>
-                    <div class="stat-value" id="clickPower">+1</div>
+                    <div class="stat-label">
+                        За клик
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="clickPower"
+                    >
+                        +1
+                    </div>
                 `;
 
-                stats.appendChild(powerCard);
+                stats.appendChild(
+                    powerCard
+                );
 
                 powerElement =
-                    document.getElementById("clickPower");
+                    document.getElementById(
+                        "clickPower"
+                    );
             }
         }
 
         if (powerElement) {
             powerElement.textContent =
-                "+" + formatNumber(clickPower);
+                "+" +
+                formatNumber(clickPower);
         }
     }
 
@@ -110,41 +145,48 @@ document.addEventListener("DOMContentLoaded", () => {
      * =====================================================
      */
 
-    function updateAdminInterface(user, impersonating = false) {
-        /*
-         * Ищем уже существующую кнопку админки.
-         * Если её нет — создаём.
-         */
-
+    function updateAdminInterface(
+        user,
+        impersonating = false
+    ) {
         let adminButton =
-            document.getElementById("adminPanelButton");
+            document.getElementById(
+                "adminPanelButton"
+            );
 
-        /*
-         * Если мы вошли в аккаунт другого игрока
-         * через админку — показываем кнопку возврата.
-         */
         let returnButton =
-            document.getElementById("returnAdminButton");
+            document.getElementById(
+                "returnAdminButton"
+            );
 
-        if (user && user.is_admin === true && !impersonating) {
+        const isAdmin =
+            user &&
+            (
+                user.is_admin === true ||
+                user.is_admin === "true" ||
+                user.is_admin === 1 ||
+                user.is_admin === "1"
+            );
 
+        if (
+            isAdmin &&
+            !impersonating
+        ) {
             if (!adminButton) {
                 adminButton =
-                    document.createElement("button");
+                    document.createElement(
+                        "button"
+                    );
 
                 adminButton.id =
                     "adminPanelButton";
 
-                adminButton.type = "button";
+                adminButton.type =
+                    "button";
 
                 adminButton.textContent =
                     "⚙️ Админ-панель";
 
-                /*
-                 * Стили специально здесь,
-                 * чтобы кнопка появилась даже если
-                 * в index.html её раньше не было.
-                 */
                 adminButton.style.cssText = `
                     display: block;
                     width: 100%;
@@ -168,23 +210,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 );
 
-                /*
-                 * Пытаемся поставить кнопку рядом
-                 * с кнопкой выхода.
-                 */
                 if (logoutButton) {
                     logoutButton.parentElement
-                        ?.appendChild(adminButton);
+                        ?.appendChild(
+                            adminButton
+                        );
                 } else {
-                    document.body
-                        .appendChild(adminButton);
+                    document.body.appendChild(
+                        adminButton
+                    );
                 }
             }
 
-            adminButton.style.display = "block";
+            adminButton.style.display =
+                "block";
+
         } else {
             if (adminButton) {
-                adminButton.style.display = "none";
+                adminButton.style.display =
+                    "none";
             }
         }
 
@@ -195,15 +239,17 @@ document.addEventListener("DOMContentLoaded", () => {
          */
 
         if (impersonating) {
-
             if (!returnButton) {
                 returnButton =
-                    document.createElement("button");
+                    document.createElement(
+                        "button"
+                    );
 
                 returnButton.id =
                     "returnAdminButton";
 
-                returnButton.type = "button";
+                returnButton.type =
+                    "button";
 
                 returnButton.textContent =
                     "↩️ Вернуться в админку";
@@ -233,7 +279,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                     "/api/admin/stop-impersonation",
                                     {
                                         method: "POST",
-                                        credentials: "include",
+                                        credentials:
+                                            "include",
                                         headers: {
                                             "Content-Type":
                                                 "application/json"
@@ -260,7 +307,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                 "/admin.html";
 
                         } catch (error) {
-                            console.error(error);
+                            console.error(
+                                error
+                            );
 
                             alert(
                                 "Ошибка возврата в админку."
@@ -274,70 +323,113 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
-            returnButton.style.display = "block";
+            returnButton.style.display =
+                "block";
 
         } else {
-
             if (returnButton) {
-                returnButton.style.display = "none";
+                returnButton.style.display =
+                    "none";
             }
         }
     }
 
-    function updateUser(user, impersonating = false) {
+    /*
+     * =====================================================
+     * UPDATE USER
+     * =====================================================
+     */
+
+    function updateUser(
+        user,
+        impersonating = currentImpersonating
+    ) {
         if (!user) {
             return;
         }
+
+        currentImpersonating =
+            impersonating === true;
+
+        /*
+         * НИК ИГРОКА
+         */
 
         if (usernameElement) {
             usernameElement.textContent =
                 user.username || "";
         }
 
+        /*
+         * БАЛАНС
+         */
+
         if (clicksElement) {
             clicksElement.textContent =
-                formatNumber(user.clicks ?? 0);
+                formatNumber(
+                    user.clicks ?? 0
+                );
         }
 
+        /*
+         * СИЛА КЛИКА
+         */
+
         try {
-            clickPower = BigInt(
-                String(user.click_power ?? "1")
-            );
+            clickPower =
+                BigInt(
+                    String(
+                        user.click_power ?? "1"
+                    )
+                );
+
         } catch {
             clickPower = 1n;
         }
 
         updateClickPower();
 
-        /*
-         * ВАЖНО:
-         * Проверяем is_admin, который приходит
-         * непосредственно из users.is_admin.
-         */
         updateAdminInterface(
             user,
-            impersonating
+            currentImpersonating
         );
     }
+
+    /*
+     * =====================================================
+     * ЗАГРУЗКА ПОЛЬЗОВАТЕЛЯ
+     * =====================================================
+     */
 
     async function loadUser() {
         try {
             const response =
-                await fetch("/api/me", {
-                    credentials: "include"
-                });
+                await fetch(
+                    "/api/me",
+                    {
+                        credentials:
+                            "include",
+                        cache: "no-store"
+                    }
+                );
 
             const data =
                 await response.json();
 
-            if (!response.ok || !data.success) {
+            if (
+                !response.ok ||
+                !data.success
+            ) {
                 window.location.href =
                     "/login.html";
 
                 return;
             }
 
-            if (!data.loggedIn || !data.user) {
+            if (
+                !data.loggedIn ||
+                !data.user
+            ) {
                 window.location.href =
                     "/login.html";
 
@@ -357,6 +449,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /*
+     * =====================================================
+     * КЛИК
+     * =====================================================
+     */
+
     async function makeClick() {
         if (
             !clickButton ||
@@ -367,33 +465,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clickInProgress = true;
 
-        clickButton.classList.add("pressed");
+        clickButton.classList.add(
+            "pressed"
+        );
+
         clickButton.classList.add(
             "click-animation"
         );
 
         try {
             const response =
-                await fetch("/api/click", {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type":
-                            "application/json"
+                await fetch(
+                    "/api/click",
+                    {
+                        method: "POST",
+                        credentials:
+                            "include",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        }
                     }
-                });
+                );
 
             const data =
                 await response.json();
 
-            if (response.status === 401) {
+            if (
+                response.status === 401
+            ) {
                 window.location.href =
                     "/login.html";
 
                 return;
             }
 
-            if (!response.ok || !data.success) {
+            if (
+                !response.ok ||
+                !data.success
+            ) {
                 console.error(
                     data.message ||
                     "Ошибка клика."
@@ -403,10 +513,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             /*
-             * При клике обновляем только данные,
-             * не ломая информацию об админке.
+             * Сохраняем состояние админки
+             * после клика.
              */
-            updateUser(data.user);
+
+            updateUser(
+                data.user,
+                currentImpersonating
+            );
 
         } catch (error) {
             console.error(
@@ -424,7 +538,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     "click-animation"
                 );
 
-                clickInProgress = false;
+                clickInProgress =
+                    false;
+
             }, 30);
         }
     }
@@ -436,21 +552,30 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
+    /*
+     * =====================================================
+     * LOGOUT
+     * =====================================================
+     */
+
     if (logoutButton) {
         logoutButton.addEventListener(
             "click",
             async () => {
-
                 try {
                     await fetch(
                         "/api/logout",
                         {
                             method: "POST",
-                            credentials: "include"
+                            credentials:
+                                "include"
                         }
                     );
+
                 } catch (error) {
-                    console.error(error);
+                    console.error(
+                        error
+                    );
                 }
 
                 window.location.href =
@@ -458,6 +583,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         );
     }
+
+    /*
+     * =====================================================
+     * START
+     * =====================================================
+     */
 
     loadUser();
 });

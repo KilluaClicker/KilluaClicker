@@ -5,9 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const shopMessage =
         document.getElementById("shopMessage");
 
+    let shopItems = [];
+
     function formatNumber(value) {
         try {
-            const n = BigInt(String(value));
+            const n =
+                BigInt(String(value));
 
             if (n < 1000n) {
                 return n.toString();
@@ -40,13 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             return `${number.toString()} ${units[unit]}`;
+
         } catch {
             return String(value);
         }
     }
 
     function escapeHtml(value) {
-        return String(value)
+        return String(value ?? "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
@@ -55,7 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function showMessage(text, type = "") {
-        if (!shopMessage) return;
+        if (!shopMessage) {
+            return;
+        }
 
         shopMessage.textContent = text;
         shopMessage.className = "shop-message";
@@ -67,15 +73,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadShop() {
         try {
-            const response = await fetch("/api/shop", {
-                credentials: "include",
-                cache: "no-store"
-            });
+            const response = await fetch(
+                "/api/shop",
+                {
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
 
             const data = await response.json();
 
             if (response.status === 401) {
-                window.location.replace("/login.html");
+                window.location.replace(
+                    "/login.html"
+                );
                 return;
             }
 
@@ -88,9 +99,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            renderShop(data.items);
+            shopItems =
+                Array.isArray(data.items)
+                    ? data.items
+                    : [];
+
+            renderShop(shopItems);
+
         } catch (error) {
-            console.error("SHOP ERROR:", error);
+            console.error(
+                "SHOP ERROR:",
+                error
+            );
 
             showMessage(
                 "Ошибка соединения с сервером.",
@@ -100,11 +120,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderShop(items) {
-        if (!shopGrid) return;
+        if (!shopGrid) {
+            return;
+        }
 
         shopGrid.innerHTML = "";
 
-        if (!Array.isArray(items) || items.length === 0) {
+        if (
+            !Array.isArray(items) ||
+            items.length === 0
+        ) {
             shopGrid.innerHTML = `
                 <div class="empty-state">
                     Магазин пока пуст.
@@ -113,43 +138,86 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        items.forEach((item) => {
+        items.forEach(item => {
             const card =
                 document.createElement("div");
 
-            card.className = "shop-card";
+            card.className =
+                "shop-card";
 
             card.innerHTML = `
                 <div class="shop-icon">
-                    ${escapeHtml(item.icon || "✦")}
+                    ${escapeHtml(
+                        item.icon || "✦"
+                    )}
                 </div>
 
                 <div class="shop-info">
+
                     <div class="shop-name">
-                        ${escapeHtml(item.name)}
+                        ${escapeHtml(
+                            item.name
+                        )}
                     </div>
 
                     <div class="shop-amount">
                         Получишь:
                         <strong>
-                            +${formatNumber(item.amount)}
+                            +${formatNumber(
+                                item.amount
+                            )}
                         </strong>
+                        к клику
                     </div>
 
                     <div class="shop-price">
                         Цена:
                         <strong>
-                            ${formatNumber(item.price)}
+                            ${formatNumber(
+                                item.price
+                            )}
                         </strong>
                         кликов
                     </div>
 
-                    <button
-                        class="shop-buy"
-                        data-item-id="${escapeHtml(item.id)}"
+                    <div
+                        class="shop-buttons"
+                        style="
+                            display:flex;
+                            gap:8px;
+                            flex-wrap:wrap;
+                            margin-top:12px;
+                        "
                     >
-                        Купить
-                    </button>
+
+                        <button
+                            class="shop-buy"
+                            data-item-id="${escapeHtml(
+                                item.id
+                            )}"
+                            style="
+                                flex:1;
+                                min-width:120px;
+                            "
+                        >
+                            Купить
+                        </button>
+
+                        <button
+                            class="shop-buy-max"
+                            data-item-id="${escapeHtml(
+                                item.id
+                            )}"
+                            style="
+                                flex:1;
+                                min-width:120px;
+                            "
+                        >
+                            🛒 Купить всё
+                        </button>
+
+                    </div>
+
                 </div>
             `;
 
@@ -158,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document
             .querySelectorAll(".shop-buy")
-            .forEach((button) => {
+            .forEach(button => {
                 button.addEventListener(
                     "click",
                     () => {
@@ -169,33 +237,55 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 );
             });
+
+        document
+            .querySelectorAll(".shop-buy-max")
+            .forEach(button => {
+                button.addEventListener(
+                    "click",
+                    () => {
+                        buyMaxItem(
+                            button.dataset.itemId,
+                            button
+                        );
+                    }
+                );
+            });
     }
 
-    async function buyItem(itemId, button) {
-        if (!button) return;
+    async function buyItem(
+        itemId,
+        button
+    ) {
+        if (!button) {
+            return;
+        }
 
         button.disabled = true;
-        button.textContent = "Покупка...";
+        button.textContent =
+            "Покупка...";
 
         showMessage("");
 
         try {
-            const response = await fetch(
-                "/api/shop/buy",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        itemId
-                    })
-                }
-            );
+            const response =
+                await fetch(
+                    "/api/shop/buy",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            itemId
+                        })
+                    }
+                );
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
             if (response.status === 401) {
                 window.location.replace(
@@ -214,20 +304,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             showMessage(
-                "Покупка успешно совершена!",
+                "✅ Покупка успешно совершена!",
                 "success"
             );
 
-            const clicksElement =
-                document.getElementById("clicks");
+            updateBalanceFromResponse(data);
 
-            if (
-                clicksElement &&
-                data.clicks !== undefined
-            ) {
-                clicksElement.textContent =
-                    formatNumber(data.clicks);
-            }
         } catch (error) {
             console.error(
                 "BUY ERROR:",
@@ -238,9 +320,175 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Ошибка соединения с сервером.",
                 "error"
             );
+
         } finally {
             button.disabled = false;
             button.textContent = "Купить";
+        }
+    }
+
+    /*
+     * =====================================================
+     * КУПИТЬ НА ВСЕ ДЕНЬГИ
+     * =====================================================
+     */
+
+    async function buyMaxItem(
+        itemId,
+        button
+    ) {
+        if (!button) {
+            return;
+        }
+
+        const item =
+            shopItems.find(
+                x =>
+                    String(x.id) ===
+                    String(itemId)
+            );
+
+        if (!item) {
+            showMessage(
+                "Товар не найден.",
+                "error"
+            );
+            return;
+        }
+
+        /*
+         * БЕЗ confirm
+         *
+         * Нажал «Купить всё» —
+         * сразу покупаем максимально
+         * возможное количество.
+         */
+
+        button.disabled = true;
+        button.textContent =
+            "Покупка...";
+
+        showMessage("");
+
+        try {
+            const response =
+                await fetch(
+                    "/api/shop/buy-max",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            itemId
+                        })
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (response.status === 401) {
+                window.location.replace(
+                    "/login.html"
+                );
+                return;
+            }
+
+            if (!response.ok || !data.success) {
+                showMessage(
+                    data.message ||
+                    "Не удалось купить товар.",
+                    "error"
+                );
+                return;
+            }
+
+            const quantity =
+                data.quantity ?? "0";
+
+            const spent =
+                data.spent ?? "0";
+
+            const powerGain =
+                data.power_gain ?? "0";
+
+            showMessage(
+                `🛒 Куплено: ${formatNumber(quantity)} шт. | Потрачено: ${formatNumber(spent)} | +${formatNumber(powerGain)} к клику`,
+                "success"
+            );
+
+            updateBalanceFromResponse(data);
+
+            /*
+             * Обновляем силу клика
+             */
+
+            const powerElement =
+                document.getElementById(
+                    "clickPower"
+                );
+
+            if (
+                powerElement &&
+                data.user &&
+                data.user.click_power !==
+                    undefined
+            ) {
+                powerElement.textContent =
+                    "+" +
+                    formatNumber(
+                        data.user.click_power
+                    );
+            }
+
+        } catch (error) {
+            console.error(
+                "BUY MAX ERROR:",
+                error
+            );
+
+            showMessage(
+                "Ошибка соединения с сервером.",
+                "error"
+            );
+
+        } finally {
+            button.disabled = false;
+            button.textContent =
+                "🛒 Купить всё";
+        }
+    }
+
+    function updateBalanceFromResponse(data) {
+        const clicksElement =
+            document.getElementById(
+                "clicks"
+            );
+
+        if (
+            clicksElement &&
+            data.user &&
+            data.user.clicks !== undefined
+        ) {
+            clicksElement.textContent =
+                formatNumber(
+                    data.user.clicks
+                );
+
+            return;
+        }
+
+        if (
+            clicksElement &&
+            data.clicks !== undefined
+        ) {
+            clicksElement.textContent =
+                formatNumber(
+                    data.clicks
+                );
         }
     }
 
